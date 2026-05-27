@@ -11,6 +11,7 @@ import {
 } from "./helpers.js";
 import EmployeeDetailModal from "./EmployeeDetailModal.jsx";
 import EmployeeFormModal from "./EmployeeFormModal.jsx";
+import ProjectBoardView from "./ProjectBoardView.jsx";
 
 // 소속 표시용 배지
 const AffiliationBadge = ({ affiliation, partnerName }) => {
@@ -48,14 +49,8 @@ export default function EmployeeManager() {
   const [page, setPage] = useState(1);
   const pageSize = 15;
 
-  const [boardQuery, setBoardQuery] = useState("");
   const [showProjModal, setShowProjModal] = useState(false);
   const [editingProj, setEditingProj] = useState(null);
-  const [dragId, setDragId] = useState(null);
-  const [dragOverProj, setDragOverProj] = useState(null);
-  // 대기 컬럼 전용 정렬: waitingDays | endDate | startDate | rank | duty | name | added
-  const [poolSortField, setPoolSortField] = useState("waitingDays");
-  const [poolSortDir, setPoolSortDir] = useState("desc");
   // 카드 상세 보기 팝업 (대기 카드 클릭 시)
   const [detailEmp, setDetailEmp] = useState(null);
 
@@ -262,43 +257,20 @@ export default function EmployeeManager() {
     setEditingProj(null);
   };
 
-  const onDragStart = (e, empId) => {
-    setDragId(empId);
-    e.dataTransfer.effectAllowed = "move";
-    e.dataTransfer.setData("text/plain", String(empId));
-  };
-  const onDragEnd = () => { setDragId(null); setDragOverProj(null); };
-  const onDragOver = (e, projId) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = "move";
-    if (dragOverProj !== projId) setDragOverProj(projId);
-  };
-  const onDragLeave = (e) => {
-    if (e.currentTarget.contains(e.relatedTarget)) return;
-    setDragOverProj(null);
-  };
-  const onDrop = (e, projId) => {
-    e.preventDefault();
-    const id = Number(e.dataTransfer.getData("text/plain"));
-    setDragId(null);
-    setDragOverProj(null);
-    if (Number.isNaN(id)) return;
-
+  // 드래그앤드롭으로 직원을 다른 프로젝트로 이동 (ProjectBoardView에서 호출)
+  const handleDropEmployee = (empId, projId) => {
     setEmployees(prev => {
-      const emp = prev.find(x => x.id === id);
+      const emp = prev.find(x => x.id === empId);
       if (!emp) return prev;
-      // 같은 컬럼으로 드롭 시 변경 없음
       if (emp.projectId === projId) return prev;
-      // 협력사 직원을 대기(pool)로 이동 시 자동 삭제 (계약 종료 처리)
+      // 협력사 직원을 대기(pool)로 이동 시 자동 삭제
       if (projId === "pool" && emp.affiliation === "협력사") {
-        return prev.filter(x => x.id !== id);
+        return prev.filter(x => x.id !== empId);
       }
       const projMap = Object.fromEntries(projects.map(p => [p.id, p]));
-      // 이전 투입(현재 프로젝트) 이력을 누적
       const newHistory = archiveCurrentAssignment(emp, projMap, { closeEndDate: true });
-      // 일반 이동: pool 진입 시 pooledAt 기록, pool 이탈 시 클리어
       return prev.map(x => {
-        if (x.id !== id) return x;
+        if (x.id !== empId) return x;
         if (projId === "pool") return { ...x, projectId: projId, pooledAt: todayISO(), assignmentHistory: newHistory };
         return { ...x, projectId: projId, pooledAt: null, assignmentHistory: newHistory };
       });
@@ -484,229 +456,15 @@ export default function EmployeeManager() {
         )}
 
         {view === "board" && (
-          <>
-            <div className="bg-white rounded-lg border border-slate-200 p-3 sm:p-4 mb-4">
-              <div className="flex gap-2 items-center">
-                <div className="relative flex-1 min-w-0">
-                  <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                  <input type="text" placeholder="직원명, 직급, 협력사명" value={boardQuery} onChange={(e) => setBoardQuery(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-                </div>
-                <button onClick={openNewProj} className="px-3 py-2 text-sm bg-indigo-600 text-white rounded-md hover:bg-indigo-700 flex items-center gap-1 font-medium flex-shrink-0">
-                  <FolderPlus size={14} /> <span className="hidden sm:inline">프로젝트 </span>등록
-                </button>
-              </div>
-              <div className="mt-2 text-[11px] sm:text-xs text-slate-500 flex items-center gap-1.5">
-                <GripVertical size={12} className="flex-shrink-0" /> <span className="hidden sm:inline">직원 카드를 다른 프로젝트 컬럼으로 드래그하여 배치를 변경할 수 있습니다.</span><span className="sm:hidden">카드를 길게 눌러 다른 컬럼으로 드래그하세요.</span>
-              </div>
-            </div>
-
-            <div className="flex gap-2 sm:gap-3 overflow-x-auto pb-4 -mx-3 px-3 sm:mx-0 sm:px-0" style={{ minHeight: "600px" }}>
-              {projects.map((proj) => {
-                const c = COLOR_MAP[proj.color] || COLOR_MAP.slate;
-                const q = boardQuery.trim().toLowerCase();
-                const isPool = proj.id === "pool";
-                let members = employees
-                  .filter(e => e.projectId === proj.id)
-                  .filter(e => !q || e.name.toLowerCase().includes(q) || e.rank.toLowerCase().includes(q) || (e.partnerName || "").toLowerCase().includes(q) || (e.duty || "").toLowerCase().includes(q) || (e.role || "").toLowerCase().includes(q));
-
-                // 대기 컬럼은 사용자가 선택한 기준으로 정렬
-                if (isPool) {
-                  const dirMul = poolSortDir === "asc" ? 1 : -1;
-                  members = [...members].sort((a, b) => {
-                    let va, vb;
-                    switch (poolSortField) {
-                      case "waitingDays":
-                        // 대기 시작일이 빠를수록 대기일수가 길다 → pooledAt asc로 비교
-                        va = a.pooledAt || "9999-12-31";
-                        vb = b.pooledAt || "9999-12-31";
-                        // 사용자 직관: 내림차순(desc)이면 "오래 대기한 사람부터"가 자연스러움
-                        if (va < vb) return 1 * dirMul;
-                        if (va > vb) return -1 * dirMul;
-                        return (RANK_ORDER[a.rank] ?? 99) - (RANK_ORDER[b.rank] ?? 99);
-                      case "rank":
-                        va = RANK_ORDER[a.rank] ?? 99;
-                        vb = RANK_ORDER[b.rank] ?? 99;
-                        break;
-                      case "duty":
-                        va = (a.duty || "ㅎ").toLowerCase();
-                        vb = (b.duty || "ㅎ").toLowerCase();
-                        break;
-                      case "name":
-                        va = a.name; vb = b.name;
-                        break;
-                      case "startDate":
-                        va = a.startDate || ""; vb = b.startDate || "";
-                        break;
-                      case "added":
-                        va = a.id; vb = b.id;
-                        break;
-                      case "endDate":
-                      default:
-                        va = a.endDate || ""; vb = b.endDate || "";
-                    }
-                    if (va < vb) return -1 * dirMul;
-                    if (va > vb) return 1 * dirMul;
-                    // 보조 정렬: 같은 값일 때 직급 순
-                    const ra = RANK_ORDER[a.rank] ?? 99;
-                    const rb = RANK_ORDER[b.rank] ?? 99;
-                    return ra - rb;
-                  });
-                }
-
-                const isOver = dragOverProj === proj.id;
-                // 협력사 직원을 대기로 드래그 중인 상황 감지
-                const draggedEmp = dragId !== null ? employees.find(x => x.id === dragId) : null;
-                const isPartnerDropWarning = isPool && isOver && draggedEmp?.affiliation === "협력사";
-
-                return (
-                  <div key={proj.id}
-                    onDragOver={(e) => onDragOver(e, proj.id)}
-                    onDragLeave={onDragLeave}
-                    onDrop={(e) => onDrop(e, proj.id)}
-                    className={`flex-shrink-0 w-64 sm:w-72 rounded-lg border-2 ${
-                      isPartnerDropWarning ? "border-red-400 bg-red-50/40" :
-                      isOver ? "border-indigo-400 bg-indigo-50/30" :
-                      `${c.border} ${c.bg}`
-                    } flex flex-col transition-colors`}>
-                    <div className={`px-3 py-2.5 border-b ${c.border} ${c.header} rounded-t-md flex items-center justify-between`}>
-                      <div className="flex items-center gap-2 min-w-0">
-                        <span className={`w-2.5 h-2.5 rounded-full ${c.dot} flex-shrink-0`}></span>
-                        <span className={`font-bold text-sm ${c.text} truncate`}>{proj.name}</span>
-                        <span className={`px-1.5 py-0.5 text-xs font-semibold rounded bg-white/70 ${c.text} flex-shrink-0`}>{members.length}</span>
-                      </div>
-                      {!isPool && (
-                        <div className="flex gap-0.5 flex-shrink-0">
-                          <button onClick={() => openEditProj(proj)} className={`p-1 rounded hover:bg-white/70 ${c.text}`} title="프로젝트 수정"><Edit2 size={12} /></button>
-                          <button onClick={() => removeProj(proj.id)} className="p-1 rounded hover:bg-white/70 text-slate-500 hover:text-red-600" title="프로젝트 삭제"><Trash2 size={12} /></button>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* 대기 컬럼 안내 문구 + 통계 */}
-                    {isPool && (
-                      <div className={`px-3 py-1.5 text-[11px] border-b ${c.border} ${
-                        isPartnerDropWarning ? "bg-red-100 text-red-700 font-semibold" : "bg-white/50 text-slate-600"
-                      }`}>
-                        {isPartnerDropWarning ? (
-                          "⚠ 협력사 직원은 대기로 이동 시 자동 삭제됩니다"
-                        ) : (() => {
-                          const withDates = members.filter(m => m.pooledAt);
-                          if (withDates.length === 0) return "대기 인력이 없습니다";
-                          const durations = withDates.map(m => calcWaitingDuration(m.pooledAt).days);
-                          const avg = Math.round(durations.reduce((s, d) => s + d, 0) / durations.length);
-                          const max = Math.max(...durations);
-                          return (
-                            <div className="flex items-center justify-between gap-2 tabular-nums">
-                              <span className="text-slate-500">평균 <span className="font-bold text-slate-700">{avg}</span>일</span>
-                              <span className="text-slate-300">·</span>
-                              <span className="text-slate-500">최장 <span className={`font-bold ${max >= 90 ? "text-red-600" : max >= 30 ? "text-orange-600" : "text-slate-700"}`}>{max}</span>일</span>
-                            </div>
-                          );
-                        })()}
-                      </div>
-                    )}
-
-                    {/* 대기 컬럼 정렬 컨트롤 */}
-                    {isPool && (
-                      <div className={`px-2 py-1.5 border-b ${c.border} bg-white/40 flex items-center gap-1`}>
-                        <span className="text-[10px] font-semibold text-slate-500 flex-shrink-0">정렬</span>
-                        <select
-                          value={poolSortField}
-                          onChange={(e) => setPoolSortField(e.target.value)}
-                          className="flex-1 min-w-0 px-1.5 py-1 text-[11px] border border-slate-300 rounded bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                        >
-                          {POOL_SORT_OPTIONS.map(opt => (
-                            <option key={opt.value} value={opt.value}>{opt.label}</option>
-                          ))}
-                        </select>
-                        <button
-                          onClick={() => setPoolSortDir(poolSortDir === "asc" ? "desc" : "asc")}
-                          className="px-2 py-1 text-[11px] border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-700 flex-shrink-0 font-semibold"
-                          title={poolSortDir === "asc" ? "오름차순" : "내림차순"}
-                        >
-                          {poolSortDir === "asc" ? "↑" : "↓"}
-                        </button>
-                      </div>
-                    )}
-
-                    <div className="p-2 space-y-2 overflow-y-auto flex-1" style={{ maxHeight: "650px" }}>
-                      {members.length === 0 && (
-                        <div className="text-center text-xs text-slate-400 py-8 border-2 border-dashed border-slate-200 rounded-md">
-                          {isOver ? (isPartnerDropWarning ? "여기 놓으면 자동 삭제" : "여기에 놓기") : "배치된 인원 없음"}
-                        </div>
-                      )}
-                      {members.map((emp) => {
-                        const status = getStatus(emp.startDate, emp.endDate, emp.projectId);
-                        const isDragging = dragId === emp.id;
-                        const waitingLabel = isPool ? formatWaitingLabel(emp.pooledAt) : "";
-                        const waitingDur = isPool ? calcWaitingDuration(emp.pooledAt) : null;
-                        // 대기일수에 따른 색상 강조: 90일 이상 빨강, 30일 이상 주황, 그 외 기본
-                        const waitingColor = !waitingDur ? "bg-amber-50 text-amber-700 border-amber-200"
-                          : waitingDur.days >= 90 ? "bg-red-50 text-red-700 border-red-200"
-                          : waitingDur.days >= 30 ? "bg-orange-50 text-orange-700 border-orange-200"
-                          : "bg-amber-50 text-amber-700 border-amber-200";
-                        return (
-                          <div key={emp.id}
-                            draggable
-                            onDragStart={(e) => onDragStart(e, emp.id)}
-                            onDragEnd={onDragEnd}
-                            onClick={() => setDetailEmp(emp)}
-                            className={`bg-white rounded-md border border-slate-200 p-2.5 shadow-sm hover:shadow-md hover:border-indigo-300 cursor-pointer transition-all ${isDragging ? "opacity-40 scale-95" : ""}`}
-                            title="클릭하여 상세 보기">
-                            <div className="flex items-start justify-between gap-2">
-                              <div className="flex items-center gap-1.5 min-w-0">
-                                <GripVertical size={12} className="text-slate-300 flex-shrink-0" />
-                                <div className="min-w-0">
-                                  <div className="font-semibold text-sm text-slate-900 truncate">{emp.name}</div>
-                                  <div className="text-xs text-slate-500">{emp.rank}</div>
-                                </div>
-                              </div>
-                              <div className="flex flex-col items-end gap-0.5 flex-shrink-0">
-                                <span className={`text-[10px] px-1.5 py-0.5 font-medium rounded border ${status.color}`}>
-                                  {status.label}
-                                </span>
-                                {isPool && waitingLabel && (
-                                  <span className={`text-[10px] px-1.5 py-0.5 font-semibold rounded border ${waitingColor} tabular-nums`} title={emp.pooledAt ? `대기 시작: ${emp.pooledAt}` : ""}>
-                                    {waitingLabel}
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                            <div className="mt-1.5 flex flex-wrap gap-1">
-                              <AffiliationBadge affiliation={emp.affiliation} partnerName={emp.partnerName} />
-                              {emp.duty && (
-                                <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium rounded border bg-slate-50 text-slate-600 border-slate-200">
-                                  {emp.duty}
-                                </span>
-                              )}
-                            </div>
-                            {emp.role && (
-                              <div className="mt-1 text-[11px] text-slate-500 truncate" title={emp.role}>
-                                · {emp.role}
-                              </div>
-                            )}
-                            {isPool && emp.pooledAt ? (
-                              <div className="mt-1.5 pt-1.5 border-t border-slate-100 text-[11px] text-slate-500 tabular-nums flex justify-between">
-                                <span className="text-slate-400">대기 시작</span>
-                                <span>{emp.pooledAt}</span>
-                              </div>
-                            ) : (
-                              <div className="mt-1.5 pt-1.5 border-t border-slate-100 text-[11px] text-slate-500 tabular-nums flex justify-between">
-                                <span>{emp.startDate}</span>
-                                <span className="text-slate-300">→</span>
-                                <span>{emp.endDate}</span>
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </>
+          <ProjectBoardView
+            employees={employees}
+            projects={projects}
+            onDropEmployee={handleDropEmployee}
+            onCardClick={(emp) => setDetailEmp(emp)}
+            onNewProject={openNewProj}
+            onEditProject={openEditProj}
+            onDeleteProject={removeProj}
+          />
         )}
       </div>
 
