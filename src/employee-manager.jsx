@@ -1,53 +1,23 @@
 import React, { useState, useMemo, useEffect } from "react";
-import { Search, Plus, Edit2, Trash2, X, Users, Briefcase, Calendar, Filter, Download, FolderKanban, LayoutList, GripVertical, FolderPlus, Building2 } from "lucide-react";
+import { X, Users, Briefcase, Calendar, FolderKanban, LayoutList, Building2 } from "lucide-react";
 import {
-  RANKS, AFFILIATIONS, SAMPLE_PARTNERS, SAMPLE_DUTIES, SAMPLE_ROLES,
-  ASSIGNMENT_TYPES, ASSIGNMENT_TYPE_STYLES, RANK_ORDER, POOL_SORT_OPTIONS,
   INITIAL_PROJECTS, COLOR_MAP, COLOR_OPTIONS,
 } from "./constants.js";
 import {
-  todayISO, getStatus, archiveCurrentAssignment,
-  calcWaitingDuration, formatWaitingLabel, generateSampleData,
+  todayISO, getStatus, archiveCurrentAssignment, generateSampleData,
 } from "./helpers.js";
 import EmployeeDetailModal from "./EmployeeDetailModal.jsx";
 import EmployeeFormModal from "./EmployeeFormModal.jsx";
 import ProjectBoardView from "./ProjectBoardView.jsx";
-
-// 소속 표시용 배지
-const AffiliationBadge = ({ affiliation, partnerName }) => {
-  if (affiliation === "IBKS") {
-    return (
-      <span className="inline-flex items-center px-1.5 py-0.5 text-[11px] font-semibold rounded border bg-indigo-50 text-indigo-700 border-indigo-200">
-        IBKS
-      </span>
-    );
-  }
-  return (
-    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[11px] font-medium rounded border bg-amber-50 text-amber-700 border-amber-200">
-      <Building2 size={10} />
-      {partnerName || "협력사"}
-    </span>
-  );
-};
+import EmployeeListView from "./EmployeeListView.jsx";
 
 export default function EmployeeManager() {
   const [projects, setProjects] = useState(INITIAL_PROJECTS);
   const [employees, setEmployees] = useState([]);
   const [view, setView] = useState("list");
 
-  const [query, setQuery] = useState("");
-  const [filterRank, setFilterRank] = useState("전체");
-  const [filterProject, setFilterProject] = useState("전체");
-  const [filterStatus, setFilterStatus] = useState("전체");
-  const [filterAffiliation, setFilterAffiliation] = useState("전체");
-  const [filterPartner, setFilterPartner] = useState("전체");
-  const [filterDuty, setFilterDuty] = useState("전체");
   const [showEmpModal, setShowEmpModal] = useState(false);
   const [editingEmp, setEditingEmp] = useState(null);
-  const [sortField, setSortField] = useState("id");
-  const [sortDir, setSortDir] = useState("asc");
-  const [page, setPage] = useState(1);
-  const pageSize = 15;
 
   const [showProjModal, setShowProjModal] = useState(false);
   const [editingProj, setEditingProj] = useState(null);
@@ -59,7 +29,6 @@ export default function EmployeeManager() {
   }, []);
 
   // 데이터 무결성 가드: 협력사 직원이 pool에 존재하면 자동 제거
-  // (외부 입력, 데이터 마이그레이션, 예외 케이스 등 모든 경로 방어)
   useEffect(() => {
     const hasInvalid = employees.some(e => e.affiliation === "협력사" && e.projectId === "pool");
     if (hasInvalid) {
@@ -69,7 +38,7 @@ export default function EmployeeManager() {
 
   const projectById = useMemo(() => Object.fromEntries(projects.map(p => [p.id, p])), [projects]);
 
-  // 실제 등록된 협력사 목록 (필터용)
+  // 실제 등록된 협력사 목록 (필터용 + 등록 자동완성용)
   const partnerList = useMemo(() => {
     const set = new Set(
       employees
@@ -78,60 +47,6 @@ export default function EmployeeManager() {
     );
     return Array.from(set).sort();
   }, [employees]);
-
-  // 등록된 직무·역할 목록 (필터 + 자동완성용)
-  const dutyList = useMemo(() => {
-    const set = new Set(employees.map(e => (e.duty || "").trim()).filter(Boolean));
-    return Array.from(set).sort();
-  }, [employees]);
-  const roleList = useMemo(() => {
-    const set = new Set(employees.map(e => (e.role || "").trim()).filter(Boolean));
-    return Array.from(set).sort();
-  }, [employees]);
-
-  const filtered = useMemo(() => {
-    let list = employees.filter((e) => {
-      const status = getStatus(e.startDate, e.endDate, e.projectId).label;
-      const projName = projectById[e.projectId]?.name || "";
-      const q = query.trim().toLowerCase();
-      const matchQuery = !q
-        || e.name.toLowerCase().includes(q)
-        || e.rank.toLowerCase().includes(q)
-        || projName.toLowerCase().includes(q)
-        || (e.partnerName || "").toLowerCase().includes(q)
-        || (e.duty || "").toLowerCase().includes(q)
-        || (e.role || "").toLowerCase().includes(q);
-      const matchRank = filterRank === "전체" || e.rank === filterRank;
-      const matchProj = filterProject === "전체" || e.projectId === filterProject;
-      const matchStatus = filterStatus === "전체" || status === filterStatus;
-      const matchAffil = filterAffiliation === "전체" || e.affiliation === filterAffiliation;
-      const matchPartner = filterPartner === "전체" || e.partnerName === filterPartner;
-      const matchDuty = filterDuty === "전체" || (e.duty || "") === filterDuty;
-      return matchQuery && matchRank && matchProj && matchStatus && matchAffil && matchPartner && matchDuty;
-    });
-
-    list.sort((a, b) => {
-      let va = a[sortField], vb = b[sortField];
-      if (sortField === "project") { va = projectById[a.projectId]?.name || ""; vb = projectById[b.projectId]?.name || ""; }
-      if (sortField === "affiliation") {
-        va = a.affiliation === "IBKS" ? "IBKS" : (a.partnerName || "협력사");
-        vb = b.affiliation === "IBKS" ? "IBKS" : (b.partnerName || "협력사");
-      }
-      if (va < vb) return sortDir === "asc" ? -1 : 1;
-      if (va > vb) return sortDir === "asc" ? 1 : -1;
-      return 0;
-    });
-    return list;
-  }, [employees, query, filterRank, filterProject, filterStatus, filterAffiliation, filterPartner, sortField, sortDir, projectById]);
-
-  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
-  const paged = filtered.slice((page - 1) * pageSize, page * pageSize);
-  useEffect(() => { setPage(1); }, [query, filterRank, filterProject, filterStatus, filterAffiliation, filterPartner, filterDuty]);
-
-  // 소속 필터가 IBKS로 바뀌거나 전체로 초기화되면 협력사 필터도 초기화
-  useEffect(() => {
-    if (filterAffiliation !== "협력사") setFilterPartner("전체");
-  }, [filterAffiliation]);
 
   const stats = useMemo(() => {
     const total = employees.length;
@@ -174,16 +89,13 @@ export default function EmployeeManager() {
       return;
     }
 
-    // IBKS로 저장 시 partnerName 초기화
     const isMovingToPool = editingEmp.projectId === "pool";
     const prevEmp = editingEmp.id !== null ? employees.find(e => e.id === editingEmp.id) : null;
     const wasInPool = prevEmp?.projectId === "pool";
-    // 프로젝트가 실제로 변경되었는지 (pool 이탈, pool 진입, 다른 프로젝트로 전환) 확인
     const projectChanged = prevEmp && prevEmp.projectId !== editingEmp.projectId;
     const projMap = Object.fromEntries(projects.map(p => [p.id, p]));
     let nextHistory = editingEmp.assignmentHistory || [];
     if (projectChanged && prevEmp.projectId && prevEmp.projectId !== "pool") {
-      // 이전 프로젝트의 투입 이력을 archive
       nextHistory = archiveCurrentAssignment(prevEmp, projMap, { closeEndDate: true });
     }
 
@@ -192,7 +104,6 @@ export default function EmployeeManager() {
       partnerName: editingEmp.affiliation === "IBKS" ? "" : editingEmp.partnerName.trim(),
       duty: (editingEmp.duty || "").trim(),
       role: (editingEmp.role || "").trim(),
-      // pool 진입 시 pooledAt 새로 기록(이미 pool에 있던 경우 기존값 유지), pool 이탈 시 null
       pooledAt: isMovingToPool
         ? (wasInPool ? editingEmp.pooledAt || todayISO() : todayISO())
         : null,
@@ -233,7 +144,6 @@ export default function EmployeeManager() {
         .filter(e => !(e.projectId === id && e.affiliation === "협력사"))
         .map(e => {
           if (e.projectId !== id) return e;
-          // 투입 이력에 archive (오늘 날짜로 종료 처리)
           const newHistory = archiveCurrentAssignment(e, projMap, { closeEndDate: true });
           return { ...e, projectId: "pool", pooledAt: todayStr, assignmentHistory: newHistory };
         });
@@ -247,7 +157,6 @@ export default function EmployeeManager() {
       setProjects(prev => {
         const pool = prev.find(p => p.id === "pool");
         const others = prev.filter(p => p.id !== "pool");
-        // 대기 컬럼은 항상 맨 앞에 유지, 새 프로젝트는 마지막에 추가
         return [pool, ...others, { ...editingProj, id: newId }].filter(Boolean);
       });
     } else {
@@ -263,7 +172,6 @@ export default function EmployeeManager() {
       const emp = prev.find(x => x.id === empId);
       if (!emp) return prev;
       if (emp.projectId === projId) return prev;
-      // 협력사 직원을 대기(pool)로 이동 시 자동 삭제
       if (projId === "pool" && emp.affiliation === "협력사") {
         return prev.filter(x => x.id !== empId);
       }
@@ -275,33 +183,6 @@ export default function EmployeeManager() {
         return { ...x, projectId: projId, pooledAt: null, assignmentHistory: newHistory };
       });
     });
-  };
-
-  const toggleSort = (field) => {
-    if (sortField === field) setSortDir(sortDir === "asc" ? "desc" : "asc");
-    else { setSortField(field); setSortDir("asc"); }
-  };
-
-  const exportCSV = () => {
-    const header = ["ID", "직원명", "직급", "소속", "협력사명", "직무", "역할", "투입프로젝트", "투입일자", "철수일자", "상태"];
-    const rows = filtered.map((e) => [
-      e.id, e.name, e.rank, e.affiliation, e.partnerName || "",
-      e.duty || "", e.role || "",
-      projectById[e.projectId]?.name || "", e.startDate, e.endDate,
-      getStatus(e.startDate, e.endDate, e.projectId).label,
-    ]);
-    const csv = "\uFEFF" + [header, ...rows].map((r) => r.join(",")).join("\n");
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `직원투입현황_${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
-  };
-
-  const SortIcon = ({ field }) => {
-    if (sortField !== field) return <span className="text-slate-300 ml-1">↕</span>;
-    return <span className="text-slate-700 ml-1">{sortDir === "asc" ? "↑" : "↓"}</span>;
   };
 
   return (
@@ -320,7 +201,7 @@ export default function EmployeeManager() {
           <TabBtn active={view === "board"} onClick={() => setView("board")} icon={<FolderKanban size={15} />}>프로젝트 배치 보드</TabBtn>
         </div>
 
-        {/* 통계 카드: 모바일·태블릿은 가로 스크롤, 큰 화면(lg↑)에서만 5열 그리드 */}
+        {/* 통계 카드 */}
         <div className="mb-4 sm:mb-6 -mx-3 px-3 lg:mx-0 lg:px-0 overflow-x-auto lg:overflow-visible">
           <div className="flex lg:grid lg:grid-cols-5 gap-2 sm:gap-3 min-w-max lg:min-w-0">
             <StatCard icon={<Users size={18} />} label="전체 인원" value={stats.total} accent="slate" />
@@ -332,127 +213,15 @@ export default function EmployeeManager() {
         </div>
 
         {view === "list" && (
-          <>
-            <div className="bg-white rounded-lg border border-slate-200 p-3 sm:p-4 mb-4">
-              {/* 검색창: 모바일은 풀폭 별행 */}
-              <div className="relative mb-2">
-                <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                <input type="text" placeholder="직원명·직급·직무·역할·프로젝트·협력사명 검색" value={query} onChange={(e) => setQuery(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
-              </div>
-              {/* 필터 버튼들: 모바일에서 가로 스크롤 */}
-              <div className="flex gap-2 items-center overflow-x-auto -mx-3 px-3 sm:mx-0 sm:px-0 sm:flex-wrap pb-1 sm:pb-0">
-                <select value={filterAffiliation} onChange={(e) => setFilterAffiliation(e.target.value)} className="px-3 py-2 text-sm border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 flex-shrink-0">
-                  <option value="전체">소속 전체</option>
-                  <option value="IBKS">IBKS</option>
-                  <option value="협력사">협력사</option>
-                </select>
-                {filterAffiliation === "협력사" && (
-                  <select value={filterPartner} onChange={(e) => setFilterPartner(e.target.value)} className="px-3 py-2 text-sm border border-amber-300 rounded-md bg-amber-50/50 focus:outline-none focus:ring-2 focus:ring-amber-500 flex-shrink-0 max-w-[180px]">
-                    <option value="전체">협력사 전체</option>
-                    {partnerList.map(p => <option key={p} value={p}>{p}</option>)}
-                  </select>
-                )}
-                <select value={filterRank} onChange={(e) => setFilterRank(e.target.value)} className="px-3 py-2 text-sm border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 flex-shrink-0">
-                  <option value="전체">직급 전체</option>
-                  {RANKS.map((r) => <option key={r} value={r}>{r}</option>)}
-                </select>
-                <select value={filterDuty} onChange={(e) => setFilterDuty(e.target.value)} className="px-3 py-2 text-sm border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 flex-shrink-0 max-w-[160px]">
-                  <option value="전체">직무 전체</option>
-                  {dutyList.map(d => <option key={d} value={d}>{d}</option>)}
-                </select>
-                <select value={filterProject} onChange={(e) => setFilterProject(e.target.value)} className="px-3 py-2 text-sm border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 flex-shrink-0 max-w-[200px]">
-                  <option value="전체">프로젝트 전체</option>
-                  {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-                </select>
-                <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="px-3 py-2 text-sm border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 flex-shrink-0">
-                  <option value="전체">상태 전체</option>
-                  <option value="투입중">투입중</option>
-                  <option value="예정">예정</option>
-                  <option value="종료">종료</option>
-                  <option value="대기">대기</option>
-                </select>
-                <button onClick={exportCSV} className="px-3 py-2 text-sm border border-slate-300 rounded-md bg-white hover:bg-slate-50 flex items-center gap-1 text-slate-700 flex-shrink-0">
-                  <Download size={14} /> CSV
-                </button>
-                <button onClick={openNewEmp} className="px-3 py-2 text-sm bg-indigo-600 text-white rounded-md hover:bg-indigo-700 flex items-center gap-1 font-medium flex-shrink-0 ml-auto sm:ml-0">
-                  <Plus size={14} /> 등록
-                </button>
-              </div>
-              <div className="mt-2 text-xs text-slate-500">
-                총 <span className="font-semibold text-slate-700">{filtered.length}</span>건 / 전체 {employees.length}건
-              </div>
-            </div>
-
-            <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="text-sm whitespace-nowrap" style={{ minWidth: "1100px" }}>
-                  <thead>
-                    <tr className="bg-slate-50 border-b border-slate-200 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                      <Th field="id" sortField={sortField} onClick={toggleSort} SortIcon={SortIcon} className="w-12">No</Th>
-                      <Th field="name" sortField={sortField} onClick={toggleSort} SortIcon={SortIcon}>직원명</Th>
-                      <Th field="affiliation" sortField={sortField} onClick={toggleSort} SortIcon={SortIcon}>소속</Th>
-                      <Th field="rank" sortField={sortField} onClick={toggleSort} SortIcon={SortIcon}>직급</Th>
-                      <Th field="duty" sortField={sortField} onClick={toggleSort} SortIcon={SortIcon}>직무</Th>
-                      <Th field="role" sortField={sortField} onClick={toggleSort} SortIcon={SortIcon}>역할</Th>
-                      <Th field="project" sortField={sortField} onClick={toggleSort} SortIcon={SortIcon}>투입 프로젝트</Th>
-                      <Th field="startDate" sortField={sortField} onClick={toggleSort} SortIcon={SortIcon}>투입일자</Th>
-                      <Th field="endDate" sortField={sortField} onClick={toggleSort} SortIcon={SortIcon}>철수일자</Th>
-                      <th className="px-3 sm:px-4 py-3">상태</th>
-                      <th className="px-3 sm:px-4 py-3 text-right">관리</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {paged.length === 0 ? (
-                      <tr><td colSpan={11} className="px-4 py-12 text-center text-slate-400">검색 결과가 없습니다.</td></tr>
-                    ) : paged.map((e) => {
-                      const status = getStatus(e.startDate, e.endDate, e.projectId);
-                      const proj = projectById[e.projectId];
-                      const c = COLOR_MAP[proj?.color || "slate"];
-                      return (
-                        <tr key={e.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
-                          <td className="px-3 sm:px-4 py-3 text-slate-500">{e.id}</td>
-                          <td className="px-3 sm:px-4 py-3 font-medium text-slate-900">{e.name}</td>
-                          <td className="px-3 sm:px-4 py-3"><AffiliationBadge affiliation={e.affiliation} partnerName={e.partnerName} /></td>
-                          <td className="px-3 sm:px-4 py-3 text-slate-700">{e.rank}</td>
-                          <td className="px-3 sm:px-4 py-3 text-slate-700">{e.duty || <span className="text-slate-300">-</span>}</td>
-                          <td className="px-3 sm:px-4 py-3 text-slate-600">{e.role || <span className="text-slate-300">-</span>}</td>
-                          <td className="px-3 sm:px-4 py-3 text-slate-700">
-                            <span className="inline-flex items-center gap-1.5">
-                              <span className={`w-2 h-2 rounded-full ${c.dot} flex-shrink-0`}></span>
-                              {proj?.name || "-"}
-                            </span>
-                          </td>
-                          <td className="px-3 sm:px-4 py-3 text-slate-600 tabular-nums">{e.startDate}</td>
-                          <td className="px-3 sm:px-4 py-3 text-slate-600 tabular-nums">{e.endDate}</td>
-                          <td className="px-3 sm:px-4 py-3">
-                            <span className={`inline-block px-2 py-0.5 text-xs font-medium rounded border ${status.color}`}>{status.label}</span>
-                          </td>
-                          <td className="px-3 sm:px-4 py-3 text-right">
-                            <button onClick={() => openEditEmp(e)} className="p-1.5 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors" title="수정"><Edit2 size={14} /></button>
-                            <button onClick={() => removeEmp(e.id)} className="p-1.5 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded transition-colors ml-1" title="삭제"><Trash2 size={14} /></button>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-
-              {filtered.length > 0 && (
-                <div className="flex items-center justify-between px-3 sm:px-4 py-3 border-t border-slate-200 bg-slate-50 text-xs sm:text-sm">
-                  <div className="text-slate-600 whitespace-nowrap">{(page - 1) * pageSize + 1}–{Math.min(page * pageSize, filtered.length)} / {filtered.length}</div>
-                  <div className="flex gap-1">
-                    <button onClick={() => setPage(1)} disabled={page === 1} className="px-2 py-1 rounded border border-slate-300 bg-white disabled:opacity-40 hover:bg-slate-100">«</button>
-                    <button onClick={() => setPage(Math.max(1, page - 1))} disabled={page === 1} className="px-2 py-1 rounded border border-slate-300 bg-white disabled:opacity-40 hover:bg-slate-100">‹</button>
-                    <span className="px-3 py-1 bg-indigo-600 text-white rounded font-medium">{page} / {totalPages}</span>
-                    <button onClick={() => setPage(Math.min(totalPages, page + 1))} disabled={page === totalPages} className="px-2 py-1 rounded border border-slate-300 bg-white disabled:opacity-40 hover:bg-slate-100">›</button>
-                    <button onClick={() => setPage(totalPages)} disabled={page === totalPages} className="px-2 py-1 rounded border border-slate-300 bg-white disabled:opacity-40 hover:bg-slate-100">»</button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </>
+          <EmployeeListView
+            employees={employees}
+            projects={projects}
+            projectById={projectById}
+            partnerList={partnerList}
+            onNewEmp={openNewEmp}
+            onEditEmp={openEditEmp}
+            onDeleteEmp={removeEmp}
+          />
         )}
 
         {view === "board" && (
@@ -493,6 +262,7 @@ export default function EmployeeManager() {
         }}
       />
 
+      {/* 프로젝트 등록/수정 모달 */}
       {showProjModal && editingProj && (
         <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-2 sm:p-4 z-50" onClick={() => setShowProjModal(false)}>
           <div className="bg-white rounded-lg shadow-xl w-full max-w-md overflow-hidden flex flex-col max-h-[95vh]" onClick={(e) => e.stopPropagation()}>
@@ -559,14 +329,6 @@ function StatCard({ icon, label, value, accent }) {
   );
 }
 
-function Th({ field, sortField, onClick, SortIcon, className = "", children }) {
-  return (
-    <th className={`px-3 sm:px-4 py-3 cursor-pointer select-none hover:bg-slate-100 whitespace-nowrap ${className}`} onClick={() => onClick(field)}>
-      {children}<SortIcon field={field} />
-    </th>
-  );
-}
-
 function Field({ label, children }) {
   return (
     <div className="w-full min-w-0 max-w-full" style={{ width: "100%", minWidth: 0, maxWidth: "100%", boxSizing: "border-box" }}>
@@ -575,4 +337,3 @@ function Field({ label, children }) {
     </div>
   );
 }
-
