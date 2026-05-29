@@ -1,20 +1,49 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { X, Users, Briefcase, Calendar, FolderKanban, LayoutList, Building2 } from "lucide-react";
 import {
-  INITIAL_PROJECTS, COLOR_MAP, COLOR_OPTIONS,
+  COLOR_MAP, COLOR_OPTIONS,
 } from "./constants.js";
 import {
   todayISO, getStatus, archiveCurrentAssignment, generateSampleData,
 } from "./helpers.js";
+import { supabase } from "./supabaseClient";
+
+function dbToApp(row) {
+  if (!row) return row;
+  return {
+    ...row,
+    projectId: row.project_id ?? row.projectId,
+    startDate: row.start_date ?? row.startDate,
+    endDate: row.end_date ?? row.endDate,
+    partnerName: row.partner_name ?? row.partnerName,
+    pooledAt: row.pooled_at ?? row.pooledAt,
+    assignmentHistory: row.assignment_history ?? row.assignmentHistory ?? [],
+    assignmentType: row.assignment_type ?? row.assignmentType,
+  };
+}
+
+function appToDb(obj) {
+  const result = { ...obj };
+  if ('projectId' in result) { result.project_id = result.projectId; delete result.projectId; }
+  if ('startDate' in result) { result.start_date = result.startDate; delete result.startDate; }
+  if ('endDate' in result) { result.end_date = result.endDate; delete result.endDate; }
+  if ('partnerName' in result) { result.partner_name = result.partnerName; delete result.partnerName; }
+  if ('pooledAt' in result) { result.pooled_at = result.pooledAt; delete result.pooledAt; }
+  if ('assignmentHistory' in result) { result.assignment_history = result.assignmentHistory; delete result.assignmentHistory; }
+  if ('assignmentType' in result) { result.assignment_type = result.assignmentType; delete result.assignmentType; }
+  return result;
+}
+
 import EmployeeDetailModal from "./EmployeeDetailModal.jsx";
 import EmployeeFormModal from "./EmployeeFormModal.jsx";
 import ProjectBoardView from "./ProjectBoardView.jsx";
 import EmployeeListView from "./EmployeeListView.jsx";
 
 export default function EmployeeManager() {
-  const [projects, setProjects] = useState(INITIAL_PROJECTS);
+  const [projects, setProjects] = useState([{ id: "pool", name: "대기", color: "slate" }]);
   const [employees, setEmployees] = useState([]);
   const [view, setView] = useState("list");
+  const [loading, setLoading] = useState(false);
 
   const [showEmpModal, setShowEmpModal] = useState(false);
   const [editingEmp, setEditingEmp] = useState(null);
@@ -25,7 +54,31 @@ export default function EmployeeManager() {
   const [detailEmp, setDetailEmp] = useState(null);
 
   useEffect(() => {
-    setEmployees(generateSampleData(INITIAL_PROJECTS));
+    const fetchEmployees = async () => {
+      setLoading(true);
+      const { data, error } = await supabase.from("employees").select("*");
+      if (error) {
+        console.error("직원 조회 오류:", error);
+      } else {
+        setEmployees((data || []).map(dbToApp));
+      }
+      setLoading(false);
+    };
+    fetchEmployees();
+  }, []);
+
+  useEffect(() => {
+    const fetchProjects = async () => {
+      const { data, error } = await supabase.from("projects").select("*");
+      if (error) {
+        console.error("프로젝트 조회 오류:", error);
+        return;
+      }
+      const POOL = { id: "pool", name: "대기", color: "slate" };
+      const withoutPool = (data || []).filter(p => p.id !== "pool");
+      setProjects([POOL, ...withoutPool]);
+    };
+    fetchProjects();
   }, []);
 
   // 데이터 무결성 가드: 협력사 직원이 pool에 존재하면 자동 제거
@@ -63,8 +116,13 @@ export default function EmployeeManager() {
     setShowEmpModal(true);
   };
   const openEditEmp = (emp) => { setEditingEmp({ ...emp }); setShowEmpModal(true); };
-  const removeEmp = (id) => { if (confirm("이 직원 정보를 삭제하시겠습니까?")) setEmployees((prev) => prev.filter((e) => e.id !== id)); };
-  const saveEmp = () => {
+  const removeEmp = async (id) => {
+    if (!confirm("이 직원 정보를 삭제하시겠습니까?")) return;
+    const { error } = await supabase.from("employees").delete().eq("id", id);
+    if (error) { console.error(error); alert("삭제 실패"); return; }
+    setEmployees((prev) => prev.filter((e) => e.id !== id));
+  };
+  const saveEmp = async () => {
     if (!editingEmp.name.trim() || !editingEmp.startDate || !editingEmp.endDate) {
       alert("직원명, 투입일자, 철수일자는 필수 입력입니다."); return;
     }
@@ -83,6 +141,8 @@ export default function EmployeeManager() {
       }
       const ok = confirm(`협력사 직원은 '대기'로 이동 시 자동 삭제됩니다.\n\n${editingEmp.name} (${editingEmp.partnerName})\n\n계속하시겠습니까?`);
       if (!ok) return;
+      const { error: delErr } = await supabase.from("employees").delete().eq("id", editingEmp.id);
+      if (delErr) { console.error(delErr); alert("삭제 실패"); return; }
       setEmployees(prev => prev.filter(e => e.id !== editingEmp.id));
       setShowEmpModal(false);
       setEditingEmp(null);
@@ -109,11 +169,16 @@ export default function EmployeeManager() {
         : null,
       assignmentHistory: nextHistory,
     };
+    const { id: _id, ...rawPayload } = toSave;
+    const payload = appToDb(rawPayload);
     if (editingEmp.id === null) {
-      const newId = Math.max(0, ...employees.map((e) => e.id)) + 1;
-      setEmployees((prev) => [...prev, { ...toSave, id: newId, assignmentHistory: [] }]);
+      const { data, error } = await supabase.from("employees").insert([payload]).select().single();
+      if (error) { console.error(error); alert("저장 실패"); return; }
+      setEmployees((prev) => [...prev, dbToApp(data)]);
     } else {
-      setEmployees((prev) => prev.map((e) => (e.id === editingEmp.id ? toSave : e)));
+      const { data, error } = await supabase.from("employees").update(payload).eq("id", editingEmp.id).select().single();
+      if (error) { console.error(error); alert("수정 실패"); return; }
+      setEmployees((prev) => prev.map((e) => (e.id === editingEmp.id ? dbToApp(data) : e)));
     }
     setShowEmpModal(false);
     setEditingEmp(null);
@@ -124,7 +189,7 @@ export default function EmployeeManager() {
     setShowProjModal(true);
   };
   const openEditProj = (proj) => { setEditingProj({ ...proj }); setShowProjModal(true); };
-  const removeProj = (id) => {
+  const removeProj = async (id) => {
     if (id === "pool") { alert("대기 컬럼은 삭제할 수 없습니다."); return; }
     const members = employees.filter(e => e.projectId === id);
     const ibksCount = members.filter(e => e.affiliation === "IBKS").length;
@@ -137,6 +202,8 @@ export default function EmployeeManager() {
       msg = `이 프로젝트에 ${members.length}명이 배치되어 있습니다.\n삭제 시 ${parts.join(", ")}됩니다.\n\n계속하시겠습니까?`;
     }
     if (!confirm(msg)) return;
+    const { error } = await supabase.from("projects").delete().eq("id", id);
+    if (error) { console.error(error); alert("프로젝트 삭제 실패"); return; }
     const todayStr = todayISO();
     setEmployees(prev => {
       const projMap = Object.fromEntries(projects.map(p => [p.id, p]));
@@ -150,16 +217,26 @@ export default function EmployeeManager() {
     });
     setProjects(prev => prev.filter(p => p.id !== id));
   };
-  const saveProj = () => {
+  const saveProj = async () => {
     if (!editingProj.name.trim()) { alert("프로젝트명을 입력하세요."); return; }
     if (editingProj.id === null) {
-      const newId = `p_${Date.now()}`;
+      const { data, error } = await supabase
+        .from("projects")
+        .insert([{ name: editingProj.name, color: editingProj.color }])
+        .select()
+        .single();
+      if (error) { console.error(error); alert("프로젝트 저장 실패"); return; }
       setProjects(prev => {
         const pool = prev.find(p => p.id === "pool");
         const others = prev.filter(p => p.id !== "pool");
-        return [pool, ...others, { ...editingProj, id: newId }].filter(Boolean);
+        return [pool, ...others, data].filter(Boolean);
       });
     } else {
+      const { error } = await supabase
+        .from("projects")
+        .update({ name: editingProj.name, color: editingProj.color })
+        .eq("id", editingProj.id);
+      if (error) { console.error(error); alert("프로젝트 수정 실패"); return; }
       setProjects(prev => prev.map(p => p.id === editingProj.id ? editingProj : p));
     }
     setShowProjModal(false);
@@ -167,22 +244,32 @@ export default function EmployeeManager() {
   };
 
   // 드래그앤드롭으로 직원을 다른 프로젝트로 이동 (ProjectBoardView에서 호출)
-  const handleDropEmployee = (empId, projId) => {
-    setEmployees(prev => {
-      const emp = prev.find(x => x.id === empId);
-      if (!emp) return prev;
-      if (emp.projectId === projId) return prev;
-      if (projId === "pool" && emp.affiliation === "협력사") {
-        return prev.filter(x => x.id !== empId);
-      }
-      const projMap = Object.fromEntries(projects.map(p => [p.id, p]));
-      const newHistory = archiveCurrentAssignment(emp, projMap, { closeEndDate: true });
-      return prev.map(x => {
-        if (x.id !== empId) return x;
-        if (projId === "pool") return { ...x, projectId: projId, pooledAt: todayISO(), assignmentHistory: newHistory };
-        return { ...x, projectId: projId, pooledAt: null, assignmentHistory: newHistory };
-      });
-    });
+  const handleDropEmployee = async (empId, projId) => {
+    const emp = employees.find(x => x.id === empId);
+    if (!emp) return;
+    if (emp.projectId === projId) return;
+
+    if (projId === "pool" && emp.affiliation === "협력사") {
+      const { error } = await supabase.from("employees").delete().eq("id", empId);
+      if (error) { console.error(error); alert("삭제 실패"); return; }
+      setEmployees(prev => prev.filter(x => x.id !== empId));
+      return;
+    }
+
+    const projMap = Object.fromEntries(projects.map(p => [p.id, p]));
+    const newHistory = archiveCurrentAssignment(emp, projMap, { closeEndDate: true });
+    const updatePayload = appToDb(projId === "pool"
+      ? { projectId: projId, pooledAt: todayISO(), assignmentHistory: newHistory }
+      : { projectId: projId, pooledAt: null, assignmentHistory: newHistory });
+
+    const { error } = await supabase.from("employees").update(updatePayload).eq("id", empId);
+    if (error) { console.error(error); alert("배치 변경 실패"); return; }
+
+    setEmployees(prev => prev.map(x => {
+      if (x.id !== empId) return x;
+      if (projId === "pool") return { ...x, projectId: projId, pooledAt: todayISO(), assignmentHistory: newHistory };
+      return { ...x, projectId: projId, pooledAt: null, assignmentHistory: newHistory };
+    }));
   };
 
   return (
@@ -212,7 +299,11 @@ export default function EmployeeManager() {
           </div>
         </div>
 
-        {view === "list" && (
+        {loading && (
+          <div className="text-center py-10 text-slate-400">데이터 불러오는 중...</div>
+        )}
+
+        {!loading && view === "list" && (
           <EmployeeListView
             employees={employees}
             projects={projects}
@@ -224,7 +315,7 @@ export default function EmployeeManager() {
           />
         )}
 
-        {view === "board" && (
+        {!loading && view === "board" && (
           <ProjectBoardView
             employees={employees}
             projects={projects}
