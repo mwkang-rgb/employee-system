@@ -1,12 +1,12 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { X, Users, Briefcase, Calendar, FolderKanban, LayoutList, Building2 } from "lucide-react";
-import {
-  COLOR_MAP, COLOR_OPTIONS,
-} from "./constants.js";
-import {
-  todayISO, getStatus, archiveCurrentAssignment, generateSampleData,
-} from "./helpers.js";
+import { COLOR_MAP, COLOR_OPTIONS } from "./constants.js";
+import { todayISO, getStatus, archiveCurrentAssignment } from "./helpers.js";
 import { supabase } from "./supabaseClient";
+import EmployeeDetailModal from "./EmployeeDetailModal.jsx";
+import EmployeeFormModal from "./EmployeeFormModal.jsx";
+import ProjectBoardView from "./ProjectBoardView.jsx";
+import EmployeeListView from "./EmployeeListView.jsx";
 
 function dbToApp(row) {
   if (!row) return row;
@@ -33,11 +33,6 @@ function appToDb(obj) {
   if ('assignmentType' in result) { result.assignment_type = result.assignmentType; delete result.assignmentType; }
   return result;
 }
-
-import EmployeeDetailModal from "./EmployeeDetailModal.jsx";
-import EmployeeFormModal from "./EmployeeFormModal.jsx";
-import ProjectBoardView from "./ProjectBoardView.jsx";
-import EmployeeListView from "./EmployeeListView.jsx";
 
 export default function EmployeeManager() {
   const [projects, setProjects] = useState([{ id: "pool", name: "대기", color: "slate" }]);
@@ -80,14 +75,6 @@ export default function EmployeeManager() {
     };
     fetchProjects();
   }, []);
-
-  // 데이터 무결성 가드: 협력사 직원이 pool에 존재하면 자동 제거
-  useEffect(() => {
-    const hasInvalid = employees.some(e => e.affiliation === "협력사" && e.projectId === "pool");
-    if (hasInvalid) {
-      setEmployees(prev => prev.filter(e => !(e.affiliation === "협력사" && e.projectId === "pool")));
-    }
-  }, [employees]);
 
   const projectById = useMemo(() => Object.fromEntries(projects.map(p => [p.id, p])), [projects]);
 
@@ -202,19 +189,37 @@ export default function EmployeeManager() {
       msg = `이 프로젝트에 ${members.length}명이 배치되어 있습니다.\n삭제 시 ${parts.join(", ")}됩니다.\n\n계속하시겠습니까?`;
     }
     if (!confirm(msg)) return;
+    const todayStr = todayISO();
+    const projMap = Object.fromEntries(projects.map(p => [p.id, p]));
+
+    // DB: 협력사 직원 삭제
+    const { error: partnerErr } = await supabase.from("employees")
+      .delete().eq("project_id", id).eq("affiliation", "협력사");
+    if (partnerErr) { console.error(partnerErr); alert("프로젝트 삭제 실패"); return; }
+
+    // DB: IBKS 직원 대기로 이동 (assignment_history가 직원마다 달라 개별 업데이트)
+    const ibksMembers = members.filter(e => e.affiliation === "IBKS");
+    for (const emp of ibksMembers) {
+      const newHistory = archiveCurrentAssignment(emp, projMap, { closeEndDate: true });
+      const { error: empErr } = await supabase.from("employees")
+        .update(appToDb({ projectId: "pool", pooledAt: todayStr, assignmentHistory: newHistory }))
+        .eq("id", emp.id);
+      if (empErr) { console.error(empErr); }
+    }
+
+    // DB: 프로젝트 삭제
     const { error } = await supabase.from("projects").delete().eq("id", id);
     if (error) { console.error(error); alert("프로젝트 삭제 실패"); return; }
-    const todayStr = todayISO();
-    setEmployees(prev => {
-      const projMap = Object.fromEntries(projects.map(p => [p.id, p]));
-      return prev
-        .filter(e => !(e.projectId === id && e.affiliation === "협력사"))
-        .map(e => {
-          if (e.projectId !== id) return e;
-          const newHistory = archiveCurrentAssignment(e, projMap, { closeEndDate: true });
-          return { ...e, projectId: "pool", pooledAt: todayStr, assignmentHistory: newHistory };
-        });
-    });
+
+    // 로컬 state 동기화
+    setEmployees(prev => prev
+      .filter(e => !(e.projectId === id && e.affiliation === "협력사"))
+      .map(e => {
+        if (e.projectId !== id) return e;
+        const newHistory = archiveCurrentAssignment(e, projMap, { closeEndDate: true });
+        return { ...e, projectId: "pool", pooledAt: todayStr, assignmentHistory: newHistory };
+      })
+    );
     setProjects(prev => prev.filter(p => p.id !== id));
   };
   const saveProj = async () => {
