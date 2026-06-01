@@ -216,7 +216,7 @@ export default function EmployeeListView({
                 <Th field="startDate" sortField={sortField} onClick={toggleSort} SortIcon={SortIcon}>투입일자</Th>
                 <Th field="endDate" sortField={sortField} onClick={toggleSort} SortIcon={SortIcon}>철수일자</Th>
                 <th className="px-3 sm:px-4 py-3 text-left">상태</th>
-                <th className="px-3 sm:px-4 py-3 text-right">관리</th>
+                <th className="px-3 sm:px-4 py-3 text-left">관리</th>
               </tr>
             </thead>
             <tbody>
