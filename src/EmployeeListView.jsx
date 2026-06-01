@@ -206,7 +206,7 @@ export default function EmployeeListView({
           <table className="w-full text-sm whitespace-nowrap" style={{ minWidth: "1100px" }}>
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                <Th field="id" sortField={sortField} onClick={toggleSort} SortIcon={SortIcon} className="w-12">No</Th>
+                <Th field="id" sortField={sortField} onClick={toggleSort} SortIcon={SortIcon} className="w-12 text-center">No</Th>
                 <Th field="name" sortField={sortField} onClick={toggleSort} SortIcon={SortIcon}>직원명</Th>
                 <Th field="affiliation" sortField={sortField} onClick={toggleSort} SortIcon={SortIcon}>소속</Th>
                 <Th field="rank" sortField={sortField} onClick={toggleSort} SortIcon={SortIcon}>직급</Th>
@@ -215,7 +215,7 @@ export default function EmployeeListView({
                 <Th field="project" sortField={sortField} onClick={toggleSort} SortIcon={SortIcon}>투입 프로젝트</Th>
                 <Th field="startDate" sortField={sortField} onClick={toggleSort} SortIcon={SortIcon}>투입일자</Th>
                 <Th field="endDate" sortField={sortField} onClick={toggleSort} SortIcon={SortIcon}>철수일자</Th>
-                <th className="px-3 sm:px-4 py-3 text-left">상태</th>
+                <th className="px-3 sm:px-4 py-3 text-center">상태</th>
                 <th className="px-3 sm:px-4 py-3 text-center">관리</th>
               </tr>
             </thead>
@@ -228,7 +228,7 @@ export default function EmployeeListView({
                 const c = COLOR_MAP[proj?.color || "slate"];
                 return (
                   <tr key={e.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
-                    <td className="px-3 sm:px-4 py-3 text-left text-slate-500">{e.id}</td>
+                    <td className="px-3 sm:px-4 py-3 text-center text-slate-500">{e.id}</td>
                     <td className="px-3 sm:px-4 py-3 text-left font-medium text-slate-900">{e.name}</td>
                     <td className="px-3 sm:px-4 py-3 text-left"><AffiliationBadge affiliation={e.affiliation} partnerName={e.partnerName} /></td>
                     <td className="px-3 sm:px-4 py-3 text-left text-slate-700">{e.rank}</td>
@@ -242,7 +242,7 @@ export default function EmployeeListView({
                     </td>
                     <td className="px-3 sm:px-4 py-3 text-left text-slate-600 tabular-nums">{e.startDate}</td>
                     <td className="px-3 sm:px-4 py-3 text-left text-slate-600 tabular-nums">{e.endDate}</td>
-                    <td className="px-3 sm:px-4 py-3 text-left">
+                    <td className="px-3 sm:px-4 py-3 text-center">
                       <span className={`inline-block px-2 py-0.5 text-xs font-medium rounded border ${status.color}`}>{status.label}</span>
                     </td>
                     <td className="px-3 sm:px-4 py-3">
