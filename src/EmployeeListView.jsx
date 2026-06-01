@@ -216,7 +216,7 @@ export default function EmployeeListView({
                 <Th field="startDate" sortField={sortField} onClick={toggleSort} SortIcon={SortIcon}>투입일자</Th>
                 <Th field="endDate" sortField={sortField} onClick={toggleSort} SortIcon={SortIcon}>철수일자</Th>
                 <th className="px-3 sm:px-4 py-3 text-left">상태</th>
-                <th className="px-3 sm:px-4 py-3 text-left">관리</th>
+                <th className="px-3 sm:px-4 py-3 text-center">관리</th>
               </tr>
             </thead>
             <tbody>
@@ -245,9 +245,11 @@ export default function EmployeeListView({
                     <td className="px-3 sm:px-4 py-3 text-left">
                       <span className={`inline-block px-2 py-0.5 text-xs font-medium rounded border ${status.color}`}>{status.label}</span>
                     </td>
-                    <td className="px-3 sm:px-4 py-3 text-right">
-                      <button onClick={() => onEditEmp(e)} className="p-1.5 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors" title="수정"><Edit2 size={14} /></button>
-                      <button onClick={() => onDeleteEmp(e.id)} className="p-1.5 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded transition-colors ml-1" title="삭제"><Trash2 size={14} /></button>
+                    <td className="px-3 sm:px-4 py-3">
+                      <div className="flex justify-center gap-1">
+                        <button onClick={() => onEditEmp(e)} className="p-1.5 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors" title="수정"><Edit2 size={14} /></button>
+                        <button onClick={() => onDeleteEmp(e.id)} className="p-1.5 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded transition-colors" title="삭제"><Trash2 size={14} /></button>
+                      </div>
                     </td>
                   </tr>
                 );
