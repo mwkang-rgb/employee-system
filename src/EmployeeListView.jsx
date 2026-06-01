@@ -203,7 +203,7 @@ export default function EmployeeListView({
       {/* 직원 테이블 */}
       <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="text-sm whitespace-nowrap" style={{ minWidth: "1100px" }}>
+          <table className="w-full text-sm whitespace-nowrap" style={{ minWidth: "1100px" }}>
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
                 <Th field="id" sortField={sortField} onClick={toggleSort} SortIcon={SortIcon} className="w-12">No</Th>
