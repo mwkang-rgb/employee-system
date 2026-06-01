@@ -25,7 +25,7 @@ function AffiliationBadge({ affiliation, partnerName }) {
 function Th({ field, sortField, onClick, SortIcon, className = "", children }) {
   return (
     <th
-      className={`px-3 sm:px-4 py-3 cursor-pointer select-none hover:bg-slate-100 whitespace-nowrap ${className}`}
+      className={`px-3 sm:px-4 py-3 text-left cursor-pointer select-none hover:bg-slate-100 whitespace-nowrap ${className}`}
       onClick={() => onClick(field)}
     >
       {children}<SortIcon field={field} />
@@ -215,7 +215,7 @@ export default function EmployeeListView({
                 <Th field="project" sortField={sortField} onClick={toggleSort} SortIcon={SortIcon}>투입 프로젝트</Th>
                 <Th field="startDate" sortField={sortField} onClick={toggleSort} SortIcon={SortIcon}>투입일자</Th>
                 <Th field="endDate" sortField={sortField} onClick={toggleSort} SortIcon={SortIcon}>철수일자</Th>
-                <th className="px-3 sm:px-4 py-3">상태</th>
+                <th className="px-3 sm:px-4 py-3 text-left">상태</th>
                 <th className="px-3 sm:px-4 py-3 text-right">관리</th>
               </tr>
             </thead>
@@ -228,21 +228,21 @@ export default function EmployeeListView({
                 const c = COLOR_MAP[proj?.color || "slate"];
                 return (
                   <tr key={e.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
-                    <td className="px-3 sm:px-4 py-3 text-slate-500">{e.id}</td>
-                    <td className="px-3 sm:px-4 py-3 font-medium text-slate-900">{e.name}</td>
-                    <td className="px-3 sm:px-4 py-3"><AffiliationBadge affiliation={e.affiliation} partnerName={e.partnerName} /></td>
-                    <td className="px-3 sm:px-4 py-3 text-slate-700">{e.rank}</td>
-                    <td className="px-3 sm:px-4 py-3 text-slate-700">{e.duty || <span className="text-slate-300">-</span>}</td>
-                    <td className="px-3 sm:px-4 py-3 text-slate-600">{e.role || <span className="text-slate-300">-</span>}</td>
-                    <td className="px-3 sm:px-4 py-3 text-slate-700">
+                    <td className="px-3 sm:px-4 py-3 text-left text-slate-500">{e.id}</td>
+                    <td className="px-3 sm:px-4 py-3 text-left font-medium text-slate-900">{e.name}</td>
+                    <td className="px-3 sm:px-4 py-3 text-left"><AffiliationBadge affiliation={e.affiliation} partnerName={e.partnerName} /></td>
+                    <td className="px-3 sm:px-4 py-3 text-left text-slate-700">{e.rank}</td>
+                    <td className="px-3 sm:px-4 py-3 text-left text-slate-700">{e.duty || <span className="text-slate-300">-</span>}</td>
+                    <td className="px-3 sm:px-4 py-3 text-left text-slate-600">{e.role || <span className="text-slate-300">-</span>}</td>
+                    <td className="px-3 sm:px-4 py-3 text-left text-slate-700">
                       <span className="inline-flex items-center gap-1.5">
                         <span className={`w-2 h-2 rounded-full ${c.dot} flex-shrink-0`}></span>
                         {proj?.name || "-"}
                       </span>
                     </td>
-                    <td className="px-3 sm:px-4 py-3 text-slate-600 tabular-nums">{e.startDate}</td>
-                    <td className="px-3 sm:px-4 py-3 text-slate-600 tabular-nums">{e.endDate}</td>
-                    <td className="px-3 sm:px-4 py-3">
+                    <td className="px-3 sm:px-4 py-3 text-left text-slate-600 tabular-nums">{e.startDate}</td>
+                    <td className="px-3 sm:px-4 py-3 text-left text-slate-600 tabular-nums">{e.endDate}</td>
+                    <td className="px-3 sm:px-4 py-3 text-left">
                       <span className={`inline-block px-2 py-0.5 text-xs font-medium rounded border ${status.color}`}>{status.label}</span>
                     </td>
                     <td className="px-3 sm:px-4 py-3 text-right">
