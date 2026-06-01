@@ -48,30 +48,31 @@ export default function EmployeeManager() {
   // 카드 상세 보기 팝업 (대기 카드 클릭 시)
   const [detailEmp, setDetailEmp] = useState(null);
 
+  // 직원 조회
   useEffect(() => {
+    if (!supabase) {
+      console.error("Supabase 미연결 — 환경변수를 확인하세요");
+      setLoading(false);
+      return;
+    }
     const fetchEmployees = async () => {
       setLoading(true);
       const { data, error } = await supabase.from("employees").select("*");
-      if (error) {
-        console.error("직원 조회 오류:", error);
-      } else {
-        setEmployees((data || []).map(dbToApp));
-      }
+      if (error) console.error("직원 조회 오류:", error);
+      else setEmployees((data || []).map(dbToApp));
       setLoading(false);
     };
     fetchEmployees();
   }, []);
 
+  // 프로젝트 조회
   useEffect(() => {
+    if (!supabase) return;
     const fetchProjects = async () => {
       const { data, error } = await supabase.from("projects").select("*");
-      if (error) {
-        console.error("프로젝트 조회 오류:", error);
-        return;
-      }
+      if (error) { console.error("프로젝트 조회 오류:", error); return; }
       const POOL = { id: "pool", name: "대기", color: "slate" };
-      const withoutPool = (data || []).filter(p => p.id !== "pool");
-      setProjects([POOL, ...withoutPool]);
+      setProjects([POOL, ...(data || []).filter(p => p.id !== "pool")]);
     };
     fetchProjects();
   }, []);
