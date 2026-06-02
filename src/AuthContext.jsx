@@ -76,7 +76,7 @@ export function AuthProvider({ children }) {
     setAuthError(null);
     const { error } = await supabase.auth.signUp({ email, password });
     if (error) {
-      setAuthError(error.message);
+      setAuthError(toKoreanError(error.message));
       return { ok: false };
     }
     // 이메일 확인이 필요한 경우 Supabase가 자동 처리
