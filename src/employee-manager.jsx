@@ -1,5 +1,7 @@
 import React, { useState, useMemo, useEffect } from "react";
-import { X, Users, Briefcase, Calendar, FolderKanban, LayoutList, Building2 } from "lucide-react";
+import { X, Users, Briefcase, Calendar, FolderKanban, LayoutList, Building2, LogOut } from "lucide-react";
+import { useRealtimeSync } from "./useRealtimeSync.js";
+import { useAuth } from "./AuthContext.jsx";
 import { COLOR_MAP, COLOR_OPTIONS } from "./constants.js";
 import { todayISO, getStatus, archiveCurrentAssignment } from "./helpers.js";
 import { supabase } from "./supabaseClient";
@@ -37,6 +39,10 @@ function appToDb(obj) {
 export default function EmployeeManager() {
   const [projects, setProjects] = useState([{ id: "pool", name: "대기", color: "slate" }]);
   const [employees, setEmployees] = useState([]);
+
+  const { session, user, signOut } = useAuth();
+  useRealtimeSync({ setEmployees, setProjects, enabled: !!session });
+
   const [view, setView] = useState("list");
   const [loading, setLoading] = useState(false);
 
@@ -286,7 +292,19 @@ export default function EmployeeManager() {
             <div className="text-[10px] sm:text-xs font-semibold tracking-widest text-slate-500 uppercase mb-1">SI개발본부 · 인력운영</div>
             <h1 className="text-lg sm:text-2xl font-bold text-slate-900">직원 투입현황 관리</h1>
           </div>
-          <div className="text-[10px] sm:text-xs text-slate-500 flex-shrink-0">기준일 {new Date().toISOString().slice(0, 10)}</div>
+          <div className="flex items-center gap-3 flex-shrink-0">
+            <div className="text-[10px] sm:text-xs text-slate-500 hidden sm:block">기준일 {new Date().toISOString().slice(0, 10)}</div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-slate-500 hidden sm:block">{user?.email}</span>
+              <button
+                onClick={signOut}
+                className="px-3 py-1.5 text-xs border border-slate-200 rounded-md bg-white hover:bg-slate-50 text-slate-600 flex items-center gap-1.5"
+              >
+                <LogOut size={12} />
+                로그아웃
+              </button>
+            </div>
+          </div>
         </div>
 
         <div className="flex gap-1 mb-4 sm:mb-5 border-b border-slate-200 overflow-x-auto -mx-3 px-3 sm:mx-0 sm:px-0">
