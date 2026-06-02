@@ -23,6 +23,7 @@ const ERROR_MAP = {
   "Email not confirmed": "이메일 인증이 완료되지 않았습니다. 받은 편지함을 확인해 주세요.",
   "User already registered": "이미 가입된 이메일입니다.",
   "Password should be at least 6 characters": "비밀번호는 6자 이상이어야 합니다.",
+  "Password should contain at least one character of each": "비밀번호는 영문 대소문자, 숫자, 특수문자를 각각 하나 이상 포함해야 합니다.",
   "Unable to validate email address: invalid format": "올바른 이메일 형식이 아닙니다.",
   "signup requires a valid password": "유효한 비밀번호를 입력해 주세요.",
   "Email rate limit exceeded": "잠시 후 다시 시도해 주세요.",
