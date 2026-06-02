@@ -10,7 +10,7 @@
  */
 
 import { useState } from "react";
-import { Mail, Lock, LogIn, UserPlus, Chrome, AlertCircle, Loader2 } from "lucide-react";
+import { Mail, Lock, LogIn, UserPlus, AlertCircle, Loader2 } from "lucide-react";
 import { useAuth } from "./AuthContext.jsx";
 
 export default function LoginPage() {
