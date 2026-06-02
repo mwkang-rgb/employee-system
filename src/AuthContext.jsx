@@ -18,6 +18,27 @@
 import { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { supabase } from "./supabaseClient.js";
 
+const ERROR_MAP = {
+  "Invalid login credentials": "이메일 또는 비밀번호가 올바르지 않습니다.",
+  "Email not confirmed": "이메일 인증이 완료되지 않았습니다. 받은 편지함을 확인해 주세요.",
+  "User already registered": "이미 가입된 이메일입니다.",
+  "Password should be at least 6 characters": "비밀번호는 6자 이상이어야 합니다.",
+  "Unable to validate email address: invalid format": "올바른 이메일 형식이 아닙니다.",
+  "signup requires a valid password": "유효한 비밀번호를 입력해 주세요.",
+  "Email rate limit exceeded": "잠시 후 다시 시도해 주세요.",
+};
+
+function toKoreanError(message) {
+  if (!message) return message;
+  for (const [en, ko] of Object.entries(ERROR_MAP)) {
+    if (message.includes(en)) return ko;
+  }
+  if (message.toLowerCase().includes("rate limit") || message.includes("60 seconds")) {
+    return "보안을 위해 잠시 후 다시 시도해 주세요.";
+  }
+  return message;
+}
+
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
@@ -46,7 +67,7 @@ export function AuthProvider({ children }) {
   const signInEmail = useCallback(async (email, password) => {
     setAuthError(null);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) setAuthError(error.message);
+    if (error) setAuthError(toKoreanError(error.message));
     return !error;
   }, []);
 
@@ -74,7 +95,7 @@ export function AuthProvider({ children }) {
         },
       },
     });
-    if (error) setAuthError(error.message);
+    if (error) setAuthError(toKoreanError(error.message));
   }, []);
 
   const signOut = useCallback(async () => {
