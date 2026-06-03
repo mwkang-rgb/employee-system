@@ -26,6 +26,7 @@ export default function EmployeeFormModal({
   if (!editingEmp) return null;
 
   const isNew = editingEmp.id === null;
+  const isPool = editingEmp.projectId === "pool";
 
   return (
     <div
@@ -152,13 +153,14 @@ export default function EmployeeFormModal({
             )}
           </Field>
 
-          <Field label="투입일자 *">
+          <Field label={isPool ? "투입일자" : "투입일자 *"}>
             <div style={{ width: "100%", maxWidth: "100%", overflow: "hidden", boxSizing: "border-box" }}>
               <input
                 type="date"
-                value={editingEmp.startDate}
+                value={editingEmp.startDate || ""}
                 onChange={(e) => setEditingEmp({ ...editingEmp, startDate: e.target.value })}
-                className="block px-3 py-2 text-base sm:text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                disabled={isPool}
+                className={`block px-3 py-2 text-base sm:text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 ${isPool ? "bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed" : "border-slate-300"}`}
                 style={{
                   width: "100%", minWidth: 0, maxWidth: "100%", boxSizing: "border-box",
                   minHeight: "42px", WebkitAppearance: "textfield", MozAppearance: "textfield",
@@ -167,13 +169,14 @@ export default function EmployeeFormModal({
             </div>
           </Field>
 
-          <Field label="철수일자 *">
+          <Field label={isPool ? "철수일자" : "철수일자 *"}>
             <div style={{ width: "100%", maxWidth: "100%", overflow: "hidden", boxSizing: "border-box" }}>
               <input
                 type="date"
-                value={editingEmp.endDate}
+                value={editingEmp.endDate || ""}
                 onChange={(e) => setEditingEmp({ ...editingEmp, endDate: e.target.value })}
-                className="block px-3 py-2 text-base sm:text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                disabled={isPool}
+                className={`block px-3 py-2 text-base sm:text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 ${isPool ? "bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed" : "border-slate-300"}`}
                 style={{
                   width: "100%", minWidth: 0, maxWidth: "100%", boxSizing: "border-box",
                   minHeight: "42px", WebkitAppearance: "textfield", MozAppearance: "textfield",
