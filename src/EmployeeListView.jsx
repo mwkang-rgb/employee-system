@@ -140,7 +140,9 @@ export default function EmployeeListView({
     const rows = filtered.map((e) => [
       e.id, e.name, e.rank, e.affiliation, e.partnerName || "",
       e.duty || "", e.role || "",
-      projectById[e.projectId]?.name || "", e.startDate, e.endDate,
+      projectById[e.projectId]?.name || "",
+      (!e.startDate || e.startDate === "1111-01-01") ? "-" : e.startDate,
+      (!e.endDate || e.endDate === "9999-12-31") ? "-" : e.endDate,
       resolveStatus(e, projectById[e.projectId]?.name).label,
     ]);
     const csv = "﻿" + [header, ...rows].map((r) => r.join(",")).join("\n");
