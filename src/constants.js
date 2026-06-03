@@ -28,6 +28,7 @@ export const POOL_SORT_OPTIONS = [
   { value: "duty", label: "직무" },
   { value: "name", label: "이름" },
   { value: "added", label: "등록순" },
+  { value: "manual", label: "수동 정렬" },
 ];
 
 export const INITIAL_PROJECTS = [

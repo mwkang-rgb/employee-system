@@ -1,7 +1,18 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Search, Edit2, Trash2, GripVertical, FolderPlus, Building2, Briefcase, UserCheck, Clock, CalendarClock, CheckCircle2, LogOut, Timer, AlertTriangle } from "lucide-react";
 import { COLOR_MAP, POOL_SORT_OPTIONS, RANK_ORDER } from "./constants.js";
 import { resolveStatus, calcWaitingDuration, formatWaitingLabel } from "./helpers.js";
+
+const BOARD_ORDER_KEY = "board-card-orders";
+const BOARD_POOL_SORT_KEY = "board-pool-sort";
+const loadOrders = () => {
+  try { return JSON.parse(localStorage.getItem(BOARD_ORDER_KEY) || "{}"); }
+  catch { return {}; }
+};
+const loadPoolSort = () => {
+  try { return localStorage.getItem(BOARD_POOL_SORT_KEY) || "waitingDays"; }
+  catch { return "waitingDays"; }
+};
 
 // 소속 배지 (이 파일 내부 로컬 컴포넌트)
 function AffiliationBadge({ affiliation, partnerName }) {
@@ -37,50 +48,191 @@ export default function ProjectBoardView({
   const [boardQuery, setBoardQuery] = useState("");
   const [dragId, setDragId] = useState(null);
   const [dragOverProj, setDragOverProj] = useState(null);
-  const [poolSortField, setPoolSortField] = useState("waitingDays");
+  const [poolSortField, setPoolSortFieldState] = useState(loadPoolSort);
   const [poolSortDir, setPoolSortDir] = useState("desc");
   const [showDropModal, setShowDropModal] = useState(false);
   const [pendingDrop, setPendingDrop] = useState(null); // { empId, projId }
 
-  // ── 드래그 핸들러 ──────────────────────────────────────────
-  const handleDragStart = (e, empId) => {
-    setDragId(empId);
-    e.dataTransfer.effectAllowed = "move";
-    e.dataTransfer.setData("text/plain", String(empId));
+  // 컬럼 내 카드 순서 관련 상태
+  const [columnOrders, setColumnOrders] = useState(loadOrders);
+  const [dragOverCard, setDragOverCard] = useState(null); // { empId, above }
+  // ref 사용: 이벤트 핸들러에서 최신 값 참조 (stale closure 방지)
+  const dragSourceColRef = useRef(null);
+  const columnMembersRef = useRef({});
+
+  const setPoolSortField = (val) => {
+    localStorage.setItem(BOARD_POOL_SORT_KEY, val);
+    setPoolSortFieldState(val);
   };
-  const handleDragEnd = () => { setDragId(null); setDragOverProj(null); };
-  const handleDragOver = (e, projId) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = "move";
-    if (dragOverProj !== projId) setDragOverProj(projId);
+
+  const saveColumnOrder = (colId, ids) => {
+    setColumnOrders(prev => {
+      const next = { ...prev, [colId]: ids };
+      localStorage.setItem(BOARD_ORDER_KEY, JSON.stringify(next));
+      return next;
+    });
   };
-  const handleDragLeave = (e) => {
-    if (e.currentTarget.contains(e.relatedTarget)) return;
-    setDragOverProj(null);
+
+  // savedOrder 순서 기준으로 members 정렬, 순서에 없는 항목은 뒤에 추가
+  const applyColumnOrder = (members, colId) => {
+    const savedOrder = columnOrders[colId];
+    if (!savedOrder || savedOrder.length === 0) return members;
+    const memberMap = Object.fromEntries(members.map(m => [m.id, m]));
+    const ordered = savedOrder.filter(id => memberMap[id]).map(id => memberMap[id]);
+    const rest = members.filter(m => !savedOrder.includes(m.id));
+    return [...ordered, ...rest];
   };
-  const handleDrop = (e, projId) => {
-    e.preventDefault();
-    const id = Number(e.dataTransfer.getData("text/plain"));
-    setDragId(null);
-    setDragOverProj(null);
-    if (!Number.isNaN(id)) {
-      const draggedEmp = employees.find(x => x.id === id);
-      const isTargetPool = projId === "pool";
-      const isTipRuYeJeong = draggedEmp?.assignmentType === "투입예정" ||
-        empStatuses[draggedEmp?.id]?.label === "투입예정";
-      if (isTipRuYeJeong && !isTargetPool) {
-        setPendingDrop({ empId: id, projId });
-        setShowDropModal(true);
-      } else {
-        onDropEmployee(id, projId);
-      }
-    }
+
+  // 현재 컬럼의 저장 순서 배열 반환 (저장된 순서 + 미포함 항목 후방 추가)
+  const getBaseOrder = (colId, currentIds) => {
+    const savedOrder = columnOrders[colId] || [];
+    const savedFiltered = savedOrder.filter(id => currentIds.includes(id));
+    const unsaved = currentIds.filter(id => !savedOrder.includes(id));
+    return [...savedFiltered, ...unsaved];
   };
 
   const projectById = Object.fromEntries(projects.map(p => [p.id, p]));
   const empStatuses = Object.fromEntries(
     employees.map(e => [e.id, resolveStatus(e, projectById[e.projectId]?.name)])
   );
+
+  // ── 드래그 핸들러 ──────────────────────────────────────────
+
+  const handleDragStart = (e, empId, colId) => {
+    setDragId(empId);
+    dragSourceColRef.current = colId;
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", String(empId));
+  };
+
+  const handleDragEnd = () => {
+    setDragId(null);
+    setDragOverProj(null);
+    setDragOverCard(null);
+    dragSourceColRef.current = null;
+  };
+
+  // 컬럼 영역 dragover (빈 공간이나 카드 없는 컬럼)
+  const handleDragOver = (e, projId) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    if (dragOverProj !== projId) setDragOverProj(projId);
+  };
+
+  const handleDragLeave = (e) => {
+    if (e.currentTarget.contains(e.relatedTarget)) return;
+    setDragOverProj(null);
+    setDragOverCard(null);
+  };
+
+  // 컬럼 영역 drop (빈 공간에 드롭 — 컬럼 간 이동)
+  const handleDrop = (e, projId) => {
+    e.preventDefault();
+    const id = Number(e.dataTransfer.getData("text/plain"));
+    const srcCol = dragSourceColRef.current;
+    setDragId(null);
+    setDragOverProj(null);
+    setDragOverCard(null);
+    dragSourceColRef.current = null;
+
+    if (Number.isNaN(id)) return;
+    if (srcCol === projId) return; // 같은 컬럼 빈 공간에 드롭: 무시
+
+    const draggedEmp = employees.find(x => x.id === id);
+    const isTargetPool = projId === "pool";
+    const isTipRuYeJeong = draggedEmp?.assignmentType === "투입예정" ||
+      empStatuses[draggedEmp?.id]?.label === "투입예정";
+
+    if (isTipRuYeJeong && !isTargetPool) {
+      setPendingDrop({ empId: id, projId });
+      setShowDropModal(true);
+    } else {
+      onDropEmployee(id, projId);
+      // 원본 컬럼 순서에서 제거
+      if (srcCol) {
+        saveColumnOrder(srcCol, (columnOrders[srcCol] || []).filter(oid => oid !== id));
+      }
+    }
+  };
+
+  // 카드 위 dragover (삽입 위치 계산)
+  const handleCardDragOver = (e, targetEmpId, colId) => {
+    e.preventDefault();
+    e.stopPropagation();
+    e.dataTransfer.dropEffect = "move";
+    if (dragOverProj !== colId) setDragOverProj(colId);
+
+    const rect = e.currentTarget.getBoundingClientRect();
+    const above = e.clientY < rect.top + rect.height / 2;
+    if (!dragOverCard || dragOverCard.empId !== targetEmpId || dragOverCard.above !== above) {
+      setDragOverCard({ empId: targetEmpId, above });
+    }
+  };
+
+  // 카드 위 drop (같은 컬럼: 순서 변경 / 다른 컬럼: 컬럼 간 이동)
+  const handleCardDrop = (e, targetEmpId, targetColId) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const id = Number(e.dataTransfer.getData("text/plain"));
+    const srcCol = dragSourceColRef.current;
+    const insertAbove = dragOverCard?.above ?? true;
+
+    setDragId(null);
+    setDragOverProj(null);
+    setDragOverCard(null);
+    dragSourceColRef.current = null;
+
+    if (Number.isNaN(id) || id === targetEmpId) return;
+
+    const draggedEmp = employees.find(x => x.id === id);
+    const isTargetPool = targetColId === "pool";
+    const isTipRuYeJeong = draggedEmp?.assignmentType === "투입예정" ||
+      empStatuses[draggedEmp?.id]?.label === "투입예정";
+
+    // 투입예정 → 프로젝트 컬럼 이동 시 모달
+    if (isTipRuYeJeong && !isTargetPool && srcCol !== targetColId) {
+      setPendingDrop({ empId: id, projId: targetColId });
+      setShowDropModal(true);
+      return;
+    }
+
+    if (srcCol === targetColId) {
+      // ── 같은 컬럼: 순서 변경 ──
+      const members = columnMembersRef.current[targetColId] || [];
+      const currentIds = members.map(m => m.id);
+      const baseOrder = getBaseOrder(targetColId, currentIds);
+
+      const withoutDragged = baseOrder.filter(i => i !== id);
+      const tIdx = withoutDragged.indexOf(targetEmpId);
+      if (tIdx === -1) return;
+
+      const newOrder = [...withoutDragged];
+      newOrder.splice(insertAbove ? tIdx : tIdx + 1, 0, id);
+      saveColumnOrder(targetColId, newOrder);
+      // 대기 컬럼에서 수동 정렬 시 자동으로 수동 정렬 모드로 전환
+      if (targetColId === "pool") setPoolSortField("manual");
+    } else {
+      // ── 다른 컬럼: 컬럼 간 이동 + 삽입 위치 저장 ──
+      onDropEmployee(id, targetColId);
+
+      // 원본 컬럼 순서에서 제거
+      if (srcCol) {
+        saveColumnOrder(srcCol, (columnOrders[srcCol] || []).filter(oid => oid !== id));
+      }
+
+      // 대상 컬럼의 특정 위치에 삽입
+      const targetMembers = columnMembersRef.current[targetColId] || [];
+      const targetCurrentIds = targetMembers.map(m => m.id).filter(i => i !== id);
+      const baseTargetOrder = getBaseOrder(targetColId, targetCurrentIds);
+
+      const tIdx = baseTargetOrder.indexOf(targetEmpId);
+      const insertAt = tIdx !== -1 ? (insertAbove ? tIdx : tIdx + 1) : baseTargetOrder.length;
+      const newTargetOrder = [...baseTargetOrder];
+      newTargetOrder.splice(insertAt, 0, id);
+      saveColumnOrder(targetColId, newTargetOrder);
+    }
+  };
 
   return (
     <>
@@ -106,8 +258,8 @@ export default function ProjectBoardView({
         </div>
         <div className="mt-2 text-[11px] sm:text-xs text-slate-500 flex items-center gap-1.5">
           <GripVertical size={12} className="flex-shrink-0" />
-          <span className="hidden sm:inline">직원 카드를 다른 프로젝트 컬럼으로 드래그하여 배치를 변경할 수 있습니다.</span>
-          <span className="sm:hidden">카드를 길게 눌러 다른 컬럼으로 드래그하세요.</span>
+          <span className="hidden sm:inline">카드를 드래그하여 다른 컬럼으로 이동하거나, 같은 컬럼 내에서 순서를 변경할 수 있습니다.</span>
+          <span className="sm:hidden">카드를 드래그하여 이동하거나 순서를 변경하세요.</span>
         </div>
       </div>
 
@@ -132,42 +284,52 @@ export default function ProjectBoardView({
 
           // 대기 컬럼 정렬
           if (isPool) {
-            const dirMul = poolSortDir === "asc" ? 1 : -1;
-            members = [...members].sort((a, b) => {
-              let va, vb;
-              switch (poolSortField) {
-                case "waitingDays":
-                  va = a.pooledAt || "9999-12-31";
-                  vb = b.pooledAt || "9999-12-31";
-                  if (va < vb) return 1 * dirMul;
-                  if (va > vb) return -1 * dirMul;
-                  return (RANK_ORDER[a.rank] ?? 99) - (RANK_ORDER[b.rank] ?? 99);
-                case "rank":
-                  va = RANK_ORDER[a.rank] ?? 99;
-                  vb = RANK_ORDER[b.rank] ?? 99;
-                  break;
-                case "duty":
-                  va = (a.duty || "ㅎ").toLowerCase();
-                  vb = (b.duty || "ㅎ").toLowerCase();
-                  break;
-                case "name":
-                  va = a.name; vb = b.name;
-                  break;
-                case "startDate":
-                  va = a.startDate || ""; vb = b.startDate || "";
-                  break;
-                case "added":
-                  va = a.id; vb = b.id;
-                  break;
-                case "endDate":
-                default:
-                  va = a.endDate || ""; vb = b.endDate || "";
-              }
-              if (va < vb) return -1 * dirMul;
-              if (va > vb) return 1 * dirMul;
-              return (RANK_ORDER[a.rank] ?? 99) - (RANK_ORDER[b.rank] ?? 99);
-            });
+            if (poolSortField === "manual") {
+              members = applyColumnOrder(members, "pool");
+            } else {
+              const dirMul = poolSortDir === "asc" ? 1 : -1;
+              members = [...members].sort((a, b) => {
+                let va, vb;
+                switch (poolSortField) {
+                  case "waitingDays":
+                    va = a.pooledAt || "9999-12-31";
+                    vb = b.pooledAt || "9999-12-31";
+                    if (va < vb) return 1 * dirMul;
+                    if (va > vb) return -1 * dirMul;
+                    return (RANK_ORDER[a.rank] ?? 99) - (RANK_ORDER[b.rank] ?? 99);
+                  case "rank":
+                    va = RANK_ORDER[a.rank] ?? 99;
+                    vb = RANK_ORDER[b.rank] ?? 99;
+                    break;
+                  case "duty":
+                    va = (a.duty || "ㅎ").toLowerCase();
+                    vb = (b.duty || "ㅎ").toLowerCase();
+                    break;
+                  case "name":
+                    va = a.name; vb = b.name;
+                    break;
+                  case "startDate":
+                    va = a.startDate || ""; vb = b.startDate || "";
+                    break;
+                  case "added":
+                    va = a.id; vb = b.id;
+                    break;
+                  case "endDate":
+                  default:
+                    va = a.endDate || ""; vb = b.endDate || "";
+                }
+                if (va < vb) return -1 * dirMul;
+                if (va > vb) return 1 * dirMul;
+                return (RANK_ORDER[a.rank] ?? 99) - (RANK_ORDER[b.rank] ?? 99);
+              });
+            }
+          } else {
+            // 프로젝트 컬럼: localStorage 순서 적용
+            members = applyColumnOrder(members, proj.id);
           }
+
+          // 이벤트 핸들러에서 참조할 수 있도록 ref 저장
+          columnMembersRef.current[proj.id] = members;
 
           const isOver = dragOverProj === proj.id;
           const draggedEmp = dragId !== null ? employees.find(x => x.id === dragId) : null;
@@ -246,13 +408,15 @@ export default function ProjectBoardView({
                       <option key={opt.value} value={opt.value}>{opt.label}</option>
                     ))}
                   </select>
-                  <button
-                    onClick={() => setPoolSortDir(poolSortDir === "asc" ? "desc" : "asc")}
-                    className="px-2 py-1 text-[11px] border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-700 flex-shrink-0 font-semibold"
-                    title={poolSortDir === "asc" ? "오름차순" : "내림차순"}
-                  >
-                    {poolSortDir === "asc" ? "↑" : "↓"}
-                  </button>
+                  {poolSortField !== "manual" && (
+                    <button
+                      onClick={() => setPoolSortDir(poolSortDir === "asc" ? "desc" : "asc")}
+                      className="px-2 py-1 text-[11px] border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-700 flex-shrink-0 font-semibold"
+                      title={poolSortDir === "asc" ? "오름차순" : "내림차순"}
+                    >
+                      {poolSortDir === "asc" ? "↑" : "↓"}
+                    </button>
+                  )}
                 </div>
               )}
 
@@ -293,80 +457,97 @@ export default function ProjectBoardView({
                     : pendingDur.days >= 30 ? "bg-orange-50 text-orange-700 border-orange-200"
                     : "bg-amber-50 text-amber-700 border-amber-200";
 
+                  const showIndicatorAbove = dragOverCard?.empId === emp.id && dragOverCard?.above;
+                  const showIndicatorBelow = dragOverCard?.empId === emp.id && !dragOverCard?.above;
+
                   return (
-                    <div
-                      key={emp.id}
-                      draggable
-                      onDragStart={(e) => handleDragStart(e, emp.id)}
-                      onDragEnd={handleDragEnd}
-                      onClick={() => onCardClick(emp)}
-                      className={`bg-white rounded-md border border-slate-200 p-2.5 shadow-sm hover:shadow-md hover:border-indigo-300 cursor-pointer transition-all ${isDragging ? "opacity-40 scale-95" : ""}`}
-                      title="클릭하여 상세 보기"
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex items-center gap-1.5 min-w-0">
-                          <GripVertical size={12} className="text-slate-300 flex-shrink-0" />
-                          <div className="min-w-0">
-                            <div className="font-semibold text-sm text-slate-900 truncate">{emp.name}</div>
-                            <div className="text-xs text-slate-500">{emp.rank}</div>
+                    <div key={emp.id}>
+                      {/* 드래그 삽입 위치 표시 (위) */}
+                      {showIndicatorAbove && (
+                        <div className="h-0.5 bg-indigo-500 rounded mx-0.5 mb-1.5" />
+                      )}
+                      <div
+                        draggable
+                        onDragStart={(e) => handleDragStart(e, emp.id, proj.id)}
+                        onDragEnd={handleDragEnd}
+                        onDragOver={(e) => handleCardDragOver(e, emp.id, proj.id)}
+                        onDrop={(e) => handleCardDrop(e, emp.id, proj.id)}
+                        onClick={() => onCardClick(emp)}
+                        className={`bg-white rounded-md border border-slate-200 p-2.5 shadow-sm hover:shadow-md hover:border-indigo-300 cursor-pointer transition-all select-none ${isDragging ? "opacity-40 scale-95" : ""}`}
+                        title="클릭하여 상세 보기"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <GripVertical
+                              size={12}
+                              className="text-slate-300 flex-shrink-0 cursor-grab active:cursor-grabbing"
+                            />
+                            <div className="min-w-0">
+                              <div className="font-semibold text-sm text-slate-900 truncate">{emp.name}</div>
+                              <div className="text-xs text-slate-500">{emp.rank}</div>
+                            </div>
+                          </div>
+                          <div className="flex flex-col items-end gap-0.5 flex-shrink-0">
+                            <span className={`inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 font-medium rounded border ${empStatus.color}`}>
+                              {CardStatusIcon && <CardStatusIcon size={10} />}
+                              {empStatus.label}
+                            </span>
+                            {isPool && waitingLabel && (
+                              <span
+                                className={`inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 font-semibold rounded border ${waitingColor} tabular-nums`}
+                                title={emp.pooledAt ? `대기 시작: ${emp.pooledAt}` : ""}
+                              >
+                                <Timer size={10} />
+                                {waitingLabel}
+                              </span>
+                            )}
+                            {isTipRuYeJeong && pendingLabel && (
+                              <span
+                                className={`inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 font-semibold rounded border ${pendingColor} tabular-nums`}
+                                title={pendingBaseDate ? `기산일: ${pendingBaseDate}` : ""}
+                              >
+                                <Timer size={10} />
+                                {pendingLabel}
+                              </span>
+                            )}
                           </div>
                         </div>
-                        <div className="flex flex-col items-end gap-0.5 flex-shrink-0">
-                          <span className={`inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 font-medium rounded border ${empStatus.color}`}>
-                            {CardStatusIcon && <CardStatusIcon size={10} />}
-                            {empStatus.label}
-                          </span>
-                          {isPool && waitingLabel && (
-                            <span
-                              className={`inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 font-semibold rounded border ${waitingColor} tabular-nums`}
-                              title={emp.pooledAt ? `대기 시작: ${emp.pooledAt}` : ""}
-                            >
-                              <Timer size={10} />
-                              {waitingLabel}
+                        <div className="mt-1.5 flex flex-wrap gap-1">
+                          <AffiliationBadge affiliation={emp.affiliation} partnerName={emp.partnerName} />
+                          {emp.duty && emp.duty !== "없음" && (
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-medium rounded border bg-slate-50 text-slate-600 border-slate-200">
+                              <Briefcase size={10} />
+                              {emp.duty}
                             </span>
                           )}
-                          {isTipRuYeJeong && pendingLabel && (
-                            <span
-                              className={`inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 font-semibold rounded border ${pendingColor} tabular-nums`}
-                              title={pendingBaseDate ? `기산일: ${pendingBaseDate}` : ""}
-                            >
-                              <Timer size={10} />
-                              {pendingLabel}
+                          {emp.role && emp.role !== "없음" && (
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-medium rounded border bg-slate-50 text-slate-600 border-slate-200">
+                              <UserCheck size={10} />
+                              {emp.role}
                             </span>
                           )}
                         </div>
-                      </div>
-                      <div className="mt-1.5 flex flex-wrap gap-1">
-                        <AffiliationBadge affiliation={emp.affiliation} partnerName={emp.partnerName} />
-                        {emp.duty && emp.duty !== "없음" && (
-                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-medium rounded border bg-slate-50 text-slate-600 border-slate-200">
-                            <Briefcase size={10} />
-                            {emp.duty}
-                          </span>
+                        {isPurePool && emp.pooledAt ? (
+                          <div className="mt-1.5 pt-1.5 border-t border-slate-100 text-[11px] text-slate-500 tabular-nums flex justify-between">
+                            <span className="text-slate-400">대기 시작</span>
+                            <span>{emp.pooledAt}</span>
+                          </div>
+                        ) : empStatus.label === "투입예정" && !isPurePool ? (
+                          <div className="mt-1.5 pt-1.5 border-t border-slate-100 text-[11px] text-slate-700 flex justify-between gap-1 min-w-0">
+                            <span className="text-slate-400 flex-shrink-0">배정 프로젝트</span>
+                            <span className="font-medium truncate">{empProjName || "-"}</span>
+                          </div>
+                        ) : (
+                          <div className="mt-1.5 pt-1.5 border-t border-slate-100 text-[11px] text-slate-500 tabular-nums flex justify-between">
+                            <span>{displayStart}</span>
+                            <span className="text-slate-300">→</span>
+                            <span>{displayEnd}</span>
+                          </div>
                         )}
-                        {emp.role && emp.role !== "없음" && (
-                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-medium rounded border bg-slate-50 text-slate-600 border-slate-200">
-                            <UserCheck size={10} />
-                            {emp.role}
-                          </span>
-                        )}
                       </div>
-                      {isPurePool && emp.pooledAt ? (
-                        <div className="mt-1.5 pt-1.5 border-t border-slate-100 text-[11px] text-slate-500 tabular-nums flex justify-between">
-                          <span className="text-slate-400">대기 시작</span>
-                          <span>{emp.pooledAt}</span>
-                        </div>
-                      ) : empStatus.label === "투입예정" && !isPurePool ? (
-                        <div className="mt-1.5 pt-1.5 border-t border-slate-100 text-[11px] text-slate-700 flex justify-between gap-1 min-w-0">
-                          <span className="text-slate-400 flex-shrink-0">배정 프로젝트</span>
-                          <span className="font-medium truncate">{empProjName || "-"}</span>
-                        </div>
-                      ) : (
-                        <div className="mt-1.5 pt-1.5 border-t border-slate-100 text-[11px] text-slate-500 tabular-nums flex justify-between">
-                          <span>{displayStart}</span>
-                          <span className="text-slate-300">→</span>
-                          <span>{displayEnd}</span>
-                        </div>
+                      {/* 드래그 삽입 위치 표시 (아래) */}
+                      {showIndicatorBelow && (
+                        <div className="h-0.5 bg-indigo-500 rounded mx-0.5 mt-1.5" />
                       )}
                     </div>
                   );
