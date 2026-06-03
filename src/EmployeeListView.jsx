@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect, useRef } from "react";
 import { Search, Plus, Edit2, Trash2, Download, Building2 } from "lucide-react";
 import * as XLSX from "xlsx";
 import { RANKS } from "./constants.js";
-import { getStatus } from "./helpers.js";
+import { getStatus, resolveStatus } from "./helpers.js";
 import { COLOR_MAP } from "./constants.js";
 
 function downloadTemplate() {
@@ -91,7 +91,7 @@ export default function EmployeeListView({
   // 필터 + 정렬 적용
   const filtered = useMemo(() => {
     let list = employees.filter((e) => {
-      const status = getStatus(e.startDate, e.endDate, e.projectId).label;
+      const status = resolveStatus(e).label;
       const projName = projectById[e.projectId]?.name || "";
       const q = query.trim().toLowerCase();
       const matchQuery = !q
@@ -141,7 +141,7 @@ export default function EmployeeListView({
       e.id, e.name, e.rank, e.affiliation, e.partnerName || "",
       e.duty || "", e.role || "",
       projectById[e.projectId]?.name || "", e.startDate, e.endDate,
-      getStatus(e.startDate, e.endDate, e.projectId).label,
+      resolveStatus(e).label,
     ]);
     const csv = "﻿" + [header, ...rows].map((r) => r.join(",")).join("\n");
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
@@ -243,7 +243,7 @@ export default function EmployeeListView({
               {paged.length === 0 ? (
                 <tr><td colSpan={11} className="px-4 py-12 text-center text-slate-400">검색 결과가 없습니다.</td></tr>
               ) : paged.map((e) => {
-                const status = getStatus(e.startDate, e.endDate, e.projectId);
+                const status = resolveStatus(e);
                 const proj = projectById[e.projectId];
                 const c = COLOR_MAP[proj?.color || "slate"];
                 return (

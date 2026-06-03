@@ -3,7 +3,7 @@ import { X, Users, Briefcase, Calendar, FolderKanban, LayoutList, Building2, Log
 import { useRealtimeSync } from "./useRealtimeSync.js";
 import { useAuth } from "./AuthContext.jsx";
 import { COLOR_MAP, COLOR_OPTIONS } from "./constants.js";
-import { todayISO, getStatus, archiveCurrentAssignment } from "./helpers.js";
+import { todayISO, getStatus, resolveStatus, archiveCurrentAssignment } from "./helpers.js";
 import { supabase } from "./supabaseClient";
 import * as XLSX from "xlsx";
 import EmployeeDetailModal from "./EmployeeDetailModal.jsx";
@@ -98,7 +98,7 @@ export default function EmployeeManager() {
 
   const stats = useMemo(() => {
     const total = employees.length;
-    const active = employees.filter((e) => getStatus(e.startDate, e.endDate, e.projectId).label === "투입중").length;
+    const active = employees.filter((e) => resolveStatus(e).label === "투입중").length;
     const waiting = employees.filter((e) => e.projectId === "pool").length;
     const ibks = employees.filter(e => e.affiliation === "IBKS").length;
     const partner = employees.filter(e => e.affiliation === "협력사").length;
@@ -168,6 +168,7 @@ export default function EmployeeManager() {
       assignmentHistory: nextHistory,
       startDate: isPool ? null : editingEmp.startDate,
       endDate: isPool ? null : editingEmp.endDate,
+      status: isPool ? "대기" : null,
     };
     const { id: _id, ...rawPayload } = toSave;
     const payload = appToDb(rawPayload);
@@ -229,6 +230,7 @@ export default function EmployeeManager() {
         end_date: isPool ? null : (row["철수일자"]?.toString().trim() || "9999-12-31"),
         pooled_at: isPool ? todayISO() : null,
         assignment_history: [],
+        status: isPool ? "대기" : null,
       };
     }).filter(Boolean);
 

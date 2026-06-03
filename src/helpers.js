@@ -12,13 +12,28 @@ export const randomDate = (start, end) => {
 // 오늘 날짜를 YYYY-MM-DD 문자열로 반환
 export const todayISO = () => new Date().toISOString().slice(0, 10);
 
+const STATUS_COLORS = {
+  "대기":  "bg-amber-50 text-amber-700 border-amber-200",
+  "투입중": "bg-emerald-50 text-emerald-700 border-emerald-200",
+  "예정":  "bg-slate-50 text-slate-600 border-slate-200",
+  "종료":  "bg-zinc-100 text-zinc-500 border-zinc-200",
+};
+
 // 투입 상태 계산 (대기 / 예정 / 투입중 / 종료)
 export const getStatus = (startDate, endDate, projectId) => {
-  if (projectId === "pool") return { label: "대기", color: "bg-amber-50 text-amber-700 border-amber-200" };
+  if (projectId === "pool") return { label: "대기", color: STATUS_COLORS["대기"] };
   const today = new Date().toISOString().slice(0, 10);
-  if (today < startDate) return { label: "예정", color: "bg-slate-50 text-slate-600 border-slate-200" };
-  if (today > endDate) return { label: "종료", color: "bg-zinc-100 text-zinc-500 border-zinc-200" };
-  return { label: "투입중", color: "bg-emerald-50 text-emerald-700 border-emerald-200" };
+  if (today < startDate) return { label: "예정", color: STATUS_COLORS["예정"] };
+  if (today > endDate) return { label: "종료", color: STATUS_COLORS["종료"] };
+  return { label: "투입중", color: STATUS_COLORS["투입중"] };
+};
+
+// DB status 컬럼 우선, 없으면 날짜 기반 계산으로 fallback
+export const resolveStatus = (emp) => {
+  if (emp.status) {
+    return { label: emp.status, color: STATUS_COLORS[emp.status] || STATUS_COLORS["예정"] };
+  }
+  return getStatus(emp.startDate, emp.endDate, emp.projectId);
 };
 
 // 직원의 현재 투입 정보를 assignmentHistory에 누적
