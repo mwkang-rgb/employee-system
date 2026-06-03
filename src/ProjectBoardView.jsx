@@ -194,9 +194,18 @@ export default function ProjectBoardView({
                   {isPartnerDropWarning ? (
                     "⚠ 협력사 직원은 대기로 이동 시 자동 삭제됩니다"
                   ) : (() => {
-                    const withDates = members.filter(m => m.pooledAt);
+                    const getPendingBase = (m) => {
+                      if (m.pooledAt) return m.pooledAt;
+                      if (empStatuses[m.id]?.label === "투입예정" && m.projectId !== "pool") {
+                        return (m.startDate && m.startDate !== "1111-01-01")
+                          ? m.startDate
+                          : m.created_at?.slice(0, 10) ?? null;
+                      }
+                      return null;
+                    };
+                    const withDates = members.filter(m => getPendingBase(m));
                     if (withDates.length === 0) return "대기 인력이 없습니다";
-                    const durations = withDates.map(m => calcWaitingDuration(m.pooledAt).days);
+                    const durations = withDates.map(m => calcWaitingDuration(getPendingBase(m))?.days ?? 0);
                     const avg = Math.round(durations.reduce((s, d) => s + d, 0) / durations.length);
                     const max = Math.max(...durations);
                     return (
