@@ -199,11 +199,6 @@ export default function EmployeeManager() {
       REQUIRED.forEach(col => {
         if (!row[col]?.toString().trim()) errors.push(`${rowNum}행: '${col}' 필수값 누락`);
       });
-      const proj = row["투입프로젝트"]?.toString().trim();
-      if (proj && proj !== "대기") {
-        if (!row["투입일자"]?.toString().trim()) errors.push(`${rowNum}행: 투입일자 필요`);
-        if (!row["철수일자"]?.toString().trim()) errors.push(`${rowNum}행: 철수일자 필요`);
-      }
     });
     if (errors.length > 0) {
       alert("유효성 오류:\n\n" + errors.slice(0, 10).join("\n") + (errors.length > 10 ? `\n...외 ${errors.length - 10}건` : ""));
@@ -230,8 +225,8 @@ export default function EmployeeManager() {
         role: (row["역할"] || "").toString().trim(),
         assignment_type: row["투입형태"].toString().trim(),
         project_id: projectId,
-        start_date: isPool ? null : (row["투입일자"]?.toString().trim() || null),
-        end_date: isPool ? null : (row["철수일자"]?.toString().trim() || null),
+        start_date: isPool ? null : (row["투입일자"]?.toString().trim() || "1111-01-01"),
+        end_date: isPool ? null : (row["철수일자"]?.toString().trim() || "9999-12-31"),
         pooled_at: isPool ? todayISO() : null,
         assignment_history: [],
       };

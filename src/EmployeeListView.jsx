@@ -7,8 +7,9 @@ import { COLOR_MAP } from "./constants.js";
 
 function downloadTemplate() {
   const headers = ["이름", "소속", "직급", "직무", "역할", "투입형태", "투입프로젝트", "투입일자", "철수일자"];
-  const example = ["홍길동", "IBKS", "차장", "DBA", "", "비계약", "대기", "", ""];
-  const ws = XLSX.utils.aoa_to_sheet([headers, example]);
+  const example = ["홍길동", "IBKS", "차장", "DBA", "백엔드 개발", "비계약", "프로젝트명", "2026-06-01", "2026-12-31"];
+  const note = ["※ 날짜 미정 시", "", "", "", "", "", "대기 입력 시 날짜 불필요", "1111-01-01", "9999-12-31"];
+  const ws = XLSX.utils.aoa_to_sheet([headers, example, note]);
   ws["!cols"] = [12, 16, 10, 12, 16, 10, 20, 14, 14].map((w) => ({ wch: w }));
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "직원정보");
@@ -263,8 +264,12 @@ export default function EmployeeListView({
                         </span>
                       )}
                     </td>
-                    <td className="px-3 sm:px-4 py-3 text-left text-slate-600 tabular-nums">{e.startDate}</td>
-                    <td className="px-3 sm:px-4 py-3 text-left text-slate-600 tabular-nums">{e.endDate}</td>
+                    <td className="px-3 sm:px-4 py-3 text-left text-slate-600 tabular-nums">
+                      {e.startDate === "1111-01-01" || !e.startDate ? <span className="text-slate-300">-</span> : e.startDate}
+                    </td>
+                    <td className="px-3 sm:px-4 py-3 text-left text-slate-600 tabular-nums">
+                      {e.endDate === "9999-12-31" || !e.endDate ? <span className="text-slate-300">-</span> : e.endDate}
+                    </td>
                     <td className="px-3 sm:px-4 py-3 text-center">
                       <span className={`inline-block px-2 py-0.5 text-xs font-medium rounded border ${status.color}`}>{status.label}</span>
                     </td>
