@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, Edit2, Trash2, GripVertical, FolderPlus, Building2, Briefcase, UserCheck, Clock, CalendarClock, CheckCircle2, LogOut } from "lucide-react";
+import { Search, Edit2, Trash2, GripVertical, FolderPlus, Building2, Briefcase, UserCheck, Clock, CalendarClock, CheckCircle2, LogOut, Timer } from "lucide-react";
 import { COLOR_MAP, POOL_SORT_OPTIONS, RANK_ORDER } from "./constants.js";
 import { resolveStatus, calcWaitingDuration, formatWaitingLabel } from "./helpers.js";
 
@@ -305,17 +305,19 @@ export default function ProjectBoardView({
                           </span>
                           {isPool && waitingLabel && (
                             <span
-                              className={`text-[10px] px-1.5 py-0.5 font-semibold rounded border ${waitingColor} tabular-nums`}
+                              className={`inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 font-semibold rounded border ${waitingColor} tabular-nums`}
                               title={emp.pooledAt ? `대기 시작: ${emp.pooledAt}` : ""}
                             >
+                              <Timer size={10} />
                               {waitingLabel}
                             </span>
                           )}
                           {isTipRuYeJeong && pendingLabel && (
                             <span
-                              className={`text-[10px] px-1.5 py-0.5 font-semibold rounded border ${pendingColor} tabular-nums`}
+                              className={`inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 font-semibold rounded border ${pendingColor} tabular-nums`}
                               title={pendingBaseDate ? `기산일: ${pendingBaseDate}` : ""}
                             >
+                              <Timer size={10} />
                               {pendingLabel}
                             </span>
                           )}
