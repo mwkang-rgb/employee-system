@@ -413,17 +413,6 @@ export default function ProjectBoardView({
                 >
                   정보 수정하기
                 </button>
-                <button
-                  onClick={() => {
-                    const { empId, projId } = pendingDrop;
-                    setShowDropModal(false);
-                    setPendingDrop(null);
-                    onDropEmployee(empId, projId);
-                  }}
-                  className="px-3 py-2 text-sm border border-slate-200 rounded-md bg-slate-50 hover:bg-slate-100 text-slate-600"
-                >
-                  그냥 이동
-                </button>
               </div>
             </div>
           </div>
