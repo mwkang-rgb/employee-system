@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, Edit2, Trash2, GripVertical, FolderPlus, Building2 } from "lucide-react";
+import { Search, Edit2, Trash2, GripVertical, FolderPlus, Building2, Briefcase, UserCheck, Clock, CalendarClock, CheckCircle2, LogOut } from "lucide-react";
 import { COLOR_MAP, POOL_SORT_OPTIONS, RANK_ORDER } from "./constants.js";
 import { resolveStatus, calcWaitingDuration, formatWaitingLabel } from "./helpers.js";
 
@@ -7,7 +7,8 @@ import { resolveStatus, calcWaitingDuration, formatWaitingLabel } from "./helper
 function AffiliationBadge({ affiliation, partnerName }) {
   if (affiliation === "IBKS") {
     return (
-      <span className="inline-flex items-center px-1.5 py-0.5 text-[11px] font-semibold rounded border bg-indigo-50 text-indigo-700 border-indigo-200">
+      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[11px] font-semibold rounded border bg-indigo-50 text-indigo-700 border-indigo-200">
+        <Building2 size={10} />
         IBKS
       </span>
     );
@@ -251,6 +252,8 @@ export default function ProjectBoardView({
                 )}
                 {members.map((emp) => {
                   const empStatus = empStatuses[emp.id] || { label: "대기", color: "bg-slate-100 text-slate-600 border-slate-300" };
+                  const CARD_STATUS_ICONS = { "대기": Clock, "투입예정": CalendarClock, "투입중": CheckCircle2, "철수": LogOut };
+                  const CardStatusIcon = CARD_STATUS_ICONS[empStatus.label] || null;
                   const isPurePool = emp.projectId === "pool";
                   const empProjName = projectById[emp.projectId]?.name;
                   const isDragging = dragId === emp.id;
@@ -296,7 +299,8 @@ export default function ProjectBoardView({
                           </div>
                         </div>
                         <div className="flex flex-col items-end gap-0.5 flex-shrink-0">
-                          <span className={`text-[10px] px-1.5 py-0.5 font-medium rounded border ${empStatus.color}`}>
+                          <span className={`inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 font-medium rounded border ${empStatus.color}`}>
+                            {CardStatusIcon && <CardStatusIcon size={10} />}
                             {empStatus.label}
                           </span>
                           {isPool && waitingLabel && (
@@ -320,12 +324,14 @@ export default function ProjectBoardView({
                       <div className="mt-1.5 flex flex-wrap gap-1">
                         <AffiliationBadge affiliation={emp.affiliation} partnerName={emp.partnerName} />
                         {emp.duty && emp.duty !== "없음" && (
-                          <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium rounded border bg-slate-50 text-slate-600 border-slate-200">
+                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-medium rounded border bg-slate-50 text-slate-600 border-slate-200">
+                            <Briefcase size={10} />
                             {emp.duty}
                           </span>
                         )}
                         {emp.role && emp.role !== "없음" && (
-                          <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium rounded border bg-slate-50 text-slate-600 border-slate-200">
+                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-medium rounded border bg-slate-50 text-slate-600 border-slate-200">
+                            <UserCheck size={10} />
                             {emp.role}
                           </span>
                         )}
