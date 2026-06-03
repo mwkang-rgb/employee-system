@@ -113,8 +113,8 @@ export default function ProjectBoardView({
             || (e.role || "").toLowerCase().includes(q);
 
           let members = isPool
-            ? employees.filter(e => (e.projectId === "pool" || empStatuses[e.id]?.label === "투입대기") && matchesSearch(e))
-            : employees.filter(e => e.projectId === proj.id && empStatuses[e.id]?.label !== "투입대기" && matchesSearch(e));
+            ? employees.filter(e => (e.projectId === "pool" || empStatuses[e.id]?.label === "투입예정") && matchesSearch(e))
+            : employees.filter(e => e.projectId === proj.id && empStatuses[e.id]?.label !== "투입예정" && matchesSearch(e));
 
           // 대기 컬럼 정렬
           if (isPool) {
@@ -304,7 +304,7 @@ export default function ProjectBoardView({
                           <span className="text-slate-400">대기 시작</span>
                           <span>{emp.pooledAt}</span>
                         </div>
-                      ) : empStatus.label === "투입대기" && !isPurePool ? (
+                      ) : empStatus.label === "투입예정" && !isPurePool ? (
                         <div className="mt-1.5 pt-1.5 border-t border-slate-100 text-[11px] text-slate-700 flex justify-between gap-1 min-w-0">
                           <span className="text-slate-400 flex-shrink-0">배정 프로젝트</span>
                           <span className="font-medium truncate">{empProjName || "-"}</span>

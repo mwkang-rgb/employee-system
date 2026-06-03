@@ -200,7 +200,7 @@ export default function EmployeeListView({
           <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="px-3 py-2 text-sm border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 flex-shrink-0">
             <option value="전체">상태 전체</option>
             <option value="대기">대기</option>
-            <option value="투입대기">투입대기</option>
+            <option value="투입예정">투입예정</option>
             <option value="투입중">투입중</option>
             <option value="철수">철수</option>
           </select>

@@ -14,17 +14,17 @@ export const todayISO = () => new Date().toISOString().slice(0, 10);
 
 const STATUS_COLORS = {
   "대기":    "bg-slate-100 text-slate-600 border-slate-300",
-  "투입대기": "bg-amber-100 text-amber-800 border-amber-300",
+  "투입예정": "bg-sky-50 text-sky-700 border-sky-200",
   "투입중":  "bg-emerald-50 text-emerald-700 border-emerald-200",
   "철수":    "bg-blue-50 text-blue-600 border-blue-200",
 };
 
-// 투입 상태 계산 (대기 / 투입대기 / 투입중 / 철수)
+// 투입 상태 계산 (대기 / 투입예정 / 투입중 / 철수)
 export const getStatus = (startDate, endDate, projectId) => {
   if (!projectId || projectId === "pool") return { label: "대기", color: STATUS_COLORS["대기"] };
   if (!startDate || startDate === "1111-01-01") return { label: "대기", color: STATUS_COLORS["대기"] };
   const today = new Date().toISOString().slice(0, 10);
-  if (today < startDate) return { label: "투입대기", color: STATUS_COLORS["투입대기"] };
+  if (today < startDate) return { label: "투입예정", color: STATUS_COLORS["투입예정"] };
   if (today > endDate) return { label: "철수", color: STATUS_COLORS["철수"] };
   return { label: "투입중", color: STATUS_COLORS["투입중"] };
 };
@@ -35,7 +35,7 @@ export const resolveStatus = (emp, projectName) => {
   if (projectName === "대기" || !emp.projectId || emp.projectId === "pool") {
     result = { label: "대기", color: STATUS_COLORS["대기"] };
   } else if (emp.assignmentType === "투입예정") {
-    result = { label: "투입대기", color: STATUS_COLORS["투입대기"] };
+    result = { label: "투입예정", color: STATUS_COLORS["투입예정"] };
   } else if (!emp.startDate || emp.startDate === "1111-01-01") {
     result = { label: "대기", color: STATUS_COLORS["대기"] };
   } else {
