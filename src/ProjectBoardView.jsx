@@ -388,7 +388,7 @@ export default function ProjectBoardView({
                 <h3 className="text-base font-bold text-slate-900">투입 정보 확인 필요</h3>
               </div>
               <p className="text-sm text-slate-600 leading-relaxed mb-3">
-                ⚠️ 투입예정 직원을 프로젝트에 배치하기 전에<br />
+                투입예정 직원을 프로젝트에 배치하기 전에<br />
                 투입일자와 철수일자를 먼저 설정해주세요.
               </p>
               <div className="text-sm text-slate-700 bg-slate-50 rounded-md px-3 py-2 mb-5 space-y-1">
