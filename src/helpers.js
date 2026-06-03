@@ -13,34 +13,35 @@ export const randomDate = (start, end) => {
 export const todayISO = () => new Date().toISOString().slice(0, 10);
 
 const STATUS_COLORS = {
-  "대기":  "bg-amber-50 text-amber-700 border-amber-200",
-  "투입중": "bg-emerald-50 text-emerald-700 border-emerald-200",
-  "예정":  "bg-slate-50 text-slate-600 border-slate-200",
-  "종료":  "bg-zinc-100 text-zinc-500 border-zinc-200",
+  "대기":    "bg-slate-100 text-slate-600 border-slate-300",
+  "투입대기": "bg-amber-100 text-amber-800 border-amber-300",
+  "투입중":  "bg-emerald-50 text-emerald-700 border-emerald-200",
+  "철수":    "bg-blue-50 text-blue-600 border-blue-200",
 };
 
-// 투입 상태 계산 (대기 / 예정 / 투입중 / 종료)
+// 투입 상태 계산 (대기 / 투입대기 / 투입중 / 철수)
 export const getStatus = (startDate, endDate, projectId) => {
   if (!projectId || projectId === "pool") return { label: "대기", color: STATUS_COLORS["대기"] };
+  if (!startDate || startDate === "1111-01-01") return { label: "대기", color: STATUS_COLORS["대기"] };
   const today = new Date().toISOString().slice(0, 10);
-  if (today < startDate) return { label: "예정", color: STATUS_COLORS["예정"] };
-  if (today > endDate) return { label: "종료", color: STATUS_COLORS["종료"] };
+  if (today < startDate) return { label: "투입대기", color: STATUS_COLORS["투입대기"] };
+  if (today > endDate) return { label: "철수", color: STATUS_COLORS["철수"] };
   return { label: "투입중", color: STATUS_COLORS["투입중"] };
 };
 
-// 투입형태 "투입예정" → 프로젝트명 "대기" → emp.status → 날짜 기반 계산 순으로 fallback
+// 우선순위: 프로젝트명 "대기"/미배정 → 투입예정 형태 → null 날짜 → 날짜 기반 계산
 export const resolveStatus = (emp, projectName) => {
   let result;
-  if (emp.assignmentType === "투입예정") {
+  if (projectName === "대기" || !emp.projectId || emp.projectId === "pool") {
     result = { label: "대기", color: STATUS_COLORS["대기"] };
-  } else if (projectName === "대기") {
+  } else if (emp.assignmentType === "투입예정") {
+    result = { label: "투입대기", color: STATUS_COLORS["투입대기"] };
+  } else if (!emp.startDate || emp.startDate === "1111-01-01") {
     result = { label: "대기", color: STATUS_COLORS["대기"] };
-  } else if (emp.status) {
-    result = { label: emp.status, color: STATUS_COLORS[emp.status] || STATUS_COLORS["예정"] };
   } else {
     result = getStatus(emp.startDate, emp.endDate, emp.projectId);
   }
-  // console.log('[상태판단]', { name: emp.name, input_type: emp.assignmentType, project_name: projectName, result: result.label });
+  // console.log('[상태판단]', { name: emp.name, input_type: emp.assignmentType, project_name: projectName, input_date: emp.startDate, withdrawal_date: emp.endDate, result: result.label });
   return result;
 };
 

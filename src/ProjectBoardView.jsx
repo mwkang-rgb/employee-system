@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Search, Edit2, Trash2, GripVertical, FolderPlus, Building2 } from "lucide-react";
 import { COLOR_MAP, POOL_SORT_OPTIONS, RANK_ORDER } from "./constants.js";
-import { getStatus, calcWaitingDuration, formatWaitingLabel } from "./helpers.js";
+import { resolveStatus, calcWaitingDuration, formatWaitingLabel } from "./helpers.js";
 
 // 소속 배지 (이 파일 내부 로컬 컴포넌트)
 function AffiliationBadge({ affiliation, partnerName }) {
@@ -63,6 +63,11 @@ export default function ProjectBoardView({
     if (!Number.isNaN(id)) onDropEmployee(id, projId);
   };
 
+  const projectById = Object.fromEntries(projects.map(p => [p.id, p]));
+  const empStatuses = Object.fromEntries(
+    employees.map(e => [e.id, resolveStatus(e, projectById[e.projectId]?.name)])
+  );
+
   return (
     <>
       {/* 검색 + 프로젝트 등록 */}
@@ -100,14 +105,16 @@ export default function ProjectBoardView({
           const isPool = proj.id === "pool";
 
           // 검색 필터링
-          let members = employees
-            .filter(e => e.projectId === proj.id)
-            .filter(e => !q
-              || e.name.toLowerCase().includes(q)
-              || e.rank.toLowerCase().includes(q)
-              || (e.partnerName || "").toLowerCase().includes(q)
-              || (e.duty || "").toLowerCase().includes(q)
-              || (e.role || "").toLowerCase().includes(q));
+          const matchesSearch = (e) => !q
+            || e.name.toLowerCase().includes(q)
+            || e.rank.toLowerCase().includes(q)
+            || (e.partnerName || "").toLowerCase().includes(q)
+            || (e.duty || "").toLowerCase().includes(q)
+            || (e.role || "").toLowerCase().includes(q);
+
+          let members = isPool
+            ? employees.filter(e => (e.projectId === "pool" || empStatuses[e.id]?.label === "투입대기") && matchesSearch(e))
+            : employees.filter(e => e.projectId === proj.id && empStatuses[e.id]?.label !== "투입대기" && matchesSearch(e));
 
           // 대기 컬럼 정렬
           if (isPool) {
@@ -234,10 +241,14 @@ export default function ProjectBoardView({
                   </div>
                 )}
                 {members.map((emp) => {
-                  const status = getStatus(emp.startDate, emp.endDate, emp.projectId);
+                  const empStatus = empStatuses[emp.id] || { label: "대기", color: "bg-slate-100 text-slate-600 border-slate-300" };
+                  const isPurePool = emp.projectId === "pool";
+                  const empProjName = projectById[emp.projectId]?.name;
                   const isDragging = dragId === emp.id;
-                  const waitingLabel = isPool ? formatWaitingLabel(emp.pooledAt) : "";
-                  const waitingDur = isPool ? calcWaitingDuration(emp.pooledAt) : null;
+                  const displayStart = !emp.startDate || emp.startDate === "1111-01-01" ? "-" : emp.startDate;
+                  const displayEnd = !emp.endDate || emp.endDate === "9999-12-31" ? "-" : emp.endDate;
+                  const waitingLabel = isPurePool ? formatWaitingLabel(emp.pooledAt) : "";
+                  const waitingDur = isPurePool ? calcWaitingDuration(emp.pooledAt) : null;
                   const waitingColor = !waitingDur ? "bg-amber-50 text-amber-700 border-amber-200"
                     : waitingDur.days >= 90 ? "bg-red-50 text-red-700 border-red-200"
                     : waitingDur.days >= 30 ? "bg-orange-50 text-orange-700 border-orange-200"
@@ -262,8 +273,8 @@ export default function ProjectBoardView({
                           </div>
                         </div>
                         <div className="flex flex-col items-end gap-0.5 flex-shrink-0">
-                          <span className={`text-[10px] px-1.5 py-0.5 font-medium rounded border ${status.color}`}>
-                            {status.label}
+                          <span className={`text-[10px] px-1.5 py-0.5 font-medium rounded border ${empStatus.color}`}>
+                            {empStatus.label}
                           </span>
                           {isPool && waitingLabel && (
                             <span
@@ -288,16 +299,21 @@ export default function ProjectBoardView({
                           · {emp.role}
                         </div>
                       )}
-                      {isPool && emp.pooledAt ? (
+                      {isPurePool && emp.pooledAt ? (
                         <div className="mt-1.5 pt-1.5 border-t border-slate-100 text-[11px] text-slate-500 tabular-nums flex justify-between">
                           <span className="text-slate-400">대기 시작</span>
                           <span>{emp.pooledAt}</span>
                         </div>
+                      ) : empStatus.label === "투입대기" && !isPurePool ? (
+                        <div className="mt-1.5 pt-1.5 border-t border-slate-100 text-[11px] text-slate-700 flex justify-between gap-1 min-w-0">
+                          <span className="text-slate-400 flex-shrink-0">배정 프로젝트</span>
+                          <span className="font-medium truncate">{empProjName || "-"}</span>
+                        </div>
                       ) : (
                         <div className="mt-1.5 pt-1.5 border-t border-slate-100 text-[11px] text-slate-500 tabular-nums flex justify-between">
-                          <span>{emp.startDate}</span>
+                          <span>{displayStart}</span>
                           <span className="text-slate-300">→</span>
-                          <span>{emp.endDate}</span>
+                          <span>{displayEnd}</span>
                         </div>
                       )}
                     </div>

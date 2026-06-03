@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect, useRef } from "react";
 import { Search, Plus, Edit2, Trash2, Download, Building2 } from "lucide-react";
 import * as XLSX from "xlsx";
 import { RANKS } from "./constants.js";
-import { getStatus, resolveStatus } from "./helpers.js";
+import { resolveStatus } from "./helpers.js";
 import { COLOR_MAP } from "./constants.js";
 
 function downloadTemplate() {
@@ -199,10 +199,10 @@ export default function EmployeeListView({
           </select>
           <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="px-3 py-2 text-sm border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 flex-shrink-0">
             <option value="전체">상태 전체</option>
-            <option value="투입중">투입중</option>
-            <option value="예정">예정</option>
-            <option value="종료">종료</option>
             <option value="대기">대기</option>
+            <option value="투입대기">투입대기</option>
+            <option value="투입중">투입중</option>
+            <option value="철수">철수</option>
           </select>
           <button onClick={exportCSV} className="px-3 py-2 text-sm border border-slate-300 rounded-md bg-white hover:bg-slate-50 flex items-center gap-1 text-slate-700 flex-shrink-0">
             <Download size={14} /> CSV
