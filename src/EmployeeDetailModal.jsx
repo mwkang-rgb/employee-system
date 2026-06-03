@@ -183,8 +183,10 @@ export default function EmployeeDetailModal({ detailEmp, projectById, onClose, o
                               </span>
                             )}
                           </div>
-                          <div className="mt-1 text-[11px] text-slate-500 tabular-nums truncate" title={`${h.startDate || "?"} → ${h.endDate || "?"}`}>
-                            {h.startDate || "?"} → {h.endDate || "?"}
+                          <div className="mt-1 text-[11px] text-slate-500 tabular-nums truncate">
+                            {(!h.startDate || h.startDate === "1111-01-01") ? "-" : h.startDate}
+                            {" → "}
+                            {(!h.endDate || h.endDate === "9999-12-31") ? "-" : h.endDate}
                           </div>
                           {(h.role || h.duty) && (
                             <div className="text-[11px] text-slate-600 mt-0.5 truncate" title={[h.duty, h.role].filter(Boolean).join(" · ")}>
