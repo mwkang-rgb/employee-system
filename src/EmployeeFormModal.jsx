@@ -104,26 +104,28 @@ export default function EmployeeFormModal({
           )}
 
           {/* 직무 · 역할 */}
-          <Field label="직무">
-            <input
-              type="text"
-              value={editingEmp.duty || ""}
-              onChange={(e) => setEditingEmp({ ...editingEmp, duty: e.target.value })}
-              autoComplete="off"
-              className="w-full px-3 py-2 text-base sm:text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              placeholder="예: 개발, PM, 분석/설계"
-            />
-          </Field>
-          <Field label="역할">
-            <input
-              type="text"
-              value={editingEmp.role || ""}
-              onChange={(e) => setEditingEmp({ ...editingEmp, role: e.target.value })}
-              autoComplete="off"
-              className="w-full px-3 py-2 text-base sm:text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              placeholder="예: 백엔드 개발, 파트 리더"
-            />
-          </Field>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="직무">
+              <input
+                type="text"
+                value={editingEmp.duty || ""}
+                onChange={(e) => setEditingEmp({ ...editingEmp, duty: e.target.value })}
+                autoComplete="off"
+                className="w-full px-3 py-2 text-base sm:text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                placeholder="예: 개발, PM"
+              />
+            </Field>
+            <Field label="역할">
+              <input
+                type="text"
+                value={editingEmp.role || ""}
+                onChange={(e) => setEditingEmp({ ...editingEmp, role: e.target.value })}
+                autoComplete="off"
+                className="w-full px-3 py-2 text-base sm:text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                placeholder="예: 백엔드 개발"
+              />
+            </Field>
+          </div>
 
           <Field label="투입 형태 *">
             <select
@@ -155,59 +157,61 @@ export default function EmployeeFormModal({
             )}
           </Field>
 
-          <Field label={isPool ? "투입일자" : "투입일자 *"}>
-            <div style={{ width: "100%", maxWidth: "100%", overflow: "hidden", boxSizing: "border-box" }}>
-              <input
-                type="date"
-                value={indetermStart ? "" : (editingEmp.startDate || "")}
-                onChange={(e) => setEditingEmp({ ...editingEmp, startDate: e.target.value })}
-                disabled={isPool || indetermStart}
-                className={`block px-3 py-2 text-base sm:text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 ${isPool || indetermStart ? "bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed" : "border-slate-300"}`}
-                style={{
-                  width: "100%", minWidth: 0, maxWidth: "100%", boxSizing: "border-box",
-                  minHeight: "42px", WebkitAppearance: "textfield", MozAppearance: "textfield",
-                }}
-              />
-            </div>
-            {!isPool && (
-              <label className="mt-1.5 flex items-center gap-1.5 text-xs text-slate-500 cursor-pointer select-none">
+          <div className="grid grid-cols-2 gap-3">
+            <Field label={isPool ? "투입일자" : "투입일자 *"}>
+              <div style={{ width: "100%", maxWidth: "100%", overflow: "hidden", boxSizing: "border-box" }}>
                 <input
-                  type="checkbox"
-                  checked={indetermStart}
-                  onChange={(e) => setEditingEmp({ ...editingEmp, startDate: e.target.checked ? "1111-01-01" : "" })}
-                  className="w-3.5 h-3.5 rounded accent-indigo-600"
+                  type="date"
+                  value={indetermStart ? "" : (editingEmp.startDate || "")}
+                  onChange={(e) => setEditingEmp({ ...editingEmp, startDate: e.target.value })}
+                  disabled={isPool || indetermStart}
+                  className={`block px-3 py-2 text-base sm:text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 ${isPool || indetermStart ? "bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed" : "border-slate-300"}`}
+                  style={{
+                    width: "100%", minWidth: 0, maxWidth: "100%", boxSizing: "border-box",
+                    minHeight: "42px", WebkitAppearance: "textfield", MozAppearance: "textfield",
+                  }}
                 />
-                날짜 미정
-              </label>
-            )}
-          </Field>
+              </div>
+              {!isPool && (
+                <label className="mt-1.5 flex items-center gap-1.5 text-xs text-slate-500 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={indetermStart}
+                    onChange={(e) => setEditingEmp({ ...editingEmp, startDate: e.target.checked ? "1111-01-01" : "" })}
+                    className="w-3.5 h-3.5 rounded accent-indigo-600"
+                  />
+                  날짜 미정
+                </label>
+              )}
+            </Field>
 
-          <Field label={isPool ? "철수일자" : "철수일자 *"}>
-            <div style={{ width: "100%", maxWidth: "100%", overflow: "hidden", boxSizing: "border-box" }}>
-              <input
-                type="date"
-                value={indetermEnd ? "" : (editingEmp.endDate || "")}
-                onChange={(e) => setEditingEmp({ ...editingEmp, endDate: e.target.value })}
-                disabled={isPool || indetermEnd}
-                className={`block px-3 py-2 text-base sm:text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 ${isPool || indetermEnd ? "bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed" : "border-slate-300"}`}
-                style={{
-                  width: "100%", minWidth: 0, maxWidth: "100%", boxSizing: "border-box",
-                  minHeight: "42px", WebkitAppearance: "textfield", MozAppearance: "textfield",
-                }}
-              />
-            </div>
-            {!isPool && (
-              <label className="mt-1.5 flex items-center gap-1.5 text-xs text-slate-500 cursor-pointer select-none">
+            <Field label={isPool ? "철수일자" : "철수일자 *"}>
+              <div style={{ width: "100%", maxWidth: "100%", overflow: "hidden", boxSizing: "border-box" }}>
                 <input
-                  type="checkbox"
-                  checked={indetermEnd}
-                  onChange={(e) => setEditingEmp({ ...editingEmp, endDate: e.target.checked ? "9999-12-31" : "" })}
-                  className="w-3.5 h-3.5 rounded accent-indigo-600"
+                  type="date"
+                  value={indetermEnd ? "" : (editingEmp.endDate || "")}
+                  onChange={(e) => setEditingEmp({ ...editingEmp, endDate: e.target.value })}
+                  disabled={isPool || indetermEnd}
+                  className={`block px-3 py-2 text-base sm:text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 ${isPool || indetermEnd ? "bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed" : "border-slate-300"}`}
+                  style={{
+                    width: "100%", minWidth: 0, maxWidth: "100%", boxSizing: "border-box",
+                    minHeight: "42px", WebkitAppearance: "textfield", MozAppearance: "textfield",
+                  }}
                 />
-                날짜 미정
-              </label>
-            )}
-          </Field>
+              </div>
+              {!isPool && (
+                <label className="mt-1.5 flex items-center gap-1.5 text-xs text-slate-500 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={indetermEnd}
+                    onChange={(e) => setEditingEmp({ ...editingEmp, endDate: e.target.checked ? "9999-12-31" : "" })}
+                    className="w-3.5 h-3.5 rounded accent-indigo-600"
+                  />
+                  날짜 미정
+                </label>
+              )}
+            </Field>
+          </div>
         </div>
 
         {/* 하단 버튼 */}

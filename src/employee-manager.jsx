@@ -160,8 +160,8 @@ export default function EmployeeManager() {
     const toSave = {
       ...editingEmp,
       partnerName: editingEmp.affiliation === "IBKS" ? "" : editingEmp.partnerName.trim(),
-      duty: (editingEmp.duty || "").trim(),
-      role: (editingEmp.role || "").trim(),
+      duty: (editingEmp.duty || "").trim() || "없음",
+      role: (editingEmp.role || "").trim() || "없음",
       pooledAt: isPool
         ? (wasInPool ? editingEmp.pooledAt || todayISO() : todayISO())
         : null,
@@ -221,8 +221,8 @@ export default function EmployeeManager() {
         affiliation: 소속 === "IBKS" ? "IBKS" : "협력사",
         partner_name: 소속 === "IBKS" ? "" : 소속,
         rank: row["직급"].toString().trim(),
-        duty: (row["직무"] || "").toString().trim(),
-        role: (row["역할"] || "").toString().trim(),
+        duty: (row["직무"] || "").toString().trim() || "없음",
+        role: (row["역할"] || "").toString().trim() || "없음",
         assignment_type: row["투입형태"].toString().trim(),
         project_id: projectId,
         start_date: isPool ? null : (row["투입일자"]?.toString().trim() || "1111-01-01"),
