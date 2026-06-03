@@ -119,16 +119,18 @@ export default function EmployeeManager() {
   };
   const saveEmp = async () => {
     const isPool = editingEmp.projectId === "pool";
+    const isPending = editingEmp.assignmentType === "투입예정";
+    const dateOptional = isPool || isPending;
     if (!editingEmp.name.trim()) {
       alert("직원명은 필수 입력입니다."); return;
     }
-    if (!isPool && (!editingEmp.startDate || !editingEmp.endDate)) {
+    if (!dateOptional && (!editingEmp.startDate || !editingEmp.endDate)) {
       alert("투입일자, 철수일자는 필수 입력입니다."); return;
     }
     if (editingEmp.affiliation === "협력사" && !editingEmp.partnerName.trim()) {
       alert("협력사를 선택한 경우 협력사명을 입력해야 합니다."); return;
     }
-    if (!isPool && editingEmp.startDate > editingEmp.endDate) {
+    if (!dateOptional && editingEmp.startDate > editingEmp.endDate) {
       alert("철수일자는 투입일자보다 빠를 수 없습니다."); return;
     }
 
@@ -166,8 +168,8 @@ export default function EmployeeManager() {
         ? (wasInPool ? editingEmp.pooledAt || todayISO() : todayISO())
         : null,
       assignmentHistory: nextHistory,
-      startDate: isPool ? null : editingEmp.startDate,
-      endDate: isPool ? null : editingEmp.endDate,
+      startDate: dateOptional ? null : editingEmp.startDate,
+      endDate: dateOptional ? null : editingEmp.endDate,
     };
     const { id: _id, ...rawPayload } = toSave;
     const payload = appToDb(rawPayload);
