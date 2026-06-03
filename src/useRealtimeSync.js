@@ -25,6 +25,20 @@
 import { useEffect, useRef } from "react";
 import { supabase } from "./supabaseClient.js";
 
+function rawToApp(row) {
+  if (!row) return row;
+  return {
+    ...row,
+    projectId: row.project_id ?? row.projectId,
+    startDate: row.start_date ?? row.startDate,
+    endDate: row.end_date ?? row.endDate,
+    partnerName: row.partner_name ?? row.partnerName,
+    pooledAt: row.pooled_at ?? row.pooledAt,
+    assignmentHistory: row.assignment_history ?? row.assignmentHistory ?? [],
+    assignmentType: row.assignment_type ?? row.assignmentType,
+  };
+}
+
 /**
  * @param {Object}   opts
  * @param {Function} opts.setEmployees — (updater: prev => next) 형태의 state setter
@@ -48,7 +62,7 @@ export function useRealtimeSync({ setEmployees, setProjects, enabled = true }) {
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "employees" },
         (payload) => {
-          const newEmp = payload.new;
+          const newEmp = rawToApp(payload.new);
           setEmployees((prev) => {
             // 이미 존재하면(낙관적 업데이트 등) 교체, 없으면 추가
             const exists = prev.some((e) => e.id === newEmp.id);
@@ -62,7 +76,7 @@ export function useRealtimeSync({ setEmployees, setProjects, enabled = true }) {
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "employees" },
         (payload) => {
-          const updated = payload.new;
+          const updated = rawToApp(payload.new);
           setEmployees((prev) =>
             prev.map((e) => (e.id === updated.id ? { ...e, ...updated } : e))
           );

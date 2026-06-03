@@ -98,7 +98,7 @@ export default function EmployeeManager() {
 
   const stats = useMemo(() => {
     const total = employees.length;
-    const active = employees.filter((e) => resolveStatus(e).label === "투입중").length;
+    const active = employees.filter((e) => resolveStatus(e, projectById[e.projectId]?.name).label === "투입중").length;
     const waiting = employees.filter((e) => e.projectId === "pool").length;
     const ibks = employees.filter(e => e.affiliation === "IBKS").length;
     const partner = employees.filter(e => e.affiliation === "협력사").length;

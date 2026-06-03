@@ -91,7 +91,7 @@ export default function EmployeeListView({
   // 필터 + 정렬 적용
   const filtered = useMemo(() => {
     let list = employees.filter((e) => {
-      const status = resolveStatus(e).label;
+      const status = resolveStatus(e, projectById[e.projectId]?.name).label;
       const projName = projectById[e.projectId]?.name || "";
       const q = query.trim().toLowerCase();
       const matchQuery = !q
@@ -141,7 +141,7 @@ export default function EmployeeListView({
       e.id, e.name, e.rank, e.affiliation, e.partnerName || "",
       e.duty || "", e.role || "",
       projectById[e.projectId]?.name || "", e.startDate, e.endDate,
-      resolveStatus(e).label,
+      resolveStatus(e, projectById[e.projectId]?.name).label,
     ]);
     const csv = "﻿" + [header, ...rows].map((r) => r.join(",")).join("\n");
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
@@ -243,8 +243,8 @@ export default function EmployeeListView({
               {paged.length === 0 ? (
                 <tr><td colSpan={11} className="px-4 py-12 text-center text-slate-400">검색 결과가 없습니다.</td></tr>
               ) : paged.map((e) => {
-                const status = resolveStatus(e);
                 const proj = projectById[e.projectId];
+                const status = resolveStatus(e, proj?.name);
                 const c = COLOR_MAP[proj?.color || "slate"];
                 return (
                   <tr key={e.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">

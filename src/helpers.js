@@ -21,18 +21,17 @@ const STATUS_COLORS = {
 
 // 투입 상태 계산 (대기 / 예정 / 투입중 / 종료)
 export const getStatus = (startDate, endDate, projectId) => {
-  if (projectId === "pool") return { label: "대기", color: STATUS_COLORS["대기"] };
+  if (!projectId || projectId === "pool") return { label: "대기", color: STATUS_COLORS["대기"] };
   const today = new Date().toISOString().slice(0, 10);
   if (today < startDate) return { label: "예정", color: STATUS_COLORS["예정"] };
   if (today > endDate) return { label: "종료", color: STATUS_COLORS["종료"] };
   return { label: "투입중", color: STATUS_COLORS["투입중"] };
 };
 
-// DB status 컬럼 우선, 없으면 날짜 기반 계산으로 fallback
-export const resolveStatus = (emp) => {
-  if (emp.status) {
-    return { label: emp.status, color: STATUS_COLORS[emp.status] || STATUS_COLORS["예정"] };
-  }
+// projectName(프로젝트명) 우선 → emp.status → 날짜 기반 계산 순으로 fallback
+export const resolveStatus = (emp, projectName) => {
+  if (projectName === "대기") return { label: "대기", color: STATUS_COLORS["대기"] };
+  if (emp.status) return { label: emp.status, color: STATUS_COLORS[emp.status] || STATUS_COLORS["예정"] };
   return getStatus(emp.startDate, emp.endDate, emp.projectId);
 };
 
