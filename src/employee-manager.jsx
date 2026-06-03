@@ -168,7 +168,6 @@ export default function EmployeeManager() {
       assignmentHistory: nextHistory,
       startDate: isPool ? null : editingEmp.startDate,
       endDate: isPool ? null : editingEmp.endDate,
-      status: isPool ? "대기" : null,
     };
     const { id: _id, ...rawPayload } = toSave;
     const payload = appToDb(rawPayload);
@@ -230,7 +229,6 @@ export default function EmployeeManager() {
         end_date: isPool ? null : (row["철수일자"]?.toString().trim() || "9999-12-31"),
         pooled_at: isPool ? todayISO() : null,
         assignment_history: [],
-        status: isPool ? "대기" : null,
       };
     }).filter(Boolean);
 
