@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, Edit2, Trash2, GripVertical, FolderPlus, Building2, Briefcase, UserCheck, Clock, CalendarClock, CheckCircle2, LogOut, Timer } from "lucide-react";
+import { Search, Edit2, Trash2, GripVertical, FolderPlus, Building2, Briefcase, UserCheck, Clock, CalendarClock, CheckCircle2, LogOut, Timer, AlertTriangle } from "lucide-react";
 import { COLOR_MAP, POOL_SORT_OPTIONS, RANK_ORDER } from "./constants.js";
 import { resolveStatus, calcWaitingDuration, formatWaitingLabel } from "./helpers.js";
 
@@ -31,7 +31,7 @@ function AffiliationBadge({ affiliation, partnerName }) {
 //   onDeleteProject  — (projId) 프로젝트 삭제
 export default function ProjectBoardView({
   employees, projects,
-  onDropEmployee, onCardClick,
+  onDropEmployee, onCardClick, onEditEmp,
   onNewProject, onEditProject, onDeleteProject,
 }) {
   const [boardQuery, setBoardQuery] = useState("");
@@ -39,6 +39,8 @@ export default function ProjectBoardView({
   const [dragOverProj, setDragOverProj] = useState(null);
   const [poolSortField, setPoolSortField] = useState("waitingDays");
   const [poolSortDir, setPoolSortDir] = useState("desc");
+  const [showDropModal, setShowDropModal] = useState(false);
+  const [pendingDrop, setPendingDrop] = useState(null); // { empId, projId }
 
   // ── 드래그 핸들러 ──────────────────────────────────────────
   const handleDragStart = (e, empId) => {
@@ -61,7 +63,18 @@ export default function ProjectBoardView({
     const id = Number(e.dataTransfer.getData("text/plain"));
     setDragId(null);
     setDragOverProj(null);
-    if (!Number.isNaN(id)) onDropEmployee(id, projId);
+    if (!Number.isNaN(id)) {
+      const draggedEmp = employees.find(x => x.id === id);
+      const isTargetPool = projId === "pool";
+      const isTipRuYeJeong = draggedEmp?.assignmentType === "투입예정" ||
+        empStatuses[draggedEmp?.id]?.label === "투입예정";
+      if (isTipRuYeJeong && !isTargetPool) {
+        setPendingDrop({ empId: id, projId });
+        setShowDropModal(true);
+      } else {
+        onDropEmployee(id, projId);
+      }
+    }
   };
 
   const projectById = Object.fromEntries(projects.map(p => [p.id, p]));
@@ -363,6 +376,59 @@ export default function ProjectBoardView({
           );
         })}
       </div>
+
+      {showDropModal && pendingDrop && (() => {
+        const pendingEmp = employees.find(e => e.id === pendingDrop.empId);
+        const pendingProj = projectById[pendingDrop.projId];
+        return (
+          <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg shadow-xl w-full max-w-sm p-6">
+              <div className="flex items-center gap-2 mb-3">
+                <AlertTriangle size={18} className="text-amber-500 flex-shrink-0" />
+                <h3 className="text-base font-bold text-slate-900">투입 정보 확인 필요</h3>
+              </div>
+              <p className="text-sm text-slate-600 leading-relaxed mb-3">
+                ⚠️ 투입예정 직원을 프로젝트에 배치하기 전에<br />
+                투입일자와 철수일자를 먼저 설정해주세요.
+              </p>
+              <div className="text-sm text-slate-700 bg-slate-50 rounded-md px-3 py-2 mb-5 space-y-1">
+                <div><span className="text-slate-400 text-xs">직원명</span> <span className="font-semibold">{pendingEmp?.name}</span></div>
+                <div><span className="text-slate-400 text-xs">배정 프로젝트</span> <span className="font-semibold">{pendingProj?.name}</span></div>
+              </div>
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={() => { setShowDropModal(false); setPendingDrop(null); }}
+                  className="px-3 py-2 text-sm border border-slate-300 rounded-md bg-white hover:bg-slate-100 text-slate-700"
+                >
+                  취소
+                </button>
+                <button
+                  onClick={() => {
+                    setShowDropModal(false);
+                    const emp = employees.find(e => e.id === pendingDrop.empId);
+                    setPendingDrop(null);
+                    if (emp && onEditEmp) onEditEmp(emp);
+                  }}
+                  className="px-3 py-2 text-sm bg-indigo-600 text-white rounded-md hover:bg-indigo-700 font-medium"
+                >
+                  정보 수정하기
+                </button>
+                <button
+                  onClick={() => {
+                    const { empId, projId } = pendingDrop;
+                    setShowDropModal(false);
+                    setPendingDrop(null);
+                    onDropEmployee(empId, projId);
+                  }}
+                  className="px-3 py-2 text-sm border border-slate-200 rounded-md bg-slate-50 hover:bg-slate-100 text-slate-600"
+                >
+                  그냥 이동
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </>
   );
 }

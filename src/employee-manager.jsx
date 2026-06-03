@@ -425,6 +425,7 @@ export default function EmployeeManager() {
             projects={projects}
             onDropEmployee={handleDropEmployee}
             onCardClick={(emp) => setDetailEmp(emp)}
+            onEditEmp={openEditEmp}
             onNewProject={openNewProj}
             onEditProject={openEditProj}
             onDeleteProject={removeProj}
