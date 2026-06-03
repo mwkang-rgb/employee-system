@@ -254,6 +254,20 @@ export default function ProjectBoardView({
                     : waitingDur.days >= 30 ? "bg-orange-50 text-orange-700 border-orange-200"
                     : "bg-amber-50 text-amber-700 border-amber-200";
 
+                  // 투입예정 대기일수 배지
+                  const isTipRuYeJeong = empStatus.label === "투입예정" && !isPurePool;
+                  const pendingBaseDate = isTipRuYeJeong
+                    ? (emp.startDate && emp.startDate !== "1111-01-01"
+                        ? emp.startDate
+                        : emp.created_at ? emp.created_at.slice(0, 10) : null)
+                    : null;
+                  const pendingLabel = pendingBaseDate ? formatWaitingLabel(pendingBaseDate) : "";
+                  const pendingDur = pendingBaseDate ? calcWaitingDuration(pendingBaseDate) : null;
+                  const pendingColor = !pendingDur ? "bg-amber-50 text-amber-700 border-amber-200"
+                    : pendingDur.days >= 90 ? "bg-red-50 text-red-700 border-red-200"
+                    : pendingDur.days >= 30 ? "bg-orange-50 text-orange-700 border-orange-200"
+                    : "bg-amber-50 text-amber-700 border-amber-200";
+
                   return (
                     <div
                       key={emp.id}
@@ -282,6 +296,14 @@ export default function ProjectBoardView({
                               title={emp.pooledAt ? `대기 시작: ${emp.pooledAt}` : ""}
                             >
                               {waitingLabel}
+                            </span>
+                          )}
+                          {isTipRuYeJeong && pendingLabel && (
+                            <span
+                              className={`text-[10px] px-1.5 py-0.5 font-semibold rounded border ${pendingColor} tabular-nums`}
+                              title={pendingBaseDate ? `기산일: ${pendingBaseDate}` : ""}
+                            >
+                              {pendingLabel}
                             </span>
                           )}
                         </div>
