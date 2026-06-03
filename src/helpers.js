@@ -28,11 +28,20 @@ export const getStatus = (startDate, endDate, projectId) => {
   return { label: "투입중", color: STATUS_COLORS["투입중"] };
 };
 
-// projectName(프로젝트명) 우선 → emp.status → 날짜 기반 계산 순으로 fallback
+// 투입형태 "투입예정" → 프로젝트명 "대기" → emp.status → 날짜 기반 계산 순으로 fallback
 export const resolveStatus = (emp, projectName) => {
-  if (projectName === "대기") return { label: "대기", color: STATUS_COLORS["대기"] };
-  if (emp.status) return { label: emp.status, color: STATUS_COLORS[emp.status] || STATUS_COLORS["예정"] };
-  return getStatus(emp.startDate, emp.endDate, emp.projectId);
+  let result;
+  if (emp.assignmentType === "투입예정") {
+    result = { label: "대기", color: STATUS_COLORS["대기"] };
+  } else if (projectName === "대기") {
+    result = { label: "대기", color: STATUS_COLORS["대기"] };
+  } else if (emp.status) {
+    result = { label: emp.status, color: STATUS_COLORS[emp.status] || STATUS_COLORS["예정"] };
+  } else {
+    result = getStatus(emp.startDate, emp.endDate, emp.projectId);
+  }
+  // console.log('[상태판단]', { name: emp.name, input_type: emp.assignmentType, project_name: projectName, result: result.label });
+  return result;
 };
 
 // 직원의 현재 투입 정보를 assignmentHistory에 누적
