@@ -288,13 +288,13 @@ export default function ProjectBoardView({
                       </div>
                       <div className="mt-1.5 flex flex-wrap gap-1">
                         <AffiliationBadge affiliation={emp.affiliation} partnerName={emp.partnerName} />
-                        {emp.duty && (
+                        {emp.duty && emp.duty !== "없음" && (
                           <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium rounded border bg-slate-50 text-slate-600 border-slate-200">
                             {emp.duty}
                           </span>
                         )}
                       </div>
-                      {emp.role && (
+                      {emp.role && emp.role !== "없음" && (
                         <div className="mt-1 text-[11px] text-slate-500 truncate" title={emp.role}>
                           · {emp.role}
                         </div>
