@@ -1,4 +1,4 @@
-import { X, Edit2, Briefcase, Building2 } from "lucide-react";
+import { X, Edit2, Briefcase, Building2, User } from "lucide-react";
 import { ASSIGNMENT_TYPE_STYLES } from "./constants.js";
 import { calcWaitingDuration, formatWaitingLabel, resolveStatus } from "./helpers.js";
 
@@ -65,15 +65,22 @@ export default function EmployeeDetailModal({ detailEmp, projectById, onClose, o
 
         {/* 본문 */}
         <div className="p-4 sm:p-5 space-y-4 overflow-y-auto flex-1">
-          {/* 소속 / 직무 / 투입형태 / 상태 배지 */}
+          {/* 소속 / 직무 / 역할 / 투입형태 / 상태 배지 */}
           <div className="flex flex-wrap gap-1.5">
             <AffiliationBadge affiliation={detailEmp.affiliation} partnerName={detailEmp.partnerName} />
-            {detailEmp.duty && (
-              <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded border bg-slate-50 text-slate-700 border-slate-200">
+            {detailEmp.duty && detailEmp.duty !== "없음" && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded border bg-slate-50 text-slate-700 border-slate-200">
+                <Briefcase size={10} />
                 {detailEmp.duty}
               </span>
             )}
-            {detailEmp.assignmentType && (
+            {detailEmp.role && detailEmp.role !== "없음" && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded border bg-slate-50 text-slate-700 border-slate-200">
+                <User size={10} />
+                {detailEmp.role}
+              </span>
+            )}
+            {detailEmp.assignmentType && detailEmp.assignmentType !== status.label && (
               <span className={`inline-flex items-center px-2 py-0.5 text-xs font-semibold rounded border ${ASSIGNMENT_TYPE_STYLES[detailEmp.assignmentType]?.badge || "bg-slate-50 text-slate-700 border-slate-200"}`}>
                 {detailEmp.assignmentType}
               </span>
@@ -205,7 +212,7 @@ export default function EmployeeDetailModal({ detailEmp, projectById, onClose, o
           })()}
 
           {/* 역할 */}
-          {detailEmp.role && (
+          {detailEmp.role && detailEmp.role !== "없음" && (
             <div className="rounded-lg border border-slate-200 p-3">
               <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">역할</div>
               <div className="text-sm text-slate-700">{detailEmp.role}</div>
