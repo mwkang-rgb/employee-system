@@ -8,11 +8,12 @@ export const SAMPLE_DUTIES = ["개발", "분석/설계", "기획", "PM", "PL", "
 export const SAMPLE_ROLES = ["프로젝트 총괄", "파트 리더", "백엔드 개발", "프론트엔드 개발", "풀스택 개발", "DB 설계", "요구사항 분석", "화면 설계", "테스트 자동화", "시스템 운영", "기술 검토", "품질 관리"];
 
 // 투입 형태
-export const ASSIGNMENT_TYPES = ["계약", "비계약", "지원"];
+export const ASSIGNMENT_TYPES = ["계약", "비계약", "지원", "투입예정"];
 export const ASSIGNMENT_TYPE_STYLES = {
-  "계약": { badge: "bg-blue-50 text-blue-700 border-blue-200", dot: "bg-blue-500", desc: "공식 계약 기반 투입 (수임/도급)" },
+  "계약":   { badge: "bg-blue-50 text-blue-700 border-blue-200",   dot: "bg-blue-500",   desc: "공식 계약 기반 투입 (수임/도급)" },
   "비계약": { badge: "bg-purple-50 text-purple-700 border-purple-200", dot: "bg-purple-500", desc: "내부 인력 풀 활용 투입" },
-  "지원": { badge: "bg-teal-50 text-teal-700 border-teal-200", dot: "bg-teal-500", desc: "타 프로젝트 일시 지원" },
+  "지원":   { badge: "bg-teal-50 text-teal-700 border-teal-200",   dot: "bg-teal-500",   desc: "타 프로젝트 일시 지원" },
+  "투입예정": { badge: "bg-sky-50 text-sky-700 border-sky-200",    dot: "bg-sky-500",    desc: "투입 예정 인력" },
 };
 
 // 직급 정렬 우선순위 (낮을수록 상위)
