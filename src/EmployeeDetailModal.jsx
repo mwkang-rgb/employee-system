@@ -1,6 +1,6 @@
 import { X, Edit2, Briefcase, Building2 } from "lucide-react";
 import { ASSIGNMENT_TYPE_STYLES } from "./constants.js";
-import { calcWaitingDuration, formatWaitingLabel } from "./helpers.js";
+import { calcWaitingDuration, formatWaitingLabel, resolveStatus } from "./helpers.js";
 
 // 소속 배지 (이 파일 내부에서만 사용하는 로컬 컴포넌트)
 function AffiliationBadge({ affiliation, partnerName }) {
@@ -37,6 +37,9 @@ function DetailRow({ label, children }) {
 export default function EmployeeDetailModal({ detailEmp, projectById, onClose, onEdit }) {
   if (!detailEmp) return null;
 
+  const projectName = projectById[detailEmp.projectId]?.name;
+  const status = resolveStatus(detailEmp, projectName);
+
   return (
     <div
       className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-2 sm:p-4 z-50"
@@ -62,7 +65,7 @@ export default function EmployeeDetailModal({ detailEmp, projectById, onClose, o
 
         {/* 본문 */}
         <div className="p-4 sm:p-5 space-y-4 overflow-y-auto flex-1">
-          {/* 소속 / 직무 / 투입형태 배지 */}
+          {/* 소속 / 직무 / 투입형태 / 상태 배지 */}
           <div className="flex flex-wrap gap-1.5">
             <AffiliationBadge affiliation={detailEmp.affiliation} partnerName={detailEmp.partnerName} />
             {detailEmp.duty && (
@@ -75,6 +78,9 @@ export default function EmployeeDetailModal({ detailEmp, projectById, onClose, o
                 {detailEmp.assignmentType}
               </span>
             )}
+            <span className={`inline-flex items-center px-2 py-0.5 text-xs font-semibold rounded border ${status.color}`}>
+              {status.label}
+            </span>
           </div>
 
           {/* 현재 투입 정보 (대기 인력 제외) */}
