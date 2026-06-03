@@ -88,10 +88,14 @@ export default function EmployeeDetailModal({ detailEmp, projectById, onClose, o
                   <span className="font-semibold text-slate-900">{projectById[detailEmp.projectId]?.name || "-"}</span>
                 </DetailRow>
                 <DetailRow label="투입일자">
-                  <span className="tabular-nums text-slate-700">{detailEmp.startDate || "-"}</span>
+                  <span className="tabular-nums text-slate-700">
+                    {!detailEmp.startDate || detailEmp.startDate === "1111-01-01" ? "-" : detailEmp.startDate}
+                  </span>
                 </DetailRow>
                 <DetailRow label="철수일자">
-                  <span className="tabular-nums text-slate-700">{detailEmp.endDate || "-"}</span>
+                  <span className="tabular-nums text-slate-700">
+                    {!detailEmp.endDate || detailEmp.endDate === "9999-12-31" ? "-" : detailEmp.endDate}
+                  </span>
                 </DetailRow>
                 <DetailRow label="투입 형태">
                   {detailEmp.assignmentType ? (
