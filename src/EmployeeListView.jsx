@@ -1,8 +1,19 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { Search, Plus, Edit2, Trash2, Download, Building2 } from "lucide-react";
+import * as XLSX from "xlsx";
 import { RANKS } from "./constants.js";
 import { getStatus } from "./helpers.js";
 import { COLOR_MAP } from "./constants.js";
+
+function downloadTemplate() {
+  const headers = ["이름", "소속", "직급", "직무", "역할", "투입형태", "투입프로젝트", "투입일자", "철수일자"];
+  const example = ["홍길동", "IBKS", "차장", "DBA", "", "비계약", "대기", "", ""];
+  const ws = XLSX.utils.aoa_to_sheet([headers, example]);
+  ws["!cols"] = [12, 16, 10, 12, 16, 10, 20, 14, 14].map((w) => ({ wch: w }));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "직원정보");
+  XLSX.writeFile(wb, "직원정보_업로드양식.xlsx");
+}
 
 // 소속 배지 (이 파일 내부 로컬 컴포넌트)
 function AffiliationBadge({ affiliation, partnerName }) {
@@ -45,7 +56,7 @@ const PAGE_SIZE = 15;
 //   onDeleteEmp  — (id) 삭제 버튼 클릭 시
 export default function EmployeeListView({
   employees, projects, projectById, partnerList,
-  onNewEmp, onEditEmp, onDeleteEmp,
+  onNewEmp, onEditEmp, onDeleteEmp, onBulkUpload,
 }) {
   const [query, setQuery] = useState("");
   const [filterRank, setFilterRank] = useState("전체");
@@ -57,6 +68,8 @@ export default function EmployeeListView({
   const [sortField, setSortField] = useState("id");
   const [sortDir, setSortDir] = useState("asc");
   const [page, setPage] = useState(1);
+  const [showUploadWarning, setShowUploadWarning] = useState(false);
+  const fileInputRef = useRef(null);
 
   // 필터 변경 시 1페이지로 복귀
   useEffect(() => {
@@ -191,6 +204,12 @@ export default function EmployeeListView({
           <button onClick={exportCSV} className="px-3 py-2 text-sm border border-slate-300 rounded-md bg-white hover:bg-slate-50 flex items-center gap-1 text-slate-700 flex-shrink-0">
             <Download size={14} /> CSV
           </button>
+          <button onClick={downloadTemplate} className="px-3 py-2 text-sm border border-slate-300 rounded-md bg-white hover:bg-slate-50 flex items-center gap-1 text-slate-700 flex-shrink-0">
+            📥 양식 다운로드
+          </button>
+          <button onClick={() => setShowUploadWarning(true)} className="px-3 py-2 text-sm border border-emerald-300 rounded-md bg-emerald-50 hover:bg-emerald-100 flex items-center gap-1 text-emerald-700 flex-shrink-0">
+            📤 직원정보 업로드
+          </button>
           <button onClick={onNewEmp} className="px-3 py-2 text-sm bg-indigo-600 text-white rounded-md hover:bg-indigo-700 flex items-center gap-1 font-medium flex-shrink-0 ml-auto sm:ml-0">
             <Plus size={14} /> 등록
           </button>
@@ -278,6 +297,43 @@ export default function EmployeeListView({
           </div>
         )}
       </div>
+
+      {showUploadWarning && (
+        <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-sm p-6">
+            <h3 className="text-base font-bold text-slate-900 mb-3">⚠️ 직원정보 일괄 업로드</h3>
+            <p className="text-sm text-slate-600 mb-6 leading-relaxed">
+              업로드한 파일의 데이터로 직원 정보가 등록됩니다.<br />
+              이름이 동일한 직원이 있을 경우 기존 데이터가 덮어씌워질 수 있습니다.<br /><br />
+              계속하시겠습니까?
+            </p>
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setShowUploadWarning(false)}
+                className="px-4 py-2 text-sm border border-slate-300 rounded-md bg-white hover:bg-slate-100 text-slate-700"
+              >
+                취소
+              </button>
+              <button
+                onClick={() => { setShowUploadWarning(false); fileInputRef.current?.click(); }}
+                className="px-4 py-2 text-sm bg-indigo-600 text-white rounded-md hover:bg-indigo-700 font-medium"
+              >
+                계속
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".xlsx"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) { onBulkUpload(file); e.target.value = ""; }
+        }}
+      />
     </>
   );
 }

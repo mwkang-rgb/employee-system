@@ -5,6 +5,7 @@ import { useAuth } from "./AuthContext.jsx";
 import { COLOR_MAP, COLOR_OPTIONS } from "./constants.js";
 import { todayISO, getStatus, archiveCurrentAssignment } from "./helpers.js";
 import { supabase } from "./supabaseClient";
+import * as XLSX from "xlsx";
 import EmployeeDetailModal from "./EmployeeDetailModal.jsx";
 import EmployeeFormModal from "./EmployeeFormModal.jsx";
 import ProjectBoardView from "./ProjectBoardView.jsx";
@@ -183,6 +184,82 @@ export default function EmployeeManager() {
     setEditingEmp(null);
   };
 
+  const handleBulkUpload = async (file) => {
+    const buf = await file.arrayBuffer();
+    const wb = XLSX.read(new Uint8Array(buf), { type: "array" });
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(ws, { defval: "", raw: false });
+
+    if (rows.length === 0) { alert("업로드할 데이터가 없습니다."); return; }
+
+    const REQUIRED = ["이름", "소속", "직급", "투입형태", "투입프로젝트"];
+    const errors = [];
+    rows.forEach((row, i) => {
+      const rowNum = i + 2;
+      REQUIRED.forEach(col => {
+        if (!row[col]?.toString().trim()) errors.push(`${rowNum}행: '${col}' 필수값 누락`);
+      });
+      const proj = row["투입프로젝트"]?.toString().trim();
+      if (proj && proj !== "대기") {
+        if (!row["투입일자"]?.toString().trim()) errors.push(`${rowNum}행: 투입일자 필요`);
+        if (!row["철수일자"]?.toString().trim()) errors.push(`${rowNum}행: 철수일자 필요`);
+      }
+    });
+    if (errors.length > 0) {
+      alert("유효성 오류:\n\n" + errors.slice(0, 10).join("\n") + (errors.length > 10 ? `\n...외 ${errors.length - 10}건` : ""));
+      return;
+    }
+
+    const projByName = Object.fromEntries(projects.map(p => [p.name, p.id]));
+    const payloadErrors = [];
+    const payloads = rows.map((row, i) => {
+      const projName = row["투입프로젝트"].toString().trim();
+      const isPool = projName === "대기";
+      const projectId = isPool ? "pool" : projByName[projName];
+      if (!isPool && !projectId) {
+        payloadErrors.push(`${i + 2}행: 프로젝트 '${projName}'을 찾을 수 없습니다`);
+        return null;
+      }
+      const 소속 = row["소속"].toString().trim();
+      return {
+        name: row["이름"].toString().trim(),
+        affiliation: 소속 === "IBKS" ? "IBKS" : "협력사",
+        partner_name: 소속 === "IBKS" ? "" : 소속,
+        rank: row["직급"].toString().trim(),
+        duty: (row["직무"] || "").toString().trim(),
+        role: (row["역할"] || "").toString().trim(),
+        assignment_type: row["투입형태"].toString().trim(),
+        project_id: projectId,
+        start_date: isPool ? null : (row["투입일자"]?.toString().trim() || null),
+        end_date: isPool ? null : (row["철수일자"]?.toString().trim() || null),
+        pooled_at: isPool ? todayISO() : null,
+        assignment_history: [],
+      };
+    }).filter(Boolean);
+
+    if (payloadErrors.length > 0) { alert("오류:\n\n" + payloadErrors.join("\n")); return; }
+
+    const existingByName = Object.fromEntries(employees.map(e => [e.name, e.id]));
+    const toInsert = payloads.filter(p => !existingByName[p.name]);
+    const toUpdate = payloads
+      .filter(p => existingByName[p.name])
+      .map(p => ({ ...p, id: existingByName[p.name] }));
+
+    if (toInsert.length > 0) {
+      const { error } = await supabase.from("employees").insert(toInsert);
+      if (error) { alert("등록 실패: " + error.message); return; }
+    }
+    if (toUpdate.length > 0) {
+      const { error } = await supabase.from("employees").upsert(toUpdate, { onConflict: "id" });
+      if (error) { alert("수정 실패: " + error.message); return; }
+    }
+
+    const { data, error: fetchErr } = await supabase.from("employees").select("*");
+    if (!fetchErr) setEmployees((data || []).map(dbToApp));
+
+    alert(`${payloads.length}건의 직원 정보가 업로드되었습니다.`);
+  };
+
   const openNewProj = () => {
     setEditingProj({ id: null, name: "", color: COLOR_OPTIONS[Math.floor(Math.random() * COLOR_OPTIONS.length)] });
     setShowProjModal(true);
@@ -341,6 +418,7 @@ export default function EmployeeManager() {
             onNewEmp={openNewEmp}
             onEditEmp={openEditEmp}
             onDeleteEmp={removeEmp}
+            onBulkUpload={handleBulkUpload}
           />
         )}
 
