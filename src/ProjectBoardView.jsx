@@ -293,12 +293,12 @@ export default function ProjectBoardView({
                             {emp.duty}
                           </span>
                         )}
+                        {emp.role && emp.role !== "없음" && (
+                          <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium rounded border bg-slate-50 text-slate-600 border-slate-200">
+                            {emp.role}
+                          </span>
+                        )}
                       </div>
-                      {emp.role && emp.role !== "없음" && (
-                        <div className="mt-1 text-[11px] text-slate-500 truncate" title={emp.role}>
-                          · {emp.role}
-                        </div>
-                      )}
                       {isPurePool && emp.pooledAt ? (
                         <div className="mt-1.5 pt-1.5 border-t border-slate-100 text-[11px] text-slate-500 tabular-nums flex justify-between">
                           <span className="text-slate-400">대기 시작</span>
