@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from "react";
-import { X, Users, Briefcase, Calendar, FolderKanban, LayoutList, Building2, LogOut } from "lucide-react";
+import { X, Users, Briefcase, Calendar, FolderKanban, LayoutList, Building2, LogOut, Trash2 } from "lucide-react";
 import { useRealtimeSync } from "./useRealtimeSync.js";
 import { useAuth } from "./AuthContext.jsx";
 import { COLOR_MAP, COLOR_OPTIONS } from "./constants.js";
@@ -54,6 +54,10 @@ export default function EmployeeManager() {
   const [editingProj, setEditingProj] = useState(null);
   // 카드 상세 보기 팝업 (대기 카드 클릭 시)
   const [detailEmp, setDetailEmp] = useState(null);
+
+  // 프로젝트 삭제 확인 모달
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
+  // deleteConfirm = { projId, members, ibksCount, partnerCount }
 
   // 직원 조회
   useEffect(() => {
@@ -262,25 +266,22 @@ export default function EmployeeManager() {
     setShowProjModal(true);
   };
   const openEditProj = (proj) => { setEditingProj({ ...proj }); setShowProjModal(true); };
-  const removeProj = async (id) => {
+  const removeProj = (id) => {
     if (id === "pool") { alert("대기 컬럼은 삭제할 수 없습니다."); return; }
     const members = employees.filter(e => e.projectId === id);
     const ibksCount = members.filter(e => e.affiliation === "IBKS").length;
     const partnerCount = members.filter(e => e.affiliation === "협력사").length;
-    let msg = "이 프로젝트를 삭제하시겠습니까?";
-    if (members.length > 0) {
-      const parts = [];
-      if (ibksCount > 0) parts.push(`IBKS ${ibksCount}명은 '대기'로 이동`);
-      if (partnerCount > 0) parts.push(`협력사 ${partnerCount}명은 자동 삭제`);
-      msg = `이 프로젝트에 ${members.length}명이 배치되어 있습니다.\n삭제 시 ${parts.join(", ")}됩니다.\n\n계속하시겠습니까?`;
-    }
-    if (!confirm(msg)) return;
+    setDeleteConfirm({ projId: id, members, ibksCount, partnerCount });
+  };
+  const doDeleteProject = async () => {
+    const { projId, members, ibksCount, partnerCount } = deleteConfirm;
+    setDeleteConfirm(null);
     const todayStr = todayISO();
     const projMap = Object.fromEntries(projects.map(p => [p.id, p]));
 
     // DB: 협력사 직원 삭제
     const { error: partnerErr } = await supabase.from("employees")
-      .delete().eq("project_id", id).eq("affiliation", "협력사");
+      .delete().eq("project_id", projId).eq("affiliation", "협력사");
     if (partnerErr) { console.error(partnerErr); alert("프로젝트 삭제 실패"); return; }
 
     // DB: IBKS 직원 대기로 이동 (assignment_history가 직원마다 달라 개별 업데이트)
@@ -294,19 +295,19 @@ export default function EmployeeManager() {
     }
 
     // DB: 프로젝트 삭제
-    const { error } = await supabase.from("projects").delete().eq("id", id);
+    const { error } = await supabase.from("projects").delete().eq("id", projId);
     if (error) { console.error(error); alert("프로젝트 삭제 실패"); return; }
 
     // 로컬 state 동기화
     setEmployees(prev => prev
-      .filter(e => !(e.projectId === id && e.affiliation === "협력사"))
+      .filter(e => !(e.projectId === projId && e.affiliation === "협력사"))
       .map(e => {
-        if (e.projectId !== id) return e;
+        if (e.projectId !== projId) return e;
         const newHistory = archiveCurrentAssignment(e, projMap, { closeEndDate: true });
         return { ...e, projectId: "pool", pooledAt: todayStr, assignmentHistory: newHistory };
       })
     );
-    setProjects(prev => prev.filter(p => p.id !== id));
+    setProjects(prev => prev.filter(p => p.id !== projId));
   };
   const saveProj = async () => {
     if (!editingProj.name.trim()) { alert("프로젝트명을 입력하세요."); return; }
@@ -457,6 +458,41 @@ export default function EmployeeManager() {
           setShowEmpModal(true);
         }}
       />
+
+      {/* 프로젝트 삭제 확인 모달 */}
+      {deleteConfirm && (
+        <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50" onClick={() => setDeleteConfirm(null)}>
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="flex flex-col items-center px-6 pt-7 pb-5 gap-3">
+              <div className="w-14 h-14 rounded-full bg-red-100 flex items-center justify-center">
+                <Trash2 size={26} className="text-red-600" />
+              </div>
+              <h3 className="text-lg font-bold text-slate-900">프로젝트 삭제</h3>
+              <div className="text-center text-sm text-slate-600 space-y-1.5">
+                {deleteConfirm.members.length > 0 ? (
+                  <>
+                    <p>이 프로젝트에 <span className="font-semibold text-slate-800">{deleteConfirm.members.length}명</span>이 배치되어 있습니다.</p>
+                    {deleteConfirm.ibksCount > 0 && (
+                      <p>삭제 시 <span className="font-semibold text-slate-800">IBKS {deleteConfirm.ibksCount}명</span>은 &apos;대기&apos;로 이동됩니다.</p>
+                    )}
+                    {deleteConfirm.partnerCount > 0 && (
+                      <p>삭제 시 <span className="font-semibold text-red-600">협력사 {deleteConfirm.partnerCount}명</span>은 자동 삭제됩니다.</p>
+                    )}
+                  </>
+                ) : (
+                  <p>이 프로젝트를 삭제하시겠습니까?</p>
+                )}
+                <p className="pt-0.5 text-slate-500">계속하시겠습니까?</p>
+              </div>
+            </div>
+            <div className="flex border-t border-slate-200">
+              <button onClick={() => setDeleteConfirm(null)} className="flex-1 py-3 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors">취소</button>
+              <div className="w-px bg-slate-200" />
+              <button onClick={doDeleteProject} className="flex-1 py-3 text-sm font-semibold text-red-600 hover:bg-red-50 transition-colors">삭제</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 프로젝트 등록/수정 모달 */}
       {showProjModal && editingProj && (
