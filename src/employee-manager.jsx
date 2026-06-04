@@ -318,7 +318,7 @@ export default function EmployeeManager() {
     for (const emp of ibksMembers) {
       const newHistory = archiveCurrentAssignment(emp, projMap, { closeEndDate: true });
       const { error: empErr } = await supabase.from("employees")
-        .update(appToDb({ projectId: "pool", pooledAt: todayStr, endDate: todayStr, assignmentType: "대기", assignmentHistory: newHistory }))
+        .update(appToDb({ projectId: "pool", pooledAt: todayStr, endDate: todayStr, assignmentType: "대기", duty: "", role: "", assignmentHistory: newHistory }))
         .eq("id", emp.id);
       if (empErr) { console.error(empErr); showAlert("알림", "프로젝트 삭제 실패"); return; }
     }
@@ -333,7 +333,7 @@ export default function EmployeeManager() {
       .map(e => {
         if (e.projectId !== projId) return e;
         const newHistory = archiveCurrentAssignment(e, projMap, { closeEndDate: true });
-        return { ...e, projectId: "pool", pooledAt: todayStr, endDate: todayStr, assignmentType: "대기", assignmentHistory: newHistory };
+        return { ...e, projectId: "pool", pooledAt: todayStr, endDate: todayStr, assignmentType: "대기", duty: "", role: "", assignmentHistory: newHistory };
       })
     );
     setProjects(prev => prev.filter(p => p.id !== projId));
