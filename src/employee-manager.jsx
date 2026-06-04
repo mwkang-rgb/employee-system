@@ -133,16 +133,32 @@ export default function EmployeeManager() {
     const isPool = editingEmp.projectId === "pool" || editingEmp.assignmentType === "대기";
     const isPending = editingEmp.assignmentType === "투입예정";
     const dateOptional = isPool || isPending;
+    const indetermStart = editingEmp.startDate === "1111-01-01";
+    const indetermEnd = editingEmp.endDate === "9999-12-31";
     if (!editingEmp.name.trim()) {
       alert("직원명은 필수 입력입니다."); return;
-    }
-    if (!dateOptional && (!editingEmp.startDate || !editingEmp.endDate)) {
-      alert("투입일자, 철수일자는 필수 입력입니다."); return;
     }
     if (editingEmp.affiliation === "협력사" && !editingEmp.partnerName.trim()) {
       alert("협력사를 선택한 경우 협력사명을 입력해야 합니다."); return;
     }
-    if (!dateOptional && editingEmp.startDate > editingEmp.endDate) {
+    if (editingEmp.projectId !== "pool" && editingEmp.assignmentType === "대기") {
+      alert("올바른 투입 형태를 선택한 후 저장해 주세요."); return;
+    }
+    if (editingEmp.projectId !== "pool") {
+      const duty = (editingEmp.duty || "").trim();
+      const role = (editingEmp.role || "").trim();
+      if (!duty || duty === "없음" || !role || role === "없음") {
+        alert("직무와 역할을 입력한 후 저장해 주세요."); return;
+      }
+    }
+    if (!dateOptional) {
+      const startMissing = !editingEmp.startDate && !indetermStart;
+      const endMissing = !editingEmp.endDate && !indetermEnd;
+      if (startMissing || endMissing) {
+        alert("올바른 투입 기간을 입력한 후 저장해 주세요."); return;
+      }
+    }
+    if (!dateOptional && !indetermStart && !indetermEnd && editingEmp.startDate && editingEmp.endDate && editingEmp.startDate > editingEmp.endDate) {
       alert("철수일자는 투입일자보다 빠를 수 없습니다."); return;
     }
 
@@ -366,8 +382,11 @@ export default function EmployeeManager() {
 
     const projMap = Object.fromEntries(projects.map(p => [p.id, p]));
     const newHistory = archiveCurrentAssignment(emp, projMap, { closeEndDate: true });
+    const isPending = emp.assignmentType === "투입예정";
     const updatePayload = appToDb(projId === "pool"
-      ? { projectId: projId, pooledAt: todayISO(), assignmentHistory: newHistory, startDate: null, endDate: null }
+      ? (isPending
+          ? { projectId: projId, pooledAt: todayISO(), assignmentHistory: newHistory, startDate: null, endDate: todayISO() }
+          : { projectId: projId, pooledAt: todayISO(), assignmentHistory: newHistory, startDate: null, endDate: todayISO(), assignmentType: "대기", duty: "", role: "" })
       : { projectId: projId, pooledAt: null, assignmentHistory: newHistory });
 
     const { error } = await supabase.from("employees").update(updatePayload).eq("id", empId);
@@ -375,7 +394,12 @@ export default function EmployeeManager() {
 
     setEmployees(prev => prev.map(x => {
       if (x.id !== empId) return x;
-      if (projId === "pool") return { ...x, projectId: projId, pooledAt: todayISO(), assignmentHistory: newHistory, startDate: null, endDate: null };
+      if (projId === "pool") {
+        const baseUpdate = { projectId: projId, pooledAt: todayISO(), assignmentHistory: newHistory, startDate: null, endDate: todayISO() };
+        return (x.assignmentType === "투입예정")
+          ? { ...x, ...baseUpdate }
+          : { ...x, ...baseUpdate, assignmentType: "대기", duty: "", role: "" };
+      }
       return { ...x, projectId: projId, pooledAt: null, assignmentHistory: newHistory };
     }));
   };
