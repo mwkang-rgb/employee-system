@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import { X, Users, Briefcase, Calendar, FolderKanban, LayoutList, Building2, LogOut, Trash2 } from "lucide-react";
 import { useRealtimeSync } from "./useRealtimeSync.js";
 import { useAuth } from "./AuthContext.jsx";
@@ -52,6 +52,8 @@ export default function EmployeeManager() {
 
   const [showProjModal, setShowProjModal] = useState(false);
   const [editingProj, setEditingProj] = useState(null);
+  const [isProjSubmitting, setIsProjSubmitting] = useState(false);
+  const isProjSubmittingRef = useRef(false);
   // 카드 상세 보기 팝업 (대기 카드 클릭 시)
   const [detailEmp, setDetailEmp] = useState(null);
 
@@ -311,28 +313,36 @@ export default function EmployeeManager() {
   };
   const saveProj = async () => {
     if (!editingProj.name.trim()) { alert("프로젝트명을 입력하세요."); return; }
-    if (editingProj.id === null) {
-      const { data, error } = await supabase
-        .from("projects")
-        .insert([{ name: editingProj.name, color: editingProj.color }])
-        .select()
-        .single();
-      if (error) { console.error(error); alert("프로젝트 저장 실패"); return; }
-      setProjects(prev => {
-        const pool = prev.find(p => p.id === "pool");
-        const others = prev.filter(p => p.id !== "pool");
-        return [pool, ...others, data].filter(Boolean);
-      });
-    } else {
-      const { error } = await supabase
-        .from("projects")
-        .update({ name: editingProj.name, color: editingProj.color })
-        .eq("id", editingProj.id);
-      if (error) { console.error(error); alert("프로젝트 수정 실패"); return; }
-      setProjects(prev => prev.map(p => p.id === editingProj.id ? editingProj : p));
+    if (isProjSubmittingRef.current) return;
+    isProjSubmittingRef.current = true;
+    setIsProjSubmitting(true);
+    try {
+      if (editingProj.id === null) {
+        const { data, error } = await supabase
+          .from("projects")
+          .insert([{ name: editingProj.name, color: editingProj.color }])
+          .select()
+          .single();
+        if (error) { console.error(error); alert("프로젝트 저장 실패"); return; }
+        setProjects(prev => {
+          const pool = prev.find(p => p.id === "pool");
+          const others = prev.filter(p => p.id !== "pool");
+          return [pool, ...others, data].filter(Boolean);
+        });
+      } else {
+        const { error } = await supabase
+          .from("projects")
+          .update({ name: editingProj.name, color: editingProj.color })
+          .eq("id", editingProj.id);
+        if (error) { console.error(error); alert("프로젝트 수정 실패"); return; }
+        setProjects(prev => prev.map(p => p.id === editingProj.id ? editingProj : p));
+      }
+      setShowProjModal(false);
+      setEditingProj(null);
+    } finally {
+      isProjSubmittingRef.current = false;
+      setIsProjSubmitting(false);
     }
-    setShowProjModal(false);
-    setEditingProj(null);
   };
 
   // 드래그앤드롭으로 직원을 다른 프로젝트로 이동 (ProjectBoardView에서 호출)
@@ -521,8 +531,10 @@ export default function EmployeeManager() {
               </Field>
             </div>
             <div className="px-4 sm:px-5 py-3 sm:py-4 border-t border-slate-200 flex justify-end gap-2 bg-slate-50 flex-shrink-0">
-              <button onClick={() => setShowProjModal(false)} className="px-4 py-2 text-sm border border-slate-300 rounded-md bg-white hover:bg-slate-100 text-slate-700">취소</button>
-              <button onClick={saveProj} className="px-4 py-2 text-sm bg-indigo-600 text-white rounded-md hover:bg-indigo-700 font-medium">{editingProj.id === null ? "등록" : "저장"}</button>
+              <button onClick={() => setShowProjModal(false)} disabled={isProjSubmitting} className="px-4 py-2 text-sm border border-slate-300 rounded-md bg-white hover:bg-slate-100 text-slate-700 disabled:opacity-50 disabled:cursor-not-allowed">취소</button>
+              <button onClick={saveProj} disabled={isProjSubmitting} className="px-4 py-2 text-sm bg-indigo-600 text-white rounded-md hover:bg-indigo-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed">
+                {isProjSubmitting ? "등록 중..." : (editingProj.id === null ? "등록" : "저장")}
+              </button>
             </div>
           </div>
         </div>
