@@ -113,8 +113,7 @@ export default function EmployeeManager() {
   }, [employees, projects]);
 
   const openNewEmp = () => {
-    const defaultProjectId = projects.find(p => p.id !== "pool")?.id;
-    setEditingEmp({ id: null, name: "", rank: "사원", projectId: defaultProjectId || "pool", startDate: "", endDate: "", affiliation: "IBKS", partnerName: "", duty: "", role: "", assignmentType: defaultProjectId ? "비계약" : "대기" });
+    setEditingEmp({ id: null, name: "", rank: "사원", projectId: "pool", startDate: "", endDate: "", affiliation: "IBKS", partnerName: "", duty: "", role: "", assignmentType: "대기" });
     setShowEmpModal(true);
   };
   const openEditEmp = (emp) => {
