@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Search, Edit2, Trash2, GripVertical, FolderPlus, Building2, Briefcase, UserCheck, Clock, CalendarClock, CheckCircle2, LogOut, Timer, AlertTriangle } from "lucide-react";
+import { Search, Edit2, Trash2, GripVertical, FolderPlus, Building2, Briefcase, UserCheck, Clock, CalendarClock, CheckCircle2, LogOut, Timer } from "lucide-react";
 import { COLOR_MAP, POOL_SORT_OPTIONS, RANK_ORDER } from "./constants.js";
 import { resolveStatus, calcWaitingDuration, formatWaitingLabel } from "./helpers.js";
 
@@ -50,9 +50,6 @@ export default function ProjectBoardView({
   const [dragOverProj, setDragOverProj] = useState(null);
   const [poolSortField, setPoolSortFieldState] = useState(loadPoolSort);
   const [poolSortDir, setPoolSortDir] = useState("desc");
-  const [showDropModal, setShowDropModal] = useState(false);
-  const [pendingDrop, setPendingDrop] = useState(null); // { empId, projId }
-
   // 컬럼 내 카드 순서 관련 상태
   const [columnOrders, setColumnOrders] = useState(loadOrders);
   const [dragOverCard, setDragOverCard] = useState(null); // { empId, above }
@@ -140,18 +137,17 @@ export default function ProjectBoardView({
 
     const draggedEmp = employees.find(x => x.id === id);
     const isTargetPool = projId === "pool";
-    const isTipRuYeJeong = draggedEmp?.assignmentType === "투입예정" ||
-      empStatuses[draggedEmp?.id]?.label === "투입예정";
 
-    if (isTipRuYeJeong && !isTargetPool) {
-      setPendingDrop({ empId: id, projId });
-      setShowDropModal(true);
-    } else {
-      onDropEmployee(id, projId);
-      // 원본 컬럼 순서에서 제거
-      if (srcCol) {
-        saveColumnOrder(srcCol, (columnOrders[srcCol] || []).filter(oid => oid !== id));
-      }
+    // 대기 → 프로젝트: 수정 모달 자동 오픈 (투입 프로젝트 미리 선택)
+    if (srcCol === "pool" && !isTargetPool) {
+      if (draggedEmp && onEditEmp) onEditEmp({ ...draggedEmp, projectId: projId });
+      return;
+    }
+
+    onDropEmployee(id, projId);
+    // 원본 컬럼 순서에서 제거
+    if (srcCol) {
+      saveColumnOrder(srcCol, (columnOrders[srcCol] || []).filter(oid => oid !== id));
     }
   };
 
@@ -187,13 +183,10 @@ export default function ProjectBoardView({
 
     const draggedEmp = employees.find(x => x.id === id);
     const isTargetPool = targetColId === "pool";
-    const isTipRuYeJeong = draggedEmp?.assignmentType === "투입예정" ||
-      empStatuses[draggedEmp?.id]?.label === "투입예정";
 
-    // 투입예정 → 프로젝트 컬럼 이동 시 모달
-    if (isTipRuYeJeong && !isTargetPool && srcCol !== targetColId) {
-      setPendingDrop({ empId: id, projId: targetColId });
-      setShowDropModal(true);
+    // 대기 → 프로젝트: 수정 모달 자동 오픈 (투입 프로젝트 미리 선택)
+    if (srcCol === "pool" && !isTargetPool) {
+      if (draggedEmp && onEditEmp) onEditEmp({ ...draggedEmp, projectId: targetColId });
       return;
     }
 
@@ -279,7 +272,7 @@ export default function ProjectBoardView({
             || (e.role || "").toLowerCase().includes(q);
 
           let members = isPool
-            ? employees.filter(e => (e.projectId === "pool" || empStatuses[e.id]?.label === "투입예정") && matchesSearch(e))
+            ? employees.filter(e => (e.projectId === "pool" || e.projectId == null || empStatuses[e.id]?.label === "투입예정") && matchesSearch(e))
             : employees.filter(e => e.projectId === proj.id && empStatuses[e.id]?.label !== "투입예정" && matchesSearch(e));
 
           // 대기 컬럼 정렬
@@ -558,47 +551,6 @@ export default function ProjectBoardView({
         })}
       </div>
 
-      {showDropModal && pendingDrop && (() => {
-        const pendingEmp = employees.find(e => e.id === pendingDrop.empId);
-        const pendingProj = projectById[pendingDrop.projId];
-        return (
-          <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-lg shadow-xl w-full max-w-sm p-6">
-              <div className="flex items-center gap-2 mb-3">
-                <AlertTriangle size={18} className="text-amber-500 flex-shrink-0" />
-                <h3 className="text-base font-bold text-slate-900">투입 정보 확인 필요</h3>
-              </div>
-              <p className="text-sm text-slate-600 leading-relaxed mb-3">
-                투입예정 직원을 프로젝트에 배치하기 전에<br />
-                투입일자와 철수일자를 먼저 설정해주세요.
-              </p>
-              <div className="text-sm text-slate-700 bg-slate-50 rounded-md px-3 py-2 mb-5 space-y-1">
-                <div><span className="text-slate-400 text-xs">직원명</span> <span className="font-semibold">{pendingEmp?.name}</span></div>
-                <div><span className="text-slate-400 text-xs">배정 프로젝트</span> <span className="font-semibold">{pendingProj?.name}</span></div>
-              </div>
-              <div className="flex justify-end gap-2">
-                <button
-                  onClick={() => { setShowDropModal(false); setPendingDrop(null); }}
-                  className="px-3 py-2 text-sm border border-slate-300 rounded-md bg-white hover:bg-slate-100 text-slate-700"
-                >
-                  취소
-                </button>
-                <button
-                  onClick={() => {
-                    setShowDropModal(false);
-                    const emp = employees.find(e => e.id === pendingDrop.empId);
-                    setPendingDrop(null);
-                    if (emp && onEditEmp) onEditEmp(emp);
-                  }}
-                  className="px-3 py-2 text-sm bg-indigo-600 text-white rounded-md hover:bg-indigo-700 font-medium"
-                >
-                  정보 수정하기
-                </button>
-              </div>
-            </div>
-          </div>
-        );
-      })()}
     </>
   );
 }

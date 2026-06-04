@@ -15,7 +15,7 @@ function dbToApp(row) {
   if (!row) return row;
   return {
     ...row,
-    projectId: row.project_id ?? row.projectId,
+    projectId: row.project_id == null ? "pool" : row.project_id,
     startDate: row.start_date ?? row.startDate,
     endDate: row.end_date ?? row.endDate,
     partnerName: row.partner_name ?? row.partnerName,
@@ -27,7 +27,7 @@ function dbToApp(row) {
 
 function appToDb(obj) {
   const result = { ...obj };
-  if ('projectId' in result) { result.project_id = result.projectId; delete result.projectId; }
+  if ('projectId' in result) { result.project_id = result.projectId === "pool" ? null : result.projectId; delete result.projectId; }
   if ('startDate' in result) { result.start_date = result.startDate; delete result.startDate; }
   if ('endDate' in result) { result.end_date = result.endDate; delete result.endDate; }
   if ('partnerName' in result) { result.partner_name = result.partnerName; delete result.partnerName; }
@@ -350,7 +350,7 @@ export default function EmployeeManager() {
     const projMap = Object.fromEntries(projects.map(p => [p.id, p]));
     const newHistory = archiveCurrentAssignment(emp, projMap, { closeEndDate: true });
     const updatePayload = appToDb(projId === "pool"
-      ? { projectId: projId, pooledAt: todayISO(), assignmentHistory: newHistory }
+      ? { projectId: projId, pooledAt: todayISO(), assignmentHistory: newHistory, startDate: null, endDate: null }
       : { projectId: projId, pooledAt: null, assignmentHistory: newHistory });
 
     const { error } = await supabase.from("employees").update(updatePayload).eq("id", empId);
@@ -358,7 +358,7 @@ export default function EmployeeManager() {
 
     setEmployees(prev => prev.map(x => {
       if (x.id !== empId) return x;
-      if (projId === "pool") return { ...x, projectId: projId, pooledAt: todayISO(), assignmentHistory: newHistory };
+      if (projId === "pool") return { ...x, projectId: projId, pooledAt: todayISO(), assignmentHistory: newHistory, startDate: null, endDate: null };
       return { ...x, projectId: projId, pooledAt: null, assignmentHistory: newHistory };
     }));
   };
