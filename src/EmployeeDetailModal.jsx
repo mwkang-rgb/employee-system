@@ -83,7 +83,7 @@ export default function EmployeeDetailModal({ detailEmp, projectById, onClose, o
                 {detailEmp.role}
               </span>
             )}
-            {detailEmp.assignmentType && detailEmp.assignmentType !== status.label && (
+            {detailEmp.assignmentType && detailEmp.assignmentType !== "대기" && detailEmp.assignmentType !== status.label && (
               <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs font-semibold rounded border ${ASSIGNMENT_TYPE_STYLES[detailEmp.assignmentType]?.badge || "bg-slate-50 text-slate-700 border-slate-200"}`}>
                 <FileText size={10} />
                 {detailEmp.assignmentType}
