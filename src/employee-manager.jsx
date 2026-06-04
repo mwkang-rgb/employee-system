@@ -10,6 +10,7 @@ import EmployeeDetailModal from "./EmployeeDetailModal.jsx";
 import EmployeeFormModal from "./EmployeeFormModal.jsx";
 import ProjectBoardView from "./ProjectBoardView.jsx";
 import EmployeeListView from "./EmployeeListView.jsx";
+import AlertModal from "./AlertModal.jsx";
 
 function dbToApp(row) {
   if (!row) return row;
@@ -56,6 +57,10 @@ export default function EmployeeManager() {
   const isProjSubmittingRef = useRef(false);
   // 카드 상세 보기 팝업 (대기 카드 클릭 시)
   const [detailEmp, setDetailEmp] = useState(null);
+
+  // 커스텀 알림 모달
+  const [alertInfo, setAlertInfo] = useState(null);
+  const showAlert = (title, message) => setAlertInfo({ title, message });
 
   // 프로젝트 삭제 확인 모달
   const [deleteConfirm, setDeleteConfirm] = useState(null);
@@ -126,7 +131,7 @@ export default function EmployeeManager() {
   const removeEmp = async (id) => {
     if (!confirm("이 직원 정보를 삭제하시겠습니까?")) return;
     const { error } = await supabase.from("employees").delete().eq("id", id);
-    if (error) { console.error(error); alert("삭제 실패"); return; }
+    if (error) { console.error(error); showAlert("알림", "삭제 실패"); return; }
     setEmployees((prev) => prev.filter((e) => e.id !== id));
   };
   const saveEmp = async () => {
@@ -136,42 +141,42 @@ export default function EmployeeManager() {
     const indetermStart = editingEmp.startDate === "1111-01-01";
     const indetermEnd = editingEmp.endDate === "9999-12-31";
     if (!editingEmp.name.trim()) {
-      alert("직원명은 필수 입력입니다."); return;
+      showAlert("알림", "직원명은 필수 입력입니다."); return;
     }
     if (editingEmp.affiliation === "협력사" && !editingEmp.partnerName.trim()) {
-      alert("협력사를 선택한 경우 협력사명을 입력해야 합니다."); return;
+      showAlert("알림", "협력사를 선택한 경우 협력사명을 입력해야 합니다."); return;
     }
     if (editingEmp.projectId !== "pool" && editingEmp.assignmentType === "대기") {
-      alert("올바른 투입 형태를 선택한 후 저장해 주세요."); return;
+      showAlert("투입 형태 오류", "올바른 투입 형태를 선택한 후 저장해 주세요."); return;
     }
     if (editingEmp.projectId !== "pool") {
       const duty = (editingEmp.duty || "").trim();
       const role = (editingEmp.role || "").trim();
       if (!duty || duty === "없음" || !role || role === "없음") {
-        alert("직무와 역할을 입력한 후 저장해 주세요."); return;
+        showAlert("필수 항목 누락", "직무와 역할을 입력한 후 저장해 주세요."); return;
       }
     }
     if (!dateOptional) {
       const startMissing = !editingEmp.startDate && !indetermStart;
       const endMissing = !editingEmp.endDate && !indetermEnd;
       if (startMissing || endMissing) {
-        alert("올바른 투입 기간을 입력한 후 저장해 주세요."); return;
+        showAlert("날짜 입력 오류", "올바른 투입 기간을 입력한 후 저장해 주세요."); return;
       }
     }
     if (!dateOptional && !indetermStart && !indetermEnd && editingEmp.startDate && editingEmp.endDate && editingEmp.startDate > editingEmp.endDate) {
-      alert("철수일자는 투입일자보다 빠를 수 없습니다."); return;
+      showAlert("날짜 입력 오류", "철수일자는 투입일자보다 빠를 수 없습니다."); return;
     }
 
     // 협력사 + 대기 조합은 자동 삭제 처리
     if (editingEmp.affiliation === "협력사" && isPool) {
       if (editingEmp.id === null) {
-        alert("협력사 직원은 '대기'로 등록할 수 없습니다. 투입 프로젝트를 선택해 주세요.");
+        showAlert("알림", "협력사 직원은 '대기'로 등록할 수 없습니다. 투입 프로젝트를 선택해 주세요.");
         return;
       }
       const ok = confirm(`협력사 직원은 '대기'로 이동 시 자동 삭제됩니다.\n\n${editingEmp.name} (${editingEmp.partnerName})\n\n계속하시겠습니까?`);
       if (!ok) return;
       const { error: delErr } = await supabase.from("employees").delete().eq("id", editingEmp.id);
-      if (delErr) { console.error(delErr); alert("삭제 실패"); return; }
+      if (delErr) { console.error(delErr); showAlert("알림", "삭제 실패"); return; }
       setEmployees(prev => prev.filter(e => e.id !== editingEmp.id));
       setShowEmpModal(false);
       setEditingEmp(null);
@@ -203,11 +208,11 @@ export default function EmployeeManager() {
     const payload = appToDb(rawPayload);
     if (editingEmp.id === null) {
       const { data, error } = await supabase.from("employees").insert([payload]).select().single();
-      if (error) { console.error(error); alert("저장 실패"); return; }
+      if (error) { console.error(error); showAlert("알림", "저장 실패"); return; }
       setEmployees((prev) => [...prev, dbToApp(data)]);
     } else {
       const { data, error } = await supabase.from("employees").update(payload).eq("id", editingEmp.id).select().single();
-      if (error) { console.error(error); alert("수정 실패"); return; }
+      if (error) { console.error(error); showAlert("알림", "수정 실패"); return; }
       setEmployees((prev) => prev.map((e) => (e.id === editingEmp.id ? dbToApp(data) : e)));
     }
     setShowEmpModal(false);
@@ -220,7 +225,7 @@ export default function EmployeeManager() {
     const ws = wb.Sheets[wb.SheetNames[0]];
     const rows = XLSX.utils.sheet_to_json(ws, { defval: "", raw: false });
 
-    if (rows.length === 0) { alert("업로드할 데이터가 없습니다."); return; }
+    if (rows.length === 0) { showAlert("알림", "업로드할 데이터가 없습니다."); return; }
 
     const REQUIRED = ["이름", "소속", "직급", "투입형태", "투입프로젝트"];
     const errors = [];
@@ -231,7 +236,7 @@ export default function EmployeeManager() {
       });
     });
     if (errors.length > 0) {
-      alert("유효성 오류:\n\n" + errors.slice(0, 10).join("\n") + (errors.length > 10 ? `\n...외 ${errors.length - 10}건` : ""));
+      showAlert("알림", "유효성 오류:\n\n" + errors.slice(0, 10).join("\n") + (errors.length > 10 ? `\n...외 ${errors.length - 10}건` : ""));
       return;
     }
 
@@ -262,7 +267,7 @@ export default function EmployeeManager() {
       };
     }).filter(Boolean);
 
-    if (payloadErrors.length > 0) { alert("오류:\n\n" + payloadErrors.join("\n")); return; }
+    if (payloadErrors.length > 0) { showAlert("알림", "오류:\n\n" + payloadErrors.join("\n")); return; }
 
     const existingByName = Object.fromEntries(employees.map(e => [e.name, e.id]));
     const toInsert = payloads.filter(p => !existingByName[p.name]);
@@ -272,17 +277,17 @@ export default function EmployeeManager() {
 
     if (toInsert.length > 0) {
       const { error } = await supabase.from("employees").insert(toInsert);
-      if (error) { alert("등록 실패: " + error.message); return; }
+      if (error) { showAlert("알림", "등록 실패: " + error.message); return; }
     }
     if (toUpdate.length > 0) {
       const { error } = await supabase.from("employees").upsert(toUpdate, { onConflict: "id" });
-      if (error) { alert("수정 실패: " + error.message); return; }
+      if (error) { showAlert("알림", "수정 실패: " + error.message); return; }
     }
 
     const { data, error: fetchErr } = await supabase.from("employees").select("*");
     if (!fetchErr) setEmployees((data || []).map(dbToApp));
 
-    alert(`${payloads.length}건의 직원 정보가 업로드되었습니다.`);
+    showAlert("알림", `${payloads.length}건의 직원 정보가 업로드되었습니다.`);
   };
 
   const openNewProj = () => {
@@ -291,7 +296,7 @@ export default function EmployeeManager() {
   };
   const openEditProj = (proj) => { setEditingProj({ ...proj }); setShowProjModal(true); };
   const removeProj = (id) => {
-    if (id === "pool") { alert("대기 컬럼은 삭제할 수 없습니다."); return; }
+    if (id === "pool") { showAlert("알림", "대기 컬럼은 삭제할 수 없습니다."); return; }
     const members = employees.filter(e => e.projectId === id);
     const ibksCount = members.filter(e => e.affiliation === "IBKS").length;
     const partnerCount = members.filter(e => e.affiliation === "협력사").length;
@@ -306,7 +311,7 @@ export default function EmployeeManager() {
     // DB: 협력사 직원 삭제
     const { error: partnerErr } = await supabase.from("employees")
       .delete().eq("project_id", projId).eq("affiliation", "협력사");
-    if (partnerErr) { console.error(partnerErr); alert("프로젝트 삭제 실패"); return; }
+    if (partnerErr) { console.error(partnerErr); showAlert("알림", "프로젝트 삭제 실패"); return; }
 
     // DB: IBKS 직원 대기로 이동 (assignment_history가 직원마다 달라 개별 업데이트)
     const ibksMembers = members.filter(e => e.affiliation === "IBKS");
@@ -315,12 +320,12 @@ export default function EmployeeManager() {
       const { error: empErr } = await supabase.from("employees")
         .update(appToDb({ projectId: "pool", pooledAt: todayStr, endDate: todayStr, assignmentType: "대기", assignmentHistory: newHistory }))
         .eq("id", emp.id);
-      if (empErr) { console.error(empErr); alert("프로젝트 삭제 실패"); return; }
+      if (empErr) { console.error(empErr); showAlert("알림", "프로젝트 삭제 실패"); return; }
     }
 
     // DB: 프로젝트 삭제
     const { error } = await supabase.from("projects").delete().eq("id", projId);
-    if (error) { console.error(error); alert("프로젝트 삭제 실패"); return; }
+    if (error) { console.error(error); showAlert("알림", "프로젝트 삭제 실패"); return; }
 
     // 로컬 state 동기화
     setEmployees(prev => prev
@@ -334,7 +339,7 @@ export default function EmployeeManager() {
     setProjects(prev => prev.filter(p => p.id !== projId));
   };
   const saveProj = async () => {
-    if (!editingProj.name.trim()) { alert("프로젝트명을 입력하세요."); return; }
+    if (!editingProj.name.trim()) { showAlert("알림", "프로젝트명을 입력하세요."); return; }
     if (isProjSubmittingRef.current) return;
     isProjSubmittingRef.current = true;
     setIsProjSubmitting(true);
@@ -345,7 +350,7 @@ export default function EmployeeManager() {
           .insert([{ name: editingProj.name, color: editingProj.color }])
           .select()
           .single();
-        if (error) { console.error(error); alert("프로젝트 저장 실패"); return; }
+        if (error) { console.error(error); showAlert("알림", "프로젝트 저장 실패"); return; }
         setProjects(prev => {
           const pool = prev.find(p => p.id === "pool");
           const others = prev.filter(p => p.id !== "pool");
@@ -356,7 +361,7 @@ export default function EmployeeManager() {
           .from("projects")
           .update({ name: editingProj.name, color: editingProj.color })
           .eq("id", editingProj.id);
-        if (error) { console.error(error); alert("프로젝트 수정 실패"); return; }
+        if (error) { console.error(error); showAlert("알림", "프로젝트 수정 실패"); return; }
         setProjects(prev => prev.map(p => p.id === editingProj.id ? editingProj : p));
       }
       setShowProjModal(false);
@@ -375,7 +380,7 @@ export default function EmployeeManager() {
 
     if (projId === "pool" && emp.affiliation === "협력사") {
       const { error } = await supabase.from("employees").delete().eq("id", empId);
-      if (error) { console.error(error); alert("삭제 실패"); return; }
+      if (error) { console.error(error); showAlert("알림", "삭제 실패"); return; }
       setEmployees(prev => prev.filter(x => x.id !== empId));
       return;
     }
@@ -390,7 +395,7 @@ export default function EmployeeManager() {
       : { projectId: projId, pooledAt: null, assignmentHistory: newHistory });
 
     const { error } = await supabase.from("employees").update(updatePayload).eq("id", empId);
-    if (error) { console.error(error); alert("배치 변경 실패"); return; }
+    if (error) { console.error(error); showAlert("알림", "배치 변경 실패"); return; }
 
     setEmployees(prev => prev.map(x => {
       if (x.id !== empId) return x;
@@ -568,6 +573,15 @@ export default function EmployeeManager() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* 커스텀 알림 모달 */}
+      {alertInfo && (
+        <AlertModal
+          title={alertInfo.title}
+          message={alertInfo.message}
+          onClose={() => setAlertInfo(null)}
+        />
       )}
     </div>
   );

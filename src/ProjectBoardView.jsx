@@ -520,7 +520,7 @@ export default function ProjectBoardView({
                             </span>
                           )}
                         </div>
-                        {isPurePool && emp.pooledAt ? (
+                        {(empStatus.label === "대기" || emp.assignmentType === "대기") && emp.pooledAt ? (
                           <div className="mt-1.5 pt-1.5 border-t border-slate-100 text-[11px] text-slate-500 tabular-nums flex justify-between">
                             <span className="text-slate-400">대기 시작</span>
                             <span>{emp.pooledAt}</span>

@@ -29,7 +29,7 @@ function rawToApp(row) {
   if (!row) return row;
   return {
     ...row,
-    projectId: row.project_id ?? row.projectId,
+    projectId: row.project_id == null ? "pool" : row.project_id,
     startDate: row.start_date ?? row.startDate,
     endDate: row.end_date ?? row.endDate,
     partnerName: row.partner_name ?? row.partnerName,
