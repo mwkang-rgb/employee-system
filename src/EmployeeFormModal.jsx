@@ -110,20 +110,22 @@ export default function EmployeeFormModal({
             <Field label="직무">
               <input
                 type="text"
-                value={editingEmp.duty || ""}
+                value={isPool ? "없음" : (editingEmp.duty || "")}
                 onChange={(e) => setEditingEmp({ ...editingEmp, duty: e.target.value })}
+                disabled={isPool}
                 autoComplete="off"
-                className="w-full px-3 py-2 text-base sm:text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className={`w-full px-3 py-2 text-base sm:text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 ${isPool ? "bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed" : "border-slate-300"}`}
                 placeholder="예: 개발, PM"
               />
             </Field>
             <Field label="역할">
               <input
                 type="text"
-                value={editingEmp.role || ""}
+                value={isPool ? "없음" : (editingEmp.role || "")}
                 onChange={(e) => setEditingEmp({ ...editingEmp, role: e.target.value })}
+                disabled={isPool}
                 autoComplete="off"
-                className="w-full px-3 py-2 text-base sm:text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className={`w-full px-3 py-2 text-base sm:text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 ${isPool ? "bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed" : "border-slate-300"}`}
                 placeholder="예: 백엔드 개발"
               />
             </Field>
@@ -134,8 +136,13 @@ export default function EmployeeFormModal({
               value={editingEmp.assignmentType || "비계약"}
               onChange={(e) => {
                 const newType = e.target.value;
-                if (newType === "대기") {
-                  setEditingEmp({ ...editingEmp, assignmentType: "대기", projectId: "pool", startDate: "", endDate: "" });
+                if (newType === "투입예정") {
+                  const newProjectId = editingEmp.projectId === "pool"
+                    ? (projects.find(p => p.id !== "pool")?.id || "pool")
+                    : editingEmp.projectId;
+                  setEditingEmp({ ...editingEmp, assignmentType: "투입예정", projectId: newProjectId });
+                } else if (newType === "대기") {
+                  setEditingEmp({ ...editingEmp, assignmentType: "대기", projectId: "pool", startDate: "", endDate: "", duty: "", role: "" });
                 } else {
                   const newProjectId = editingEmp.projectId === "pool"
                     ? (projects.find(p => p.id !== "pool")?.id || "pool")
