@@ -113,10 +113,17 @@ export default function EmployeeManager() {
   }, [employees, projects]);
 
   const openNewEmp = () => {
-    setEditingEmp({ id: null, name: "", rank: "사원", projectId: projects[0].id, startDate: "", endDate: "", affiliation: "IBKS", partnerName: "", duty: "", role: "", assignmentType: "비계약" });
+    const defaultProjectId = projects.find(p => p.id !== "pool")?.id;
+    setEditingEmp({ id: null, name: "", rank: "사원", projectId: defaultProjectId || "pool", startDate: "", endDate: "", affiliation: "IBKS", partnerName: "", duty: "", role: "", assignmentType: defaultProjectId ? "비계약" : "대기" });
     setShowEmpModal(true);
   };
-  const openEditEmp = (emp) => { setEditingEmp({ ...emp }); setShowEmpModal(true); };
+  const openEditEmp = (emp) => {
+    const normalized = emp.projectId === "pool" && emp.assignmentType !== "대기"
+      ? { ...emp, assignmentType: "대기" }
+      : { ...emp };
+    setEditingEmp(normalized);
+    setShowEmpModal(true);
+  };
   const removeEmp = async (id) => {
     if (!confirm("이 직원 정보를 삭제하시겠습니까?")) return;
     const { error } = await supabase.from("employees").delete().eq("id", id);
@@ -124,7 +131,7 @@ export default function EmployeeManager() {
     setEmployees((prev) => prev.filter((e) => e.id !== id));
   };
   const saveEmp = async () => {
-    const isPool = editingEmp.projectId === "pool";
+    const isPool = editingEmp.projectId === "pool" || editingEmp.assignmentType === "대기";
     const isPending = editingEmp.assignmentType === "투입예정";
     const dateOptional = isPool || isPending;
     if (!editingEmp.name.trim()) {
@@ -141,7 +148,7 @@ export default function EmployeeManager() {
     }
 
     // 협력사 + 대기 조합은 자동 삭제 처리
-    if (editingEmp.affiliation === "협력사" && editingEmp.projectId === "pool") {
+    if (editingEmp.affiliation === "협력사" && isPool) {
       if (editingEmp.id === null) {
         alert("협력사 직원은 '대기'로 등록할 수 없습니다. 투입 프로젝트를 선택해 주세요.");
         return;
@@ -157,7 +164,7 @@ export default function EmployeeManager() {
     }
 
     const prevEmp = editingEmp.id !== null ? employees.find(e => e.id === editingEmp.id) : null;
-    const wasInPool = prevEmp?.projectId === "pool";
+    const wasInPool = prevEmp?.projectId === "pool" || prevEmp?.assignmentType === "대기";
     const projectChanged = prevEmp && prevEmp.projectId !== editingEmp.projectId;
     const projMap = Object.fromEntries(projects.map(p => [p.id, p]));
     let nextHistory = editingEmp.assignmentHistory || [];

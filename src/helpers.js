@@ -32,7 +32,7 @@ export const getStatus = (startDate, endDate, projectId) => {
 // 우선순위: 프로젝트명 "대기"/미배정 → 투입예정 형태 → null 날짜 → 날짜 기반 계산
 export const resolveStatus = (emp, projectName) => {
   let result;
-  if (projectName === "대기" || !emp.projectId || emp.projectId === "pool") {
+  if (projectName === "대기" || !emp.projectId || emp.projectId === "pool" || emp.assignmentType === "대기") {
     result = { label: "대기", color: STATUS_COLORS["대기"] };
   } else if (emp.assignmentType === "투입예정") {
     result = { label: "투입예정", color: STATUS_COLORS["투입예정"] };

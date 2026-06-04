@@ -96,7 +96,7 @@ export default function EmployeeDetailModal({ detailEmp, projectById, onClose, o
           </div>
 
           {/* 현재 투입 정보 (대기 인력 제외) */}
-          {detailEmp.projectId !== "pool" && (
+          {detailEmp.projectId !== "pool" && detailEmp.assignmentType !== "대기" && (
             <div className="rounded-lg border border-slate-200 bg-slate-50/50 overflow-hidden">
               <div className="px-3 py-2 bg-slate-100/70 border-b border-slate-200 text-[11px] font-bold text-slate-600 uppercase tracking-wider flex items-center gap-1.5">
                 <Briefcase size={13} /> 현재 투입 정보
@@ -127,7 +127,7 @@ export default function EmployeeDetailModal({ detailEmp, projectById, onClose, o
           )}
 
           {/* 대기 상태 카드 (대기 인력만) */}
-          {detailEmp.projectId === "pool" && detailEmp.pooledAt && (() => {
+          {(detailEmp.projectId === "pool" || detailEmp.assignmentType === "대기") && detailEmp.pooledAt && (() => {
             const dur = calcWaitingDuration(detailEmp.pooledAt);
             const colorCls = dur.days >= 90 ? "text-red-700 bg-red-50 border-red-200"
               : dur.days >= 30 ? "text-orange-700 bg-orange-50 border-orange-200"

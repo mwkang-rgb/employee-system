@@ -257,7 +257,7 @@ export default function EmployeeListView({
                     <td className="px-3 sm:px-4 py-3 text-left text-slate-700">{e.duty || <span className="text-slate-300">-</span>}</td>
                     <td className="px-3 sm:px-4 py-3 text-left text-slate-600">{e.role || <span className="text-slate-300">-</span>}</td>
                     <td className="px-3 sm:px-4 py-3 text-left text-slate-700">
-                      {e.projectId === "pool" || !proj || proj.name === "대기" ? (
+                      {e.projectId === "pool" || e.assignmentType === "대기" || !proj || proj.name === "대기" ? (
                         <span className="text-slate-300">-</span>
                       ) : (
                         <span className="inline-flex items-center gap-1.5">

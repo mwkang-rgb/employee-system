@@ -132,7 +132,17 @@ export default function EmployeeFormModal({
           <Field label="투입 형태 *">
             <select
               value={editingEmp.assignmentType || "비계약"}
-              onChange={(e) => setEditingEmp({ ...editingEmp, assignmentType: e.target.value })}
+              onChange={(e) => {
+                const newType = e.target.value;
+                if (newType === "대기") {
+                  setEditingEmp({ ...editingEmp, assignmentType: "대기", projectId: "pool", startDate: "", endDate: "" });
+                } else {
+                  const newProjectId = editingEmp.projectId === "pool"
+                    ? (projects.find(p => p.id !== "pool")?.id || "pool")
+                    : editingEmp.projectId;
+                  setEditingEmp({ ...editingEmp, assignmentType: newType, projectId: newProjectId });
+                }
+              }}
               className="w-full px-3 py-2 text-base sm:text-sm border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
             >
               {ASSIGNMENT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
@@ -145,13 +155,21 @@ export default function EmployeeFormModal({
           </Field>
 
           <Field label="투입 프로젝트 *">
-            <select
-              value={editingEmp.projectId}
-              onChange={(e) => setEditingEmp({ ...editingEmp, projectId: e.target.value })}
-              className="w-full px-3 py-2 text-base sm:text-sm border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            >
-              {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-            </select>
+            {isPool ? (
+              <input
+                disabled
+                value="대기 상태 (프로젝트 없음)"
+                className="w-full px-3 py-2 text-base sm:text-sm border border-slate-200 rounded-md bg-slate-100 text-slate-400 cursor-not-allowed"
+              />
+            ) : (
+              <select
+                value={editingEmp.projectId}
+                onChange={(e) => setEditingEmp({ ...editingEmp, projectId: e.target.value })}
+                className="w-full px-3 py-2 text-base sm:text-sm border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              >
+                {projects.filter(p => p.id !== "pool").map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+              </select>
+            )}
             {editingEmp.affiliation === "협력사" && editingEmp.projectId === "pool" && (
               <div className="mt-1.5 text-[11px] text-red-600 font-medium flex items-center gap-1">
                 ⚠ 협력사 직원을 '대기'로 지정하면 저장 시 자동 삭제됩니다.
