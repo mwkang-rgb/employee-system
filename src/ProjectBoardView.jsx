@@ -415,7 +415,7 @@ export default function ProjectBoardView({
                     >
                       {proj.name}
                     </span>
-                    <span className={`px-1.5 py-0.5 text-xs font-semibold rounded bg-white/70 ${c.text} flex-shrink-0`}>{members.length}</span>
+
                   </div>
                   {!isPool && (
                     <div className="flex gap-0.5 flex-shrink-0">
