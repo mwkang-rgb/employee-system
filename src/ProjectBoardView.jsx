@@ -445,7 +445,7 @@ export default function ProjectBoardView({
                         <span className="opacity-80 w-6">경과</span>
                         <span className="opacity-40">:</span>
                         <span className="flex-1">
-                          <span className={`px-2 py-0.5 rounded text-[11px] font-bold border ${c.header} ${c.text} border-current border-opacity-30`}>{elapsedLabel}</span>
+                          <span className="px-2 py-0.5 rounded text-[11px] font-bold border bg-slate-100 text-slate-700 border-slate-300">{elapsedLabel}</span>
                         </span>
                       </>}
 
@@ -468,7 +468,7 @@ export default function ProjectBoardView({
                       <span className="font-semibold flex-shrink-0 w-6">인원</span>
                       <span className="opacity-40 flex-shrink-0">:</span>
                       <span className="flex flex-wrap gap-1">
-                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold border ${c.header} ${c.text} border-current border-opacity-30`}>
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-bold border bg-slate-100 text-slate-700 border-slate-300">
                           총원 {members.length}
                         </span>
                         <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
