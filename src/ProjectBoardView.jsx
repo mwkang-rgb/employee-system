@@ -341,18 +341,43 @@ export default function ProjectBoardView({
               } flex flex-col transition-colors`}
             >
               {/* 컬럼 헤더 */}
-              <div className={`px-3 py-2.5 border-b ${c.border} ${c.header} rounded-t-md flex items-center justify-between`}>
-                <div className="flex items-center gap-2 min-w-0">
-                  <span className={`w-2.5 h-2.5 rounded-full ${c.dot} flex-shrink-0`}></span>
-                  <span className={`font-bold text-sm ${c.text} truncate`} title={proj.name}>{proj.name}</span>
-                  <span className={`px-1.5 py-0.5 text-xs font-semibold rounded bg-white/70 ${c.text} flex-shrink-0`}>{members.length}</span>
+              <div className={`px-3 py-2.5 border-b ${c.border} ${c.header} rounded-t-md`}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className={`w-2.5 h-2.5 rounded-full ${c.dot} flex-shrink-0`}></span>
+                    <span
+                      className={`font-bold text-sm ${c.text} truncate`}
+                      title={proj.name}
+                    >
+                      {proj.name}
+                    </span>
+                    <span className={`px-1.5 py-0.5 text-xs font-semibold rounded bg-white/70 ${c.text} flex-shrink-0`}>{members.length}</span>
+                  </div>
+                  {!isPool && (
+                    <div className="flex gap-0.5 flex-shrink-0">
+                      <button onClick={() => onEditProject(proj)} className={`p-1 rounded hover:bg-white/70 ${c.text}`} title="프로젝트 수정"><Edit2 size={12} /></button>
+                      <button onClick={() => onDeleteProject(proj.id)} className="p-1 rounded hover:bg-white/70 text-slate-500 hover:text-red-600" title="프로젝트 삭제"><Trash2 size={12} /></button>
+                    </div>
+                  )}
                 </div>
-                {!isPool && (
-                  <div className="flex gap-0.5 flex-shrink-0">
-                    <button onClick={() => onEditProject(proj)} className={`p-1 rounded hover:bg-white/70 ${c.text}`} title="프로젝트 수정"><Edit2 size={12} /></button>
-                    <button onClick={() => onDeleteProject(proj.id)} className="p-1 rounded hover:bg-white/70 text-slate-500 hover:text-red-600" title="프로젝트 삭제"><Trash2 size={12} /></button>
+                {!isPool && (proj.startDate || proj.endDate) && (
+                  <div className={`text-[11px] ${c.text} opacity-70 mt-0.5 tabular-nums`}>
+                    {proj.startDate || "미정"} ~ {proj.endDate || "미정"}
                   </div>
                 )}
+                {!isPool && (() => {
+                  const pmEmp = members.find(m => m.duty === "PM");
+                  return (
+                    <div className="flex items-center gap-1 text-[11px] mt-0.5">
+                      <Briefcase size={10} className={pmEmp ? `${c.text} opacity-60` : "text-red-500"} />
+                      {pmEmp ? (
+                        <span className={`${c.text} opacity-70`}>PM: {pmEmp.name}</span>
+                      ) : (
+                        <span className="text-red-500 font-semibold animate-pulse">PM 등록 필수</span>
+                      )}
+                    </div>
+                  );
+                })()}
               </div>
 
               {/* 대기 컬럼 안내 + 통계 */}
