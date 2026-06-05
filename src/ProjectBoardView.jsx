@@ -344,7 +344,7 @@ export default function ProjectBoardView({
               <div className={`px-3 py-2.5 border-b ${c.border} ${c.header} rounded-t-md flex items-center justify-between`}>
                 <div className="flex items-center gap-2 min-w-0">
                   <span className={`w-2.5 h-2.5 rounded-full ${c.dot} flex-shrink-0`}></span>
-                  <span className={`font-bold text-sm ${c.text} truncate`}>{proj.name}</span>
+                  <span className={`font-bold text-sm ${c.text} truncate`} title={proj.name}>{proj.name}</span>
                   <span className={`px-1.5 py-0.5 text-xs font-semibold rounded bg-white/70 ${c.text} flex-shrink-0`}>{members.length}</span>
                 </div>
                 {!isPool && (
