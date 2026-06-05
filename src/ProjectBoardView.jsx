@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef } from "react";
-import { Search, Edit2, Trash2, GripVertical, FolderPlus, Building2, Briefcase, UserCheck, Clock, CalendarClock, CheckCircle2, LogOut, Timer, Calendar } from "lucide-react";
+import { Search, Edit2, Trash2, GripVertical, FolderPlus, Building2, Briefcase, UserCheck, Clock, CalendarClock, CheckCircle2, LogOut, Timer, Calendar, Users } from "lucide-react";
 import { COLOR_MAP, POOL_SORT_OPTIONS, RANK_ORDER } from "./constants.js";
 import { resolveStatus, calcWaitingDuration, formatWaitingLabel } from "./helpers.js";
 
@@ -444,7 +444,7 @@ export default function ProjectBoardView({
                         <Clock size={10} className="opacity-60" />
                         <span className="opacity-80 w-6">경과</span>
                         <span className="opacity-40">:</span>
-                        <span className={`px-1 rounded text-[10px] font-bold ${c.header}`}>{elapsedLabel}</span>
+                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${c.header} ${c.text}`}>{elapsedLabel}</span>
                       </>}
 
                       <Briefcase size={10} className={pmEmp ? "opacity-60" : "text-red-600"} />
@@ -454,6 +454,30 @@ export default function ProjectBoardView({
                         ? <span className="opacity-70">{pmEmp.name}{pmEmp.rank ? ` ${pmEmp.rank}` : ""}</span>
                         : <span className="text-red-600">PM 등록 필수</span>
                       }
+                    </div>
+                  );
+                })()}
+                {!isPool && (() => {
+                  const ibksCount    = members.filter(m => m.affiliation === "IBKS").length;
+                  const partnerCount = members.filter(m => m.affiliation === "협력사").length;
+                  return (
+                    <div className={`flex items-center gap-1 text-[11px] ${c.text} opacity-90 mt-0.5`}>
+                      <Users size={10} className="flex-shrink-0" />
+                      <span className="font-semibold flex-shrink-0 w-6">인원</span>
+                      <span className="opacity-40 flex-shrink-0">:</span>
+                      <span className="flex flex-wrap gap-1">
+                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold border ${c.header} ${c.text} border-current border-opacity-30`}>
+                          총원 {members.length}
+                        </span>
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                          IBKS {ibksCount}
+                        </span>
+                        {partnerCount > 0 && (
+                          <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-orange-50 text-orange-700 border border-orange-200">
+                            협력사 {partnerCount}
+                          </span>
+                        )}
+                      </span>
                     </div>
                   );
                 })()}
