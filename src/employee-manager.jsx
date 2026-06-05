@@ -66,6 +66,16 @@ function histDbToApp(row) {
   };
 }
 
+function mapProject(row) {
+  return {
+    ...row,
+    startDate:     row.start_date     || "",
+    endDate:       row.end_date       || "",
+    locationName:  row.location_name  || "",
+    addressDetail: row.address_detail || "",
+  };
+}
+
 export default function EmployeeManager() {
   const [projects, setProjects] = useState([{ id: "pool", name: "대기", color: "slate" }]);
   const [employees, setEmployees] = useState([]);
@@ -140,7 +150,7 @@ export default function EmployeeManager() {
       const { data, error } = await supabase.from("projects").select("*");
       if (error) { console.error("프로젝트 조회 오류:", error); return; }
       const POOL = { id: "pool", name: "대기", color: "slate" };
-      setProjects([POOL, ...(data || []).filter(p => p.id !== "pool")]);
+      setProjects([POOL, ...(data || []).filter(p => p.id !== "pool").map(mapProject)]);
     };
     fetchProjects();
   }, []);
@@ -340,10 +350,25 @@ export default function EmployeeManager() {
   };
 
   const openNewProj = () => {
-    setEditingProj({ id: null, name: "", color: COLOR_OPTIONS[Math.floor(Math.random() * COLOR_OPTIONS.length)] });
+    setEditingProj({
+      id: null, name: "", color: COLOR_OPTIONS[Math.floor(Math.random() * COLOR_OPTIONS.length)],
+      startDate: "", endDate: "", locationName: "", address: "", addressDetail: "",
+      latitude: null, longitude: null,
+    });
     setShowProjModal(true);
   };
-  const openEditProj = (proj) => { setEditingProj({ ...proj }); setShowProjModal(true); };
+  const openEditProj = (proj) => {
+    setEditingProj({
+      startDate: "", endDate: "", locationName: "", address: "", addressDetail: "",
+      latitude: null, longitude: null,
+      ...proj,
+      startDate:     proj.start_date     || proj.startDate     || "",
+      endDate:       proj.end_date       || proj.endDate       || "",
+      locationName:  proj.location_name  || proj.locationName  || "",
+      addressDetail: proj.address_detail || proj.addressDetail || "",
+    });
+    setShowProjModal(true);
+  };
   const removeProj = (id) => {
     if (id === "pool") { showAlert("알림", "대기 컬럼은 삭제할 수 없습니다."); return; }
     const members = employees.filter(e => e.projectId === id);
@@ -388,35 +413,77 @@ export default function EmployeeManager() {
   };
   const saveProj = async () => {
     if (!editingProj.name.trim()) { showAlert("알림", "프로젝트명을 입력하세요."); return; }
+    if (editingProj.startDate && editingProj.endDate && editingProj.endDate < editingProj.startDate) {
+      showAlert("알림", "종료일은 시작일 이후여야 합니다."); return;
+    }
     if (isProjSubmittingRef.current) return;
     isProjSubmittingRef.current = true;
     setIsProjSubmitting(true);
+    const payload = {
+      name:           editingProj.name,
+      color:          editingProj.color,
+      start_date:     editingProj.startDate    || null,
+      end_date:       editingProj.endDate      || null,
+      location_name:  editingProj.locationName || null,
+      address:        editingProj.address      || null,
+      address_detail: editingProj.addressDetail || null,
+      latitude:       editingProj.latitude     ?? null,
+      longitude:      editingProj.longitude    ?? null,
+    };
     try {
       if (editingProj.id === null) {
         const { data, error } = await supabase
           .from("projects")
-          .insert([{ name: editingProj.name, color: editingProj.color }])
+          .insert([payload])
           .select()
           .single();
         if (error) { console.error(error); showAlert("알림", "프로젝트 저장 실패"); return; }
         setProjects(prev => {
           const pool = prev.find(p => p.id === "pool");
           const others = prev.filter(p => p.id !== "pool");
-          return [pool, ...others, data].filter(Boolean);
+          return [pool, ...others, mapProject(data)].filter(Boolean);
         });
       } else {
         const { error } = await supabase
           .from("projects")
-          .update({ name: editingProj.name, color: editingProj.color })
+          .update(payload)
           .eq("id", editingProj.id);
         if (error) { console.error(error); showAlert("알림", "프로젝트 수정 실패"); return; }
-        setProjects(prev => prev.map(p => p.id === editingProj.id ? editingProj : p));
+        setProjects(prev => prev.map(p => p.id === editingProj.id ? { ...editingProj } : p));
       }
       setShowProjModal(false);
       setEditingProj(null);
     } finally {
       isProjSubmittingRef.current = false;
       setIsProjSubmitting(false);
+    }
+  };
+
+  const openAddressSearch = () => {
+    const execute = () => {
+      new window.daum.Postcode({
+        oncomplete: (data) => {
+          const addr = data.roadAddress || data.jibunAddress;
+          setEditingProj(prev => ({
+            ...prev,
+            address: addr,
+            addressDetail: "",
+            // TODO: 카카오 지도 API 연동 시 위도/경도 자동 입력 처리
+            latitude: null,
+            longitude: null,
+          }));
+        },
+      }).open();
+    };
+
+    if (window.daum?.Postcode) {
+      execute();
+    } else {
+      const s = document.createElement("script");
+      s.id = "daum-postcode-script";
+      s.src = "//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js";
+      s.onload = execute;
+      document.head.appendChild(s);
     }
   };
 
@@ -604,6 +671,65 @@ export default function EmployeeManager() {
                     );
                   })}
                 </div>
+              </Field>
+              <Field label="프로젝트 기간">
+                <div className="flex gap-2 items-center">
+                  <input
+                    type="date"
+                    value={editingProj.startDate || ""}
+                    onChange={(e) => setEditingProj({ ...editingProj, startDate: e.target.value })}
+                    className="flex-1 px-3 py-2 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                  <span className="text-slate-400 text-sm flex-shrink-0">~</span>
+                  <input
+                    type="date"
+                    value={editingProj.endDate || ""}
+                    min={editingProj.startDate || undefined}
+                    onChange={(e) => setEditingProj({ ...editingProj, endDate: e.target.value })}
+                    className="flex-1 px-3 py-2 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+                {editingProj.startDate && editingProj.endDate && editingProj.endDate < editingProj.startDate && (
+                  <p className="text-xs text-red-500 mt-1">종료일은 시작일 이후여야 합니다.</p>
+                )}
+              </Field>
+              <Field label="장소">
+                <input
+                  type="text"
+                  value={editingProj.locationName || ""}
+                  onChange={(e) => setEditingProj({ ...editingProj, locationName: e.target.value })}
+                  maxLength={200}
+                  placeholder="예: 본사 3층 회의실"
+                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </Field>
+              <Field label="주소">
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={editingProj.address || ""}
+                    readOnly
+                    placeholder="주소 검색 버튼을 눌러 입력하세요"
+                    className="flex-1 px-3 py-2 text-sm border border-slate-300 rounded-md bg-slate-50 text-slate-700 cursor-default"
+                  />
+                  <button
+                    type="button"
+                    onClick={openAddressSearch}
+                    className="px-3 py-2 text-sm bg-slate-600 text-white rounded-md hover:bg-slate-700 flex-shrink-0"
+                  >
+                    주소 검색
+                  </button>
+                </div>
+                {editingProj.address && (
+                  <input
+                    type="text"
+                    value={editingProj.addressDetail || ""}
+                    onChange={(e) => setEditingProj({ ...editingProj, addressDetail: e.target.value })}
+                    maxLength={200}
+                    placeholder="상세주소 입력 (동/호수, 층 등)"
+                    className="mt-1.5 w-full px-3 py-2 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                )}
               </Field>
             </div>
             <div className="px-4 sm:px-5 py-3 sm:py-4 border-t border-slate-200 flex justify-end gap-2 bg-slate-50 flex-shrink-0">
