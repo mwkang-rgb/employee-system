@@ -444,7 +444,9 @@ export default function ProjectBoardView({
                         <Clock size={10} className="opacity-60" />
                         <span className="opacity-80 w-6">경과</span>
                         <span className="opacity-40">:</span>
-                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${c.header} ${c.text}`}>{elapsedLabel}</span>
+                        <span className="flex-1">
+                          <span className={`px-2 py-0.5 rounded text-[11px] font-bold border ${c.header} ${c.text} border-current border-opacity-30`}>{elapsedLabel}</span>
+                        </span>
                       </>}
 
                       <Briefcase size={10} className={pmEmp ? "opacity-60" : "text-red-600"} />
