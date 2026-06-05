@@ -2,11 +2,13 @@
 -- REQ-EMP-002: assignment_history 테이블 정규화 마이그레이션
 -- ============================================================
 
--- 1. 정규화 테이블 생성
-CREATE TABLE IF NOT EXISTS assignment_history (
+-- 1. 기존 테이블 제거 후 재생성 (컬럼 불일치 방지)
+DROP TABLE IF EXISTS assignment_history CASCADE;
+
+CREATE TABLE assignment_history (
   id              text         PRIMARY KEY,
-  employee_id     uuid         NOT NULL REFERENCES employees(id) ON DELETE CASCADE,
-  project_id      uuid         REFERENCES projects(id) ON DELETE SET NULL,
+  employee_id     bigint       NOT NULL REFERENCES employees(id) ON DELETE CASCADE,
+  project_id      bigint       REFERENCES projects(id) ON DELETE SET NULL,
   project_name    text,
   duty            text,
   role            text,
