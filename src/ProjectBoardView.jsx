@@ -635,7 +635,7 @@ export default function ProjectBoardView({
                             <span className="font-medium truncate">{empProjName || "-"}</span>
                           </div>
                         ) : (
-                          <div className="mt-1.5 pt-1.5 border-t border-slate-100 text-[11px] text-slate-500 tabular-nums flex justify-between">
+                          <div className="mt-1.5 pt-1.5 border-t border-slate-100 text-[11px] text-slate-500 tabular-nums flex justify-center gap-2">
                             <span>{displayStart}</span>
                             <span className="text-slate-300">→</span>
                             <span>{displayEnd}</span>
