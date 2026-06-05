@@ -436,19 +436,19 @@ export default function ProjectBoardView({
                     <div className={`grid items-center text-[11px] font-semibold mt-0.5 gap-x-1 gap-y-0.5 ${c.text}`}
                          style={{ gridTemplateColumns: '10px auto auto 1fr' }}>
                       <Calendar size={10} className="opacity-60" />
-                      <span className="opacity-80">기간</span>
+                      <span className="opacity-80 w-6">기간</span>
                       <span className="opacity-40">:</span>
                       <span className="tabular-nums opacity-80">{proj.startDate || "미정"} ~ {proj.endDate || "미정"}</span>
 
                       {elapsedLabel && <>
                         <Clock size={10} className="opacity-60" />
-                        <span className="opacity-80">경과</span>
+                        <span className="opacity-80 w-6">경과</span>
                         <span className="opacity-40">:</span>
                         <span className={`px-1 rounded text-[10px] font-bold ${c.header}`}>{elapsedLabel}</span>
                       </>}
 
                       <Briefcase size={10} className={pmEmp ? "opacity-60" : "text-red-600"} />
-                      <span className={pmEmp ? "opacity-80" : "text-red-600"}>PM</span>
+                      <span className={`w-6 ${pmEmp ? "opacity-80" : "text-red-600"}`}>PM</span>
                       <span className={`opacity-40 ${pmEmp ? "" : "text-red-600"}`}>:</span>
                       {pmEmp
                         ? <span className="opacity-70">{pmEmp.name}{pmEmp.rank ? ` ${pmEmp.rank}` : ""}</span>
