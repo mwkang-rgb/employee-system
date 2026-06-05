@@ -416,6 +416,24 @@ export default function EmployeeManager() {
     if (editingProj.startDate && editingProj.endDate && editingProj.endDate < editingProj.startDate) {
       showAlert("알림", "종료일은 시작일 이후여야 합니다."); return;
     }
+    const missing = [];
+    if (!editingProj.startDate || !editingProj.endDate) missing.push("프로젝트 기간");
+    if (!editingProj.locationName?.trim())              missing.push("장소");
+    if (!editingProj.address?.trim())                   missing.push("주소");
+    if (missing.length === 1) {
+      if (missing[0] === "프로젝트 기간") {
+        showAlert("프로젝트 기간 필수", "프로젝트 시작일과 종료일을\n모두 입력해 주세요.");
+      } else if (missing[0] === "장소") {
+        showAlert("장소 필수", "프로젝트 장소를\n입력해 주세요.");
+      } else {
+        showAlert("주소 필수", "주소 검색 버튼을 눌러\n주소를 입력해 주세요.");
+      }
+      return;
+    }
+    if (missing.length > 1) {
+      showAlert("필수 항목 누락", "아래 항목을 입력해 주세요.\n\n" + missing.map(m => `· ${m}`).join("\n"));
+      return;
+    }
     if (isProjSubmittingRef.current) return;
     isProjSubmittingRef.current = true;
     setIsProjSubmitting(true);

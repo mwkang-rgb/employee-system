@@ -1,10 +1,13 @@
-import { AlertTriangle, AlertCircle } from "lucide-react";
+import { AlertTriangle, AlertCircle, CalendarOff, BuildingOff, MapPinOff } from "lucide-react";
 
 const ALERT_CONFIG = {
-  "투입 형태 오류": { Icon: AlertTriangle, iconCls: "text-orange-500", bgCls: "bg-orange-100" },
-  "필수 항목 누락": { Icon: AlertCircle,   iconCls: "text-orange-500", bgCls: "bg-orange-100" },
-  "날짜 입력 오류": { Icon: AlertCircle,   iconCls: "text-orange-500", bgCls: "bg-orange-100" },
-  "알림":           { Icon: AlertCircle,   iconCls: "text-orange-500", bgCls: "bg-orange-100" },
+  "투입 형태 오류":     { Icon: AlertTriangle, iconCls: "text-orange-500", bgCls: "bg-orange-100" },
+  "필수 항목 누락":     { Icon: AlertCircle,   iconCls: "text-red-600",    bgCls: "bg-red-100"    },
+  "날짜 입력 오류":     { Icon: AlertCircle,   iconCls: "text-orange-500", bgCls: "bg-orange-100" },
+  "알림":               { Icon: AlertCircle,   iconCls: "text-orange-500", bgCls: "bg-orange-100" },
+  "프로젝트 기간 필수": { Icon: CalendarOff,   iconCls: "text-amber-600",  bgCls: "bg-amber-100"  },
+  "장소 필수":          { Icon: BuildingOff,   iconCls: "text-blue-600",   bgCls: "bg-blue-100"   },
+  "주소 필수":          { Icon: MapPinOff,     iconCls: "text-pink-600",   bgCls: "bg-pink-100"   },
 };
 
 // props:
