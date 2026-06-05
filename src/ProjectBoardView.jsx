@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useMemo, useRef } from "react";
 import { Search, Edit2, Trash2, GripVertical, FolderPlus, Building2, Briefcase, UserCheck, Clock, CalendarClock, CheckCircle2, LogOut, Timer } from "lucide-react";
 import { COLOR_MAP, POOL_SORT_OPTIONS, RANK_ORDER } from "./constants.js";
 import { resolveStatus, calcWaitingDuration, formatWaitingLabel } from "./helpers.js";
@@ -12,6 +12,12 @@ const loadOrders = () => {
 const loadPoolSort = () => {
   try { return localStorage.getItem(BOARD_POOL_SORT_KEY) || "waitingDays"; }
   catch { return "waitingDays"; }
+};
+
+const BOARD_COLUMN_ORDER_KEY = "board-column-order";
+const loadColumnOrder = () => {
+  try { return JSON.parse(localStorage.getItem(BOARD_COLUMN_ORDER_KEY) || "null"); }
+  catch { return null; }
 };
 
 // 소속 배지 (이 파일 내부 로컬 컴포넌트)
@@ -53,9 +59,12 @@ export default function ProjectBoardView({
   // 컬럼 내 카드 순서 관련 상태
   const [columnOrders, setColumnOrders] = useState(loadOrders);
   const [dragOverCard, setDragOverCard] = useState(null); // { empId, above }
+  const [columnOrder, setColumnOrder] = useState(loadColumnOrder);
+  const [dragOverColumn, setDragOverColumn] = useState(null);
   // ref 사용: 이벤트 핸들러에서 최신 값 참조 (stale closure 방지)
   const dragSourceColRef = useRef(null);
   const columnMembersRef = useRef({});
+  const draggingColumnRef = useRef(null);
 
   const setPoolSortField = (val) => {
     localStorage.setItem(BOARD_POOL_SORT_KEY, val);
@@ -120,6 +129,7 @@ export default function ProjectBoardView({
     if (e.currentTarget.contains(e.relatedTarget)) return;
     setDragOverProj(null);
     setDragOverCard(null);
+    setDragOverColumn(null);
   };
 
   // 컬럼 영역 drop (빈 공간에 드롭 — 컬럼 간 이동)
@@ -227,6 +237,14 @@ export default function ProjectBoardView({
     }
   };
 
+  const orderedProjects = useMemo(() => {
+    if (!columnOrder || columnOrder.length === 0) return projects;
+    const projMap = Object.fromEntries(projects.map(p => [p.id, p]));
+    const ordered = columnOrder.filter(id => projMap[id]).map(id => projMap[id]);
+    const rest = projects.filter(p => !columnOrder.includes(p.id));
+    return [...ordered, ...rest];
+  }, [projects, columnOrder]);
+
   return (
     <>
       {/* 검색 + 프로젝트 등록 */}
@@ -258,7 +276,7 @@ export default function ProjectBoardView({
 
       {/* 칸반 보드 */}
       <div className="flex gap-2 sm:gap-3 overflow-x-auto pb-4 -mx-3 px-3 sm:mx-0 sm:px-0" style={{ minHeight: "600px" }}>
-        {projects.map((proj) => {
+        {orderedProjects.map((proj) => {
           const c = COLOR_MAP[proj.color] || COLOR_MAP.slate;
           const q = boardQuery.trim().toLowerCase();
           const isPool = proj.id === "pool";
@@ -325,23 +343,69 @@ export default function ProjectBoardView({
           columnMembersRef.current[proj.id] = members;
 
           const isOver = dragOverProj === proj.id;
+          const isColumnOver = dragOverColumn === proj.id
+            && draggingColumnRef.current !== null
+            && String(draggingColumnRef.current) !== String(proj.id);
           const draggedEmp = dragId !== null ? employees.find(x => x.id === dragId) : null;
           const isPartnerDropWarning = isPool && isOver && draggedEmp?.affiliation === "협력사";
 
           return (
             <div
               key={proj.id}
-              onDragOver={(e) => handleDragOver(e, proj.id)}
+              onDragOver={(e) => {
+                if (e.dataTransfer.types.includes("application/proj-id")) {
+                  e.preventDefault();
+                  e.dataTransfer.dropEffect = "move";
+                  if (dragOverColumn !== proj.id) setDragOverColumn(proj.id);
+                  return;
+                }
+                handleDragOver(e, proj.id);
+              }}
               onDragLeave={handleDragLeave}
-              onDrop={(e) => handleDrop(e, proj.id)}
+              onDrop={(e) => {
+                if (e.dataTransfer.types.includes("application/proj-id")) {
+                  e.preventDefault();
+                  const srcId = draggingColumnRef.current ?? e.dataTransfer.getData("application/proj-id");
+                  setDragOverColumn(null);
+                  if (srcId == null || String(srcId) === String(proj.id)) return;
+
+                  const currentOrder = orderedProjects.map(p => p.id);
+                  const fromIdx = currentOrder.findIndex(id => String(id) === String(srcId));
+                  const toIdx   = currentOrder.findIndex(id => String(id) === String(proj.id));
+                  if (fromIdx === -1 || toIdx === -1) return;
+
+                  const newOrder = [...currentOrder];
+                  newOrder.splice(fromIdx, 1);
+                  newOrder.splice(toIdx, 0, currentOrder[fromIdx]);
+                  localStorage.setItem(BOARD_COLUMN_ORDER_KEY, JSON.stringify(newOrder));
+                  setColumnOrder(newOrder);
+                  return;
+                }
+                handleDrop(e, proj.id);
+              }}
               className={`flex-shrink-0 w-64 sm:w-72 rounded-lg border-2 ${
                 isPartnerDropWarning ? "border-red-400 bg-red-50/40" :
+                isColumnOver ? "border-amber-400 bg-amber-50/30" :
                 isOver ? "border-indigo-400 bg-indigo-50/30" :
                 `${c.border} ${c.bg}`
               } flex flex-col transition-colors`}
             >
               {/* 컬럼 헤더 */}
-              <div className={`px-3 py-2.5 border-b ${c.border} ${c.header} rounded-t-md`}>
+              <div
+                className={`px-3 py-2.5 border-b ${c.border} ${c.header} rounded-t-md cursor-grab active:cursor-grabbing`}
+                draggable
+                onDragStart={(e) => {
+                  draggingColumnRef.current = proj.id;
+                  e.dataTransfer.setData("application/proj-id", proj.id);
+                  e.dataTransfer.effectAllowed = "move";
+                  e.stopPropagation();
+                }}
+                onDragEnd={(e) => {
+                  draggingColumnRef.current = null;
+                  setDragOverColumn(null);
+                  e.stopPropagation();
+                }}
+              >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 min-w-0">
                     <span className={`w-2.5 h-2.5 rounded-full ${c.dot} flex-shrink-0`}></span>
@@ -355,8 +419,8 @@ export default function ProjectBoardView({
                   </div>
                   {!isPool && (
                     <div className="flex gap-0.5 flex-shrink-0">
-                      <button onClick={() => onEditProject(proj)} className={`p-1 rounded hover:bg-white/70 ${c.text}`} title="프로젝트 수정"><Edit2 size={12} /></button>
-                      <button onClick={() => onDeleteProject(proj.id)} className="p-1 rounded hover:bg-white/70 text-slate-500 hover:text-red-600" title="프로젝트 삭제"><Trash2 size={12} /></button>
+                      <button onClick={(e) => { e.stopPropagation(); onEditProject(proj); }} className={`p-1 rounded hover:bg-white/70 ${c.text}`} title="프로젝트 수정"><Edit2 size={12} /></button>
+                      <button onClick={(e) => { e.stopPropagation(); onDeleteProject(proj.id); }} className="p-1 rounded hover:bg-white/70 text-slate-500 hover:text-red-600" title="프로젝트 삭제"><Trash2 size={12} /></button>
                     </div>
                   )}
                 </div>
