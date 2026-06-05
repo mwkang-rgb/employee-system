@@ -442,10 +442,10 @@ export default function ProjectBoardView({
                   const diffDays = Math.round(diffMs / 86400000);
                   const label = diffDays >= 0 ? `D+${diffDays}` : `D${diffDays}`;
                   return (
-                    <div className={`flex items-center gap-1 text-[11px] mt-0.5`}>
-                      <Clock size={10} className={`flex-shrink-0 ${c.text} opacity-60`} />
+                    <div className={`flex items-center gap-0.5 text-[11px] mt-0.5`}>
+                      <Clock size={10} className={`flex-shrink-0 ${c.text} opacity-60 mr-0.5`} />
                       <span className={`font-medium flex-shrink-0 ${c.text} opacity-80`}>경과</span>
-                      <span className={`opacity-40 flex-shrink-0 ${c.text}`}>:</span>
+                      <span className={`opacity-40 flex-shrink-0 ${c.text} mr-0`}>:</span>
                       <span className={`px-1 rounded text-[10px] font-bold ${c.header} ${c.text}`}>{label}</span>
                     </div>
                   );
