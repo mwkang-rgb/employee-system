@@ -561,7 +561,7 @@ export default function ProjectBoardView({
               )}
 
               {/* 카드 목록 */}
-              <div className="p-2 space-y-2 overflow-y-auto flex-1" style={{ maxHeight: "650px" }}>
+              <div className="p-2 space-y-2 overflow-y-auto flex-1" style={{ maxHeight: "584px" }}>
                 {members.length === 0 && (
                   <div className="text-center text-xs text-slate-400 py-8 border-2 border-dashed border-slate-200 rounded-md">
                     {isOver ? (isPartnerDropWarning ? "여기 놓으면 자동 삭제" : "여기에 놓기") : "배치된 인원 없음"}
