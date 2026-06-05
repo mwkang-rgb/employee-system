@@ -417,7 +417,24 @@ export default function ProjectBoardView({
                     </span>
 
                   </div>
-                  {!isPool && (
+                  {isPool ? (() => {
+                    const empCount  = members.filter(m => m.rank !== "교수").length;
+                    const profCount = members.filter(m => m.rank === "교수").length;
+                    return (empCount > 0 || profCount > 0) ? (
+                      <span className="flex items-center gap-1 flex-shrink-0">
+                        {empCount > 0 && (
+                          <span className="px-1.5 py-0.5 text-[10px] font-bold rounded border bg-blue-50 text-blue-700 border-blue-200">
+                            직원 {empCount}
+                          </span>
+                        )}
+                        {profCount > 0 && (
+                          <span className="px-1.5 py-0.5 text-[10px] font-bold rounded border bg-purple-50 text-purple-700 border-purple-200">
+                            교수 {profCount}
+                          </span>
+                        )}
+                      </span>
+                    ) : null;
+                  })() : (
                     <div className="flex gap-0.5 flex-shrink-0">
                       <button onClick={(e) => { e.stopPropagation(); onEditProject(proj); }} className={`p-1 rounded hover:bg-white/70 ${c.text}`} title="프로젝트 수정"><Edit2 size={12} /></button>
                       <button onClick={(e) => { e.stopPropagation(); onDeleteProject(proj.id); }} className="p-1 rounded hover:bg-white/70 text-slate-500 hover:text-red-600" title="프로젝트 삭제"><Trash2 size={12} /></button>

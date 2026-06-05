@@ -170,11 +170,14 @@ export default function EmployeeManager() {
   const stats = useMemo(() => {
     const total = employees.length;
     const active = employees.filter((e) => resolveStatus(e, projectById[e.projectId]?.name).label === "투입중").length;
-    const waiting = employees.filter((e) => e.projectId === "pool").length;
+    const waitingAll  = employees.filter((e) => e.projectId === "pool");
+    const waiting     = waitingAll.length;
+    const waitingEmp  = waitingAll.filter((e) => e.rank !== "교수").length;
+    const waitingProf = waitingAll.filter((e) => e.rank === "교수").length;
     const ibks = employees.filter(e => e.affiliation === "IBKS").length;
     const partner = employees.filter(e => e.affiliation === "협력사").length;
     const projectCount = projects.filter(p => p.id !== "pool").length;
-    return { total, active, waiting, ibks, partner, projectCount };
+    return { total, active, waiting, waitingEmp, waitingProf, ibks, partner, projectCount };
   }, [employees, projects]);
 
   const openNewEmp = () => {
@@ -568,7 +571,26 @@ export default function EmployeeManager() {
             <StatCard icon={<Users size={18} />} label="IBKS" value={stats.ibks} accent="indigo" />
             <StatCard icon={<Building2 size={18} />} label="협력사" value={stats.partner} accent="amber" />
             <StatCard icon={<Briefcase size={18} />} label="투입중" value={stats.active} accent="emerald" />
-            <StatCard icon={<Calendar size={18} />} label="대기 인력" value={stats.waiting} accent="rose" />
+            <StatCard
+                icon={<Calendar size={18} />}
+                label="대기 인력"
+                accent="rose"
+                value={
+                  <span className="flex items-center gap-1.5 flex-wrap">
+                    <span className="text-lg sm:text-xl font-bold text-slate-900 tabular-nums">{stats.waiting}</span>
+                    {stats.waitingEmp > 0 && (
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded border bg-blue-50 text-blue-700 border-blue-200">
+                        직원 {stats.waitingEmp}
+                      </span>
+                    )}
+                    {stats.waitingProf > 0 && (
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded border bg-purple-50 text-purple-700 border-purple-200">
+                        교수 {stats.waitingProf}
+                      </span>
+                    )}
+                  </span>
+                }
+              />
           </div>
         </div>
 
