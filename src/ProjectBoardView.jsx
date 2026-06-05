@@ -477,7 +477,8 @@ export default function ProjectBoardView({
                   );
                 })()}
                 {!isPool && (() => {
-                  const ibksCount    = members.filter(m => m.affiliation === "IBKS").length;
+                  const ibksCount    = members.filter(m => m.affiliation === "IBKS" && m.rank !== "교수").length;
+                  const profCount    = members.filter(m => m.affiliation === "IBKS" && m.rank === "교수").length;
                   const partnerCount = members.filter(m => m.affiliation === "협력사").length;
                   return (
                     <div className={`flex items-center gap-1 text-[11px] ${c.text} opacity-90 mt-0.5`}>
@@ -488,12 +489,19 @@ export default function ProjectBoardView({
                         <span className="px-1.5 py-0.5 rounded text-[10px] font-bold border bg-slate-100 text-slate-700 border-slate-300">
                           총원 {members.length}
                         </span>
-                        <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
-                          IBKS {ibksCount}
-                        </span>
+                        {ibksCount > 0 && (
+                          <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                            IBKS {ibksCount}
+                          </span>
+                        )}
                         {partnerCount > 0 && (
                           <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-orange-50 text-orange-700 border border-orange-200">
                             협력사 {partnerCount}
+                          </span>
+                        )}
+                        {profCount > 0 && (
+                          <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
+                            교수 {profCount}
                           </span>
                         )}
                       </span>
