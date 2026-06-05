@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef } from "react";
-import { Search, Edit2, Trash2, GripVertical, FolderPlus, Building2, Briefcase, UserCheck, Clock, CalendarClock, CheckCircle2, LogOut, Timer } from "lucide-react";
+import { Search, Edit2, Trash2, GripVertical, FolderPlus, Building2, Briefcase, UserCheck, Clock, CalendarClock, CheckCircle2, LogOut, Timer, Calendar } from "lucide-react";
 import { COLOR_MAP, POOL_SORT_OPTIONS, RANK_ORDER } from "./constants.js";
 import { resolveStatus, calcWaitingDuration, formatWaitingLabel } from "./helpers.js";
 
@@ -424,21 +424,44 @@ export default function ProjectBoardView({
                     </div>
                   )}
                 </div>
-                {!isPool && (proj.startDate || proj.endDate) && (
-                  <div className={`text-[11px] ${c.text} opacity-70 mt-0.5 tabular-nums`}>
-                    {proj.startDate || "미정"} ~ {proj.endDate || "미정"}
+                {!isPool && (
+                  <div className={`flex items-center gap-1 text-[11px] ${c.text} opacity-80 mt-0.5`}>
+                    <Calendar size={10} className="flex-shrink-0" />
+                    <span className="font-medium flex-shrink-0">기간</span>
+                    <span className="opacity-40 flex-shrink-0">:</span>
+                    <span className="flex-1 tabular-nums">{proj.startDate || "미정"} ~ {proj.endDate || "미정"}</span>
                   </div>
                 )}
                 {!isPool && (() => {
                   const pmEmp = members.find(m => m.duty === "PM");
                   return (
-                    <div className="flex items-center gap-1 text-[11px] mt-0.5">
-                      <Briefcase size={10} className={pmEmp ? `${c.text} opacity-60` : "text-red-500"} />
+                    <div className={`flex items-center gap-1 text-[11px] mt-0.5`}>
+                      <Briefcase size={10} className={`flex-shrink-0 ${pmEmp ? `${c.text} opacity-60` : "text-red-600"}`} />
+                      <span className={`font-medium flex-shrink-0 ${pmEmp ? `${c.text} opacity-80` : "text-red-600"}`}>PM</span>
+                      <span className={`opacity-40 flex-shrink-0 ${pmEmp ? `${c.text}` : "text-red-600"}`}>:</span>
                       {pmEmp ? (
-                        <span className={`${c.text} opacity-70`}>PM: {pmEmp.name}</span>
+                        <span className={`${c.text} opacity-70`}>{pmEmp.name}{pmEmp.rank ? ` ${pmEmp.rank}` : ""}</span>
                       ) : (
-                        <span className="text-red-500 font-semibold animate-pulse">PM 등록 필수</span>
+                        <span className="text-red-600 font-semibold">PM 등록 필수</span>
                       )}
+                    </div>
+                  );
+                })()}
+                {!isPool && (() => {
+                  const today = new Date();
+                  today.setHours(0, 0, 0, 0);
+                  const startStr = proj.startDate;
+                  if (!startStr) return null;
+                  const start = new Date(startStr);
+                  const diffMs = today - start;
+                  const diffDays = Math.round(diffMs / 86400000);
+                  const label = diffDays >= 0 ? `D+${diffDays}` : `D${diffDays}`;
+                  return (
+                    <div className={`flex items-center gap-1 text-[11px] mt-0.5`}>
+                      <Clock size={10} className={`flex-shrink-0 ${c.text} opacity-60`} />
+                      <span className={`font-medium flex-shrink-0 ${c.text} opacity-80`}>경과</span>
+                      <span className={`opacity-40 flex-shrink-0 ${c.text}`}>:</span>
+                      <span className={`px-1 rounded text-[10px] font-bold ${c.header} ${c.text}`}>{label}</span>
                     </div>
                   );
                 })()}
