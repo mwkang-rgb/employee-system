@@ -45,7 +45,17 @@ export default function EmployeeManager() {
   const { session, user, signOut } = useAuth();
   useRealtimeSync({ setEmployees, setProjects, enabled: !!session });
 
-  const [view, setView] = useState("list");
+  const [view, setView] = useState(() => {
+    const tab = new URLSearchParams(window.location.search).get("tab");
+    return tab === "list" || tab === "board" ? tab : "board";
+  });
+
+  const handleViewChange = (newView) => {
+    setView(newView);
+    const url = new URL(window.location.href);
+    url.searchParams.set("tab", newView);
+    window.history.replaceState(null, "", url.toString());
+  };
   const [loading, setLoading] = useState(false);
 
   const [showEmpModal, setShowEmpModal] = useState(false);
@@ -433,8 +443,8 @@ export default function EmployeeManager() {
         </div>
 
         <div className="flex gap-1 mb-4 sm:mb-5 border-b border-slate-200 overflow-x-auto -mx-3 px-3 sm:mx-0 sm:px-0">
-          <TabBtn active={view === "board"} onClick={() => setView("board")} icon={<FolderKanban size={15} />}>프로젝트 배치 보드</TabBtn>
-          <TabBtn active={view === "list"} onClick={() => setView("list")} icon={<LayoutList size={15} />}>직원 관리</TabBtn>
+          <TabBtn active={view === "board"} onClick={() => handleViewChange("board")} icon={<FolderKanban size={15} />}>프로젝트 배치 보드</TabBtn>
+          <TabBtn active={view === "list"} onClick={() => handleViewChange("list")} icon={<LayoutList size={15} />}>직원 관리</TabBtn>
         </div>
 
         {/* 통계 카드 */}
