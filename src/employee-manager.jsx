@@ -241,11 +241,13 @@ export default function EmployeeManager() {
       await insertHistoryEntry(prevEmp, projMap, { closeEndDate: true });
     }
 
+    const isTransitioningToPool = isPool && (!prevEmp || !wasInPool);
+
     const toSave = {
       ...editingEmp,
       partnerName: editingEmp.affiliation === "IBKS" ? "" : editingEmp.partnerName.trim(),
-      duty: (editingEmp.duty || "").trim() || "없음",
-      role: (editingEmp.role || "").trim() || "없음",
+      duty: isTransitioningToPool ? "없음" : ((editingEmp.duty || "").trim() || "없음"),
+      role: isTransitioningToPool ? "없음" : ((editingEmp.role || "").trim() || "없음"),
       pooledAt: isPool
         ? (wasInPool ? editingEmp.pooledAt || todayISO() : todayISO())
         : null,
@@ -365,7 +367,7 @@ export default function EmployeeManager() {
     for (const emp of ibksMembers) {
       await insertHistoryEntry(emp, projMap, { closeEndDate: true });
       const { error: empErr } = await supabase.from("employees")
-        .update(appToDb({ projectId: "pool", pooledAt: todayStr, endDate: todayStr, assignmentType: "대기", duty: "", role: "" }))
+        .update(appToDb({ projectId: "pool", pooledAt: todayStr, startDate: null, endDate: null, assignmentType: "대기", duty: "없음", role: "없음" }))
         .eq("id", emp.id);
       if (empErr) { console.error(empErr); showAlert("알림", "프로젝트 삭제 실패"); return; }
     }
@@ -379,7 +381,7 @@ export default function EmployeeManager() {
       .filter(e => !(e.projectId === projId && e.affiliation === "협력사"))
       .map(e => {
         if (e.projectId !== projId) return e;
-        return { ...e, projectId: "pool", pooledAt: todayStr, endDate: todayStr, assignmentType: "대기", duty: "", role: "" };
+        return { ...e, projectId: "pool", pooledAt: todayStr, startDate: null, endDate: null, assignmentType: "대기", duty: "없음", role: "없음" };
       })
     );
     setProjects(prev => prev.filter(p => p.id !== projId));
@@ -433,24 +435,15 @@ export default function EmployeeManager() {
 
     const projMap = Object.fromEntries(projects.map(p => [p.id, p]));
     await insertHistoryEntry(emp, projMap, { closeEndDate: true });
-    const isPending = emp.assignmentType === "투입예정";
-    const updatePayload = appToDb(projId === "pool"
-      ? (isPending
-          ? { projectId: projId, pooledAt: todayISO(), startDate: null, endDate: todayISO() }
-          : { projectId: projId, pooledAt: todayISO(), startDate: null, endDate: todayISO(), assignmentType: "대기", duty: "", role: "" })
-      : { projectId: projId, pooledAt: null });
+    const poolReset = { projectId: projId, pooledAt: todayISO(), startDate: null, endDate: null, assignmentType: "대기", duty: "없음", role: "없음" };
+    const updatePayload = appToDb(projId === "pool" ? poolReset : { projectId: projId, pooledAt: null });
 
     const { error } = await supabase.from("employees").update(updatePayload).eq("id", empId);
     if (error) { console.error(error); showAlert("알림", "배치 변경 실패"); return; }
 
     setEmployees(prev => prev.map(x => {
       if (x.id !== empId) return x;
-      if (projId === "pool") {
-        const baseUpdate = { projectId: projId, pooledAt: todayISO(), startDate: null, endDate: todayISO() };
-        return (x.assignmentType === "투입예정")
-          ? { ...x, ...baseUpdate }
-          : { ...x, ...baseUpdate, assignmentType: "대기", duty: "", role: "" };
-      }
+      if (projId === "pool") return { ...x, ...poolReset };
       return { ...x, projectId: projId, pooledAt: null };
     }));
   };
