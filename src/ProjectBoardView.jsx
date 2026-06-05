@@ -424,44 +424,36 @@ export default function ProjectBoardView({
                     </div>
                   )}
                 </div>
-                {!isPool && (
-                  <div className={`flex items-center gap-1 text-[11px] ${c.text} opacity-80 mt-0.5`}>
-                    <Calendar size={10} className="flex-shrink-0" />
-                    <span className="font-medium flex-shrink-0">기간</span>
-                    <span className="opacity-40 flex-shrink-0">:</span>
-                    <span className="flex-1 tabular-nums">{proj.startDate || "미정"} ~ {proj.endDate || "미정"}</span>
-                  </div>
-                )}
-                {!isPool && (() => {
-                  const today = new Date();
-                  today.setHours(0, 0, 0, 0);
-                  const startStr = proj.startDate;
-                  if (!startStr) return null;
-                  const start = new Date(startStr);
-                  const diffMs = today - start;
-                  const diffDays = Math.round(diffMs / 86400000);
-                  const label = diffDays >= 0 ? `D+${diffDays}` : `D${diffDays}`;
-                  return (
-                    <div className={`flex items-center gap-0.5 text-[11px] mt-0.5`}>
-                      <Clock size={10} className={`flex-shrink-0 ${c.text} opacity-60 mr-0.5`} />
-                      <span className={`font-medium flex-shrink-0 ${c.text} opacity-80`}>경과</span>
-                      <span className={`opacity-40 flex-shrink-0 ${c.text} mr-0`}>:</span>
-                      <span className={`px-1 rounded text-[10px] font-bold ${c.header} ${c.text}`}>{label}</span>
-                    </div>
-                  );
-                })()}
                 {!isPool && (() => {
                   const pmEmp = members.find(m => m.duty === "PM");
+                  let elapsedLabel = null;
+                  if (proj.startDate) {
+                    const today = new Date(); today.setHours(0, 0, 0, 0);
+                    const diffDays = Math.round((today - new Date(proj.startDate)) / 86400000);
+                    elapsedLabel = diffDays >= 0 ? `D+${diffDays}` : `D${diffDays}`;
+                  }
                   return (
-                    <div className={`flex items-center gap-1 text-[11px] mt-0.5`}>
-                      <Briefcase size={10} className={`flex-shrink-0 ${pmEmp ? `${c.text} opacity-60` : "text-red-600"}`} />
-                      <span className={`font-medium flex-shrink-0 ${pmEmp ? `${c.text} opacity-80` : "text-red-600"}`}>PM</span>
-                      <span className={`opacity-40 flex-shrink-0 ${pmEmp ? `${c.text}` : "text-red-600"}`}>:</span>
-                      {pmEmp ? (
-                        <span className={`${c.text} opacity-70`}>{pmEmp.name}{pmEmp.rank ? ` ${pmEmp.rank}` : ""}</span>
-                      ) : (
-                        <span className="text-red-600 font-semibold">PM 등록 필수</span>
-                      )}
+                    <div className={`grid items-center text-[11px] mt-0.5 gap-x-1 gap-y-0.5 ${c.text}`}
+                         style={{ gridTemplateColumns: '10px auto auto 1fr' }}>
+                      <Calendar size={10} className="opacity-60" />
+                      <span className="font-medium opacity-80">기간</span>
+                      <span className="opacity-40">:</span>
+                      <span className="tabular-nums opacity-80">{proj.startDate || "미정"} ~ {proj.endDate || "미정"}</span>
+
+                      {elapsedLabel && <>
+                        <Clock size={10} className="opacity-60" />
+                        <span className="font-medium opacity-80">경과</span>
+                        <span className="opacity-40">:</span>
+                        <span className={`px-1 rounded text-[10px] font-bold ${c.header}`}>{elapsedLabel}</span>
+                      </>}
+
+                      <Briefcase size={10} className={pmEmp ? "opacity-60" : "text-red-600"} />
+                      <span className={`font-medium ${pmEmp ? "opacity-80" : "text-red-600"}`}>PM</span>
+                      <span className={`opacity-40 ${pmEmp ? "" : "text-red-600"}`}>:</span>
+                      {pmEmp
+                        ? <span className="opacity-70">{pmEmp.name}{pmEmp.rank ? ` ${pmEmp.rank}` : ""}</span>
+                        : <span className="text-red-600 font-semibold">PM 등록 필수</span>
+                      }
                     </div>
                   );
                 })()}
