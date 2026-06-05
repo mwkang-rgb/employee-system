@@ -8,7 +8,7 @@ DROP TABLE IF EXISTS assignment_history CASCADE;
 CREATE TABLE assignment_history (
   id              text         PRIMARY KEY,
   employee_id     bigint       NOT NULL REFERENCES employees(id) ON DELETE CASCADE,
-  project_id      bigint       REFERENCES projects(id) ON DELETE SET NULL,
+  project_id      text         REFERENCES projects(id) ON DELETE SET NULL,
   project_name    text,
   duty            text,
   role            text,
