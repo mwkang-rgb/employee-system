@@ -45,32 +45,22 @@ export const resolveStatus = (emp, projectName) => {
   return result;
 };
 
-// 직원의 현재 투입 정보를 assignmentHistory에 누적
-// emp: 현재 직원 객체, projectsMap: id→project, options: { closeEndDate?: 오늘로 종료 처리할지 }
-export const archiveCurrentAssignment = (emp, projectsMap, options = {}) => {
-  // 대기 상태였거나 프로젝트가 없으면 아카이브할 것이 없음
-  if (!emp || !emp.projectId || emp.projectId === "pool") return emp.assignmentHistory || [];
+// 직원의 현재 투입 정보를 단일 이력 엔트리로 빌드
+// 반환값: 삽입할 엔트리 객체 (null이면 아카이브 불필요)
+export const buildHistoryEntry = (emp, projectsMap, options = {}) => {
+  if (!emp || !emp.projectId || emp.projectId === "pool") return null;
   const currentProj = projectsMap[emp.projectId];
-  if (!currentProj) return emp.assignmentHistory || [];
-  // 같은 프로젝트의 동일 record가 이미 마지막 이력에 있으면 중복 방지
-  const history = Array.isArray(emp.assignmentHistory) ? [...emp.assignmentHistory] : [];
-  const last = history[history.length - 1];
-  const newEntry = {
+  if (!currentProj) return null;
+  return {
     id: `h_${emp.id}_${Date.now()}`,
+    projectId: currentProj.id,
     projectName: currentProj.name,
-    startDate: emp.startDate || "",
-    endDate: options.closeEndDate ? todayISO() : (emp.endDate || ""),
+    startDate: emp.startDate || null,
+    endDate: options.closeEndDate ? todayISO() : (emp.endDate || null),
     assignmentType: emp.assignmentType || "",
     role: emp.role || "",
     duty: emp.duty || "",
   };
-  // 마지막 이력이 같은 프로젝트·같은 시작일이면 덮어쓰기 (중복 push 방지)
-  if (last && last.projectName === newEntry.projectName && last.startDate === newEntry.startDate) {
-    history[history.length - 1] = { ...last, endDate: newEntry.endDate, assignmentType: newEntry.assignmentType, role: newEntry.role, duty: newEntry.duty };
-  } else {
-    history.push(newEntry);
-  }
-  return history;
 };
 
 // 대기 시작일로부터 오늘까지 경과일/개월 계산

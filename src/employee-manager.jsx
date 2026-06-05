@@ -3,7 +3,7 @@ import { X, Users, Briefcase, Calendar, FolderKanban, LayoutList, Building2, Log
 import { useRealtimeSync } from "./useRealtimeSync.js";
 import { useAuth } from "./AuthContext.jsx";
 import { COLOR_MAP, COLOR_OPTIONS } from "./constants.js";
-import { todayISO, getStatus, resolveStatus, archiveCurrentAssignment } from "./helpers.js";
+import { todayISO, getStatus, resolveStatus, buildHistoryEntry } from "./helpers.js";
 import { supabase } from "./supabaseClient";
 import * as XLSX from "xlsx";
 import EmployeeDetailModal from "./EmployeeDetailModal.jsx";
@@ -21,7 +21,6 @@ function dbToApp(row) {
     endDate: row.end_date ?? row.endDate,
     partnerName: row.partner_name ?? row.partnerName,
     pooledAt: row.pooled_at ?? row.pooledAt,
-    assignmentHistory: row.assignment_history ?? row.assignmentHistory ?? [],
     assignmentType: row.assignment_type ?? row.assignmentType,
   };
 }
@@ -33,9 +32,38 @@ function appToDb(obj) {
   if ('endDate' in result) { result.end_date = result.endDate; delete result.endDate; }
   if ('partnerName' in result) { result.partner_name = result.partnerName; delete result.partnerName; }
   if ('pooledAt' in result) { result.pooled_at = result.pooledAt; delete result.pooledAt; }
-  if ('assignmentHistory' in result) { result.assignment_history = result.assignmentHistory; delete result.assignmentHistory; }
+  if ('assignmentHistory' in result) { delete result.assignmentHistory; }
   if ('assignmentType' in result) { result.assignment_type = result.assignmentType; delete result.assignmentType; }
   return result;
+}
+
+async function insertHistoryEntry(emp, projMap, options = {}) {
+  const entry = buildHistoryEntry(emp, projMap, options);
+  if (!entry) return;
+  const { error } = await supabase.from("assignment_history").insert([{
+    id: entry.id,
+    employee_id: emp.id,
+    project_id: entry.projectId === "pool" ? null : entry.projectId,
+    project_name: entry.projectName,
+    duty: entry.duty || null,
+    role: entry.role || null,
+    assignment_type: entry.assignmentType || null,
+    start_date: entry.startDate || null,
+    end_date: entry.endDate || null,
+  }]);
+  if (error) console.error("[insertHistoryEntry] 이력 저장 실패:", error);
+}
+
+function histDbToApp(row) {
+  return {
+    id: row.id,
+    projectName: row.project_name,
+    startDate: row.start_date,
+    endDate: row.end_date,
+    assignmentType: row.assignment_type,
+    role: row.role,
+    duty: row.duty,
+  };
 }
 
 export default function EmployeeManager() {
@@ -67,6 +95,18 @@ export default function EmployeeManager() {
   const isProjSubmittingRef = useRef(false);
   // 카드 상세 보기 팝업 (대기 카드 클릭 시)
   const [detailEmp, setDetailEmp] = useState(null);
+  const [detailEmpHistory, setDetailEmpHistory] = useState([]);
+
+  const openDetailModal = async (emp) => {
+    setDetailEmp(emp);
+    setDetailEmpHistory([]);
+    const { data, error } = await supabase
+      .from("assignment_history")
+      .select("*")
+      .eq("employee_id", emp.id)
+      .order("start_date", { ascending: true });
+    if (!error) setDetailEmpHistory((data || []).map(histDbToApp));
+  };
 
   // 커스텀 알림 모달
   const [alertInfo, setAlertInfo] = useState(null);
@@ -197,9 +237,8 @@ export default function EmployeeManager() {
     const wasInPool = prevEmp?.projectId === "pool" || prevEmp?.assignmentType === "대기";
     const projectChanged = prevEmp && prevEmp.projectId !== editingEmp.projectId;
     const projMap = Object.fromEntries(projects.map(p => [p.id, p]));
-    let nextHistory = editingEmp.assignmentHistory || [];
     if (projectChanged && prevEmp.projectId && prevEmp.projectId !== "pool") {
-      nextHistory = archiveCurrentAssignment(prevEmp, projMap, { closeEndDate: true });
+      await insertHistoryEntry(prevEmp, projMap, { closeEndDate: true });
     }
 
     const toSave = {
@@ -210,7 +249,6 @@ export default function EmployeeManager() {
       pooledAt: isPool
         ? (wasInPool ? editingEmp.pooledAt || todayISO() : todayISO())
         : null,
-      assignmentHistory: nextHistory,
       startDate: dateOptional ? null : editingEmp.startDate,
       endDate: dateOptional ? null : editingEmp.endDate,
     };
@@ -273,7 +311,6 @@ export default function EmployeeManager() {
         start_date: isPool ? null : (row["투입일자"]?.toString().trim() || "1111-01-01"),
         end_date: isPool ? null : (row["철수일자"]?.toString().trim() || "9999-12-31"),
         pooled_at: isPool ? todayISO() : null,
-        assignment_history: [],
       };
     }).filter(Boolean);
 
@@ -323,12 +360,12 @@ export default function EmployeeManager() {
       .delete().eq("project_id", projId).eq("affiliation", "협력사");
     if (partnerErr) { console.error(partnerErr); showAlert("알림", "프로젝트 삭제 실패"); return; }
 
-    // DB: IBKS 직원 대기로 이동 (assignment_history가 직원마다 달라 개별 업데이트)
+    // DB: IBKS 직원 이력 기록 후 대기로 이동
     const ibksMembers = members.filter(e => e.affiliation === "IBKS");
     for (const emp of ibksMembers) {
-      const newHistory = archiveCurrentAssignment(emp, projMap, { closeEndDate: true });
+      await insertHistoryEntry(emp, projMap, { closeEndDate: true });
       const { error: empErr } = await supabase.from("employees")
-        .update(appToDb({ projectId: "pool", pooledAt: todayStr, endDate: todayStr, assignmentType: "대기", duty: "", role: "", assignmentHistory: newHistory }))
+        .update(appToDb({ projectId: "pool", pooledAt: todayStr, endDate: todayStr, assignmentType: "대기", duty: "", role: "" }))
         .eq("id", emp.id);
       if (empErr) { console.error(empErr); showAlert("알림", "프로젝트 삭제 실패"); return; }
     }
@@ -342,8 +379,7 @@ export default function EmployeeManager() {
       .filter(e => !(e.projectId === projId && e.affiliation === "협력사"))
       .map(e => {
         if (e.projectId !== projId) return e;
-        const newHistory = archiveCurrentAssignment(e, projMap, { closeEndDate: true });
-        return { ...e, projectId: "pool", pooledAt: todayStr, endDate: todayStr, assignmentType: "대기", duty: "", role: "", assignmentHistory: newHistory };
+        return { ...e, projectId: "pool", pooledAt: todayStr, endDate: todayStr, assignmentType: "대기", duty: "", role: "" };
       })
     );
     setProjects(prev => prev.filter(p => p.id !== projId));
@@ -396,13 +432,13 @@ export default function EmployeeManager() {
     }
 
     const projMap = Object.fromEntries(projects.map(p => [p.id, p]));
-    const newHistory = archiveCurrentAssignment(emp, projMap, { closeEndDate: true });
+    await insertHistoryEntry(emp, projMap, { closeEndDate: true });
     const isPending = emp.assignmentType === "투입예정";
     const updatePayload = appToDb(projId === "pool"
       ? (isPending
-          ? { projectId: projId, pooledAt: todayISO(), assignmentHistory: newHistory, startDate: null, endDate: todayISO() }
-          : { projectId: projId, pooledAt: todayISO(), assignmentHistory: newHistory, startDate: null, endDate: todayISO(), assignmentType: "대기", duty: "", role: "" })
-      : { projectId: projId, pooledAt: null, assignmentHistory: newHistory });
+          ? { projectId: projId, pooledAt: todayISO(), startDate: null, endDate: todayISO() }
+          : { projectId: projId, pooledAt: todayISO(), startDate: null, endDate: todayISO(), assignmentType: "대기", duty: "", role: "" })
+      : { projectId: projId, pooledAt: null });
 
     const { error } = await supabase.from("employees").update(updatePayload).eq("id", empId);
     if (error) { console.error(error); showAlert("알림", "배치 변경 실패"); return; }
@@ -410,12 +446,12 @@ export default function EmployeeManager() {
     setEmployees(prev => prev.map(x => {
       if (x.id !== empId) return x;
       if (projId === "pool") {
-        const baseUpdate = { projectId: projId, pooledAt: todayISO(), assignmentHistory: newHistory, startDate: null, endDate: todayISO() };
+        const baseUpdate = { projectId: projId, pooledAt: todayISO(), startDate: null, endDate: todayISO() };
         return (x.assignmentType === "투입예정")
           ? { ...x, ...baseUpdate }
           : { ...x, ...baseUpdate, assignmentType: "대기", duty: "", role: "" };
       }
-      return { ...x, projectId: projId, pooledAt: null, assignmentHistory: newHistory };
+      return { ...x, projectId: projId, pooledAt: null };
     }));
   };
 
@@ -480,7 +516,7 @@ export default function EmployeeManager() {
             employees={employees}
             projects={projects}
             onDropEmployee={handleDropEmployee}
-            onCardClick={(emp) => setDetailEmp(emp)}
+            onCardClick={openDetailModal}
             onEditEmp={openEditEmp}
             onNewProject={openNewProj}
             onEditProject={openEditProj}
@@ -504,11 +540,13 @@ export default function EmployeeManager() {
       {/* 카드 상세 보기 팝업 */}
       <EmployeeDetailModal
         detailEmp={detailEmp}
+        assignmentHistory={detailEmpHistory}
         projectById={projectById}
-        onClose={() => setDetailEmp(null)}
+        onClose={() => { setDetailEmp(null); setDetailEmpHistory([]); }}
         onEdit={() => {
           const target = detailEmp;
           setDetailEmp(null);
+          setDetailEmpHistory([]);
           setEditingEmp({ ...target });
           setShowEmpModal(true);
         }}

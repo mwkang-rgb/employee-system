@@ -35,7 +35,7 @@ function DetailRow({ label, children }) {
 //   projectById — { [id]: project } 맵
 //   onClose     — 닫기 버튼 / 배경 클릭 시 호출
 //   onEdit      — "정보 수정" 버튼 클릭 시 호출
-export default function EmployeeDetailModal({ detailEmp, projectById, onClose, onEdit }) {
+export default function EmployeeDetailModal({ detailEmp, assignmentHistory, projectById, onClose, onEdit }) {
   if (!detailEmp) return null;
 
   const projectName = projectById[detailEmp.projectId]?.name;
@@ -150,7 +150,7 @@ export default function EmployeeDetailModal({ detailEmp, projectById, onClose, o
 
           {/* 투입 이력 타임라인 */}
           {(() => {
-            const history = (detailEmp.assignmentHistory || []).slice().reverse(); // 최신이 위
+            const history = (assignmentHistory || []).slice().reverse(); // 최신이 위
             if (history.length === 0) {
               return (
                 <div className="rounded-lg border border-slate-200 p-3 text-center">

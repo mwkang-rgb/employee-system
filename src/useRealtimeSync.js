@@ -34,7 +34,6 @@ function rawToApp(row) {
     endDate: row.end_date ?? row.endDate,
     partnerName: row.partner_name ?? row.partnerName,
     pooledAt: row.pooled_at ?? row.pooledAt,
-    assignmentHistory: row.assignment_history ?? row.assignmentHistory ?? [],
     assignmentType: row.assignment_type ?? row.assignmentType,
   };
 }
