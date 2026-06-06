@@ -7,9 +7,10 @@ import { COLOR_MAP } from "./constants.js";
 
 function downloadTemplate() {
   const headers = ["이름", "소속", "직급", "직무", "역할", "투입형태", "투입프로젝트", "투입일자", "철수일자"];
-  const example = ["홍길동", "IBKS", "차장", "DBA", "백엔드 개발", "비계약", "프로젝트명", "2026-06-01", "2026-12-31"];
-  const note = ["※ 날짜 미정 시", "", "", "", "", "투입형태: 계약/비계약/지원/투입예정", "대기 입력 시 날짜 불필요", "1111-01-01", "9999-12-31"];
-  const ws = XLSX.utils.aoa_to_sheet([headers, example, note]);
+  const sample1 = ["홍길동", "IBKS",  "차장", "DBA",      "백엔드 개발",    "비계약", "IBK 차세대 시스템", "2026-06-01", "2026-12-31"];
+  const sample2 = ["홍길순", "IBKS",  "대리", "개발",      "프론트엔드 개발", "지원",   "IBK 차세대 시스템", "1111-01-01", "9999-12-31"];
+  const sample3 = ["김개발", "협력사", "과장", "분석/설계", "요구사항 분석",   "대기",   "대기",             "",           ""];
+  const ws = XLSX.utils.aoa_to_sheet([headers, sample1, sample2, sample3]);
   ws["!cols"] = [12, 16, 10, 12, 16, 10, 20, 14, 14].map((w) => ({ wch: w }));
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "직원정보");
