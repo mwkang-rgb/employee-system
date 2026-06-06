@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
-import { X, Users, Briefcase, Calendar, FolderKanban, LayoutList, Building2, LogOut, Trash2 } from "lucide-react";
+import { X, Users, Briefcase, Calendar, FolderKanban, LayoutList, Building2, LogOut, Trash2, UserX } from "lucide-react";
 import { useRealtimeSync } from "./useRealtimeSync.js";
 import { useAuth } from "./AuthContext.jsx";
 import { COLOR_MAP, COLOR_OPTIONS } from "./constants.js";
@@ -126,6 +126,10 @@ export default function EmployeeManager() {
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   // deleteConfirm = { projId, members, ibksCount, partnerCount }
 
+  // 직원 삭제 확인 모달
+  const [deleteEmpConfirm, setDeleteEmpConfirm] = useState(null);
+  // deleteEmpConfirm = { id, name }
+
   // 직원 조회
   useEffect(() => {
     if (!supabase) {
@@ -191,8 +195,13 @@ export default function EmployeeManager() {
     setEditingEmp(normalized);
     setShowEmpModal(true);
   };
-  const removeEmp = async (id) => {
-    if (!confirm("이 직원 정보를 삭제하시겠습니까?")) return;
+  const removeEmp = (id) => {
+    const emp = employees.find(e => e.id === id);
+    setDeleteEmpConfirm({ id, name: emp?.name ?? "" });
+  };
+  const doDeleteEmployee = async () => {
+    const { id } = deleteEmpConfirm;
+    setDeleteEmpConfirm(null);
     const { error } = await supabase.from("employees").delete().eq("id", id);
     if (error) { console.error(error); showAlert("알림", "삭제 실패"); return; }
     setEmployees((prev) => prev.filter((e) => e.id !== id));
@@ -682,6 +691,29 @@ export default function EmployeeManager() {
               <button onClick={() => setDeleteConfirm(null)} className="flex-1 py-3 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors">취소</button>
               <div className="w-px bg-slate-200" />
               <button onClick={doDeleteProject} className="flex-1 py-3 text-sm font-semibold text-red-600 hover:bg-red-50 transition-colors">삭제</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 직원 삭제 확인 모달 */}
+      {deleteEmpConfirm && (
+        <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50" onClick={() => setDeleteEmpConfirm(null)}>
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="flex flex-col items-center px-6 pt-7 pb-5 gap-3">
+              <div className="w-14 h-14 rounded-full bg-red-100 flex items-center justify-center">
+                <UserX size={26} className="text-red-600" />
+              </div>
+              <h3 className="text-lg font-bold text-slate-900">직원 삭제</h3>
+              <div className="text-center text-sm text-slate-600 space-y-1.5">
+                <p><span className="font-semibold text-slate-800">{deleteEmpConfirm?.name}</span> 님의 정보를 삭제하시겠습니까?</p>
+                <p className="text-slate-500 text-sm">삭제된 정보는 복구할 수 없습니다.</p>
+              </div>
+            </div>
+            <div className="flex border-t border-slate-200">
+              <button onClick={() => setDeleteEmpConfirm(null)} className="flex-1 py-3 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors">취소</button>
+              <div className="w-px bg-slate-200" />
+              <button onClick={doDeleteEmployee} className="flex-1 py-3 text-sm font-semibold text-red-600 hover:bg-red-50 transition-colors">삭제</button>
             </div>
           </div>
         </div>
