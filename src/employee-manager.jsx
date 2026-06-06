@@ -601,7 +601,7 @@ export default function EmployeeManager() {
                 value={
                   <span className="flex items-center justify-between w-full gap-1.5">
                     <span className="text-lg sm:text-xl font-bold text-slate-900 tabular-nums">{stats.waiting}</span>
-                    <span className="flex flex-col items-end gap-0.5">
+                    <span className="flex flex-row items-center gap-1">
                       {stats.waitingEmp > 0 && (
                         <span className="text-[10px] font-bold px-1.5 py-0.5 rounded border bg-blue-50 text-blue-700 border-blue-200 whitespace-nowrap">
                           직원 {stats.waitingEmp}
