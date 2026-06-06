@@ -275,8 +275,8 @@ export default function ProjectBoardView({
       </div>
 
       {/* 칸반 보드 — 가로+세로 스크롤 */}
-      <div className="flex-1 overflow-auto min-h-0 mt-1.5" style={{ minWidth: 0 }}>
-        <div className="flex gap-2 sm:gap-3 pb-4 h-full" style={{ minWidth: "max-content" }}>
+      <div className="flex-1 overflow-auto min-h-0 mt-1.5" style={{ minWidth: 0, minHeight: "730px" }}>
+        <div className="flex gap-2 sm:gap-3 pb-4" style={{ minWidth: "max-content", height: "730px" }}>
         {orderedProjects.map((proj) => {
           const c = COLOR_MAP[proj.color] || COLOR_MAP.slate;
           const q = boardQuery.trim().toLowerCase();
