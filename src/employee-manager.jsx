@@ -299,13 +299,15 @@ export default function EmployeeManager() {
 
     if (rows.length === 0) { showAlert("알림", "업로드할 데이터가 없습니다."); return; }
 
-    const REQUIRED = ["이름", "소속", "직급", "투입형태", "투입프로젝트"];
     const errors = [];
     rows.forEach((row, i) => {
       const rowNum = i + 2;
-      REQUIRED.forEach(col => {
+      const isWaiting = row["투입형태"]?.toString().trim() === "대기";
+      ["이름", "소속", "직급", "투입형태"].forEach(col => {
         if (!row[col]?.toString().trim()) errors.push(`${rowNum}행: '${col}' 필수값 누락`);
       });
+      if (!isWaiting && !row["투입프로젝트"]?.toString().trim())
+        errors.push(`${rowNum}행: '투입프로젝트' 필수값 누락`);
     });
     if (errors.length > 0) {
       showAlert("알림", "유효성 오류:\n\n" + errors.slice(0, 10).join("\n") + (errors.length > 10 ? `\n...외 ${errors.length - 10}건` : ""));
@@ -315,14 +317,20 @@ export default function EmployeeManager() {
     const projByName = Object.fromEntries(projects.map(p => [p.name, p.id]));
     const payloadErrors = [];
     const payloads = rows.map((row, i) => {
-      const projName = row["투입프로젝트"].toString().trim();
-      const isPool = projName === "대기";
+      const assignmentType = row["투입형태"].toString().trim();
+      const projName = row["투입프로젝트"]?.toString().trim() || "";
+      const isPool = assignmentType === "대기"
+        || projName === ""
+        || projName === "대기"
+        || projName === "대기 상태 (프로젝트 없음)";
       const projectId = isPool ? "pool" : projByName[projName];
       if (!isPool && !projectId) {
         payloadErrors.push(`${i + 2}행: 프로젝트 '${projName}'을 찾을 수 없습니다`);
         return null;
       }
       const 소속 = row["소속"].toString().trim();
+      const rawStart = row["투입일자"]?.toString().trim() || "";
+      const rawEnd   = row["철수일자"]?.toString().trim() || "";
       return {
         name: row["이름"].toString().trim(),
         affiliation: 소속 === "IBKS" ? "IBKS" : "협력사",
@@ -330,10 +338,10 @@ export default function EmployeeManager() {
         rank: row["직급"].toString().trim(),
         duty: (row["직무"] || "").toString().trim() || "없음",
         role: (row["역할"] || "").toString().trim() || "없음",
-        assignment_type: row["투입형태"].toString().trim(),
+        assignment_type: assignmentType,
         project_id: projectId,
-        start_date: isPool ? null : (row["투입일자"]?.toString().trim() || "1111-01-01"),
-        end_date: isPool ? null : (row["철수일자"]?.toString().trim() || "9999-12-31"),
+        start_date: isPool ? null : (rawStart || "1111-01-01"),
+        end_date:   isPool ? null : (rawEnd   || "9999-12-31"),
         pooled_at: isPool ? todayISO() : null,
       };
     }).filter(Boolean);
