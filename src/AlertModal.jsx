@@ -20,15 +20,17 @@ export default function AlertModal({ title, message, onClose }) {
 
   return (
     <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-[60]">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden" onClick={(e) => e.stopPropagation()}>
-        <div className="flex flex-col items-center px-6 pt-7 pb-5 gap-3">
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden flex flex-col max-h-[80vh]" onClick={(e) => e.stopPropagation()}>
+        <div className="flex flex-col items-center px-6 pt-7 pb-5 gap-3 flex-shrink-0">
           <div className={`w-14 h-14 rounded-full ${bgCls} flex items-center justify-center`}>
             <Icon size={26} className={iconCls} />
           </div>
           <h3 className="text-lg font-bold text-slate-900">{title}</h3>
-          <p className="text-center text-sm text-slate-600 whitespace-pre-wrap">{message}</p>
         </div>
-        <div className="border-t border-slate-200">
+        <div className="overflow-y-auto flex-1 min-h-0 px-6 pb-5">
+          <p className="text-left text-sm text-slate-600 whitespace-pre-wrap">{message}</p>
+        </div>
+        <div className="border-t border-slate-200 flex-shrink-0">
           <button
             autoFocus
             onClick={onClose}
