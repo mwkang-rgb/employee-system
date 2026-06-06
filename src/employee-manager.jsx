@@ -559,11 +559,11 @@ export default function EmployeeManager() {
 
   return (
     <div className="h-screen bg-slate-50 font-sans flex flex-col overflow-hidden">
-      <div className="max-w-[1400px] w-full mx-auto px-3 sm:px-6 pt-3 sm:pt-6 flex flex-col h-full">
-        <div className="mb-4 sm:mb-6 flex items-end justify-between border-b border-slate-200 pb-3 sm:pb-5 gap-2 flex-shrink-0">
+      <div className="max-w-[1400px] w-full mx-auto px-3 sm:px-6 pt-[5px] flex flex-col h-full">
+        <div className="mb-0 flex items-end justify-between border-b border-slate-200 pb-[5px] gap-2 flex-shrink-0">
           <div className="min-w-0">
-            <div className="text-[10px] sm:text-xs font-semibold tracking-widest text-slate-500 uppercase mb-1">SI개발본부 · 인력운영</div>
-            <h1 className="text-lg sm:text-2xl font-bold text-slate-900">직원 투입현황 관리</h1>
+            <div className="text-[10px] sm:text-xs font-semibold tracking-widest text-slate-500 uppercase mb-0">SI개발본부 · 인력운영</div>
+            <h1 className="text-lg sm:text-2xl font-bold text-slate-900 mb-[5px]">직원 투입현황 관리</h1>
           </div>
           <div className="flex items-center gap-3 flex-shrink-0">
             <div className="text-[10px] sm:text-xs text-slate-500 hidden sm:block">기준일 {new Date().toISOString().slice(0, 10)}</div>
@@ -580,13 +580,13 @@ export default function EmployeeManager() {
           </div>
         </div>
 
-        <div className="flex gap-1 mb-4 sm:mb-5 border-b border-slate-200 overflow-hidden flex-shrink-0">
+        <div className="flex gap-1 mb-0 border-b border-slate-200 overflow-hidden flex-shrink-0">
           <TabBtn active={view === "board"} onClick={() => handleViewChange("board")} icon={<FolderKanban size={15} />}>프로젝트 배치 보드</TabBtn>
           <TabBtn active={view === "list"} onClick={() => handleViewChange("list")} icon={<LayoutList size={15} />}>직원 관리</TabBtn>
         </div>
 
         {/* 통계 카드 */}
-        <div className="mb-4 sm:mb-6 -mx-3 px-3 lg:mx-0 lg:px-0 overflow-x-auto lg:overflow-visible flex-shrink-0">
+        <div className="mb-0 py-1.5 overflow-x-auto lg:overflow-visible flex-shrink-0">
           <div className="flex lg:grid lg:grid-cols-5 gap-2 sm:gap-3 min-w-max lg:min-w-0">
             <StatCard icon={<Users size={18} />} label="전체 인원" value={stats.total} accent="slate" />
             <StatCard icon={<Users size={18} />} label="IBKS" value={stats.ibks} accent="indigo" />
@@ -615,7 +615,7 @@ export default function EmployeeManager() {
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto pb-6 min-h-0">
+        <div className="flex-1 overflow-y-auto pb-4 pt-1.5 min-h-0">
           {loading && (
             <div className="text-center py-10 text-slate-400">데이터 불러오는 중...</div>
           )}
@@ -850,7 +850,7 @@ export default function EmployeeManager() {
 function TabBtn({ active, onClick, icon, children }) {
   return (
     <button onClick={onClick}
-      className={`px-4 py-2.5 text-sm font-semibold flex items-center gap-1.5 border-b-2 transition-colors -mb-px ${
+      className={`px-4 py-1.5 text-sm font-semibold flex items-center gap-1.5 border-b-2 transition-colors -mb-px ${
         active ? "border-indigo-600 text-indigo-700" : "border-transparent text-slate-500 hover:text-slate-700"
       }`}>
       {icon}{children}
@@ -867,8 +867,8 @@ function StatCard({ icon, label, value, accent }) {
     rose: "text-rose-700 bg-rose-100",
   };
   return (
-    <div className="bg-white rounded-lg border border-slate-200 p-3 sm:p-4 flex items-center gap-2 sm:gap-3 flex-shrink-0 w-[140px] lg:w-auto">
-      <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-md flex items-center justify-center flex-shrink-0 ${colors[accent]}`}>{icon}</div>
+    <div className="bg-white rounded-lg border border-slate-200 p-2 sm:p-3 flex items-center gap-2 flex-shrink-0 w-[140px] lg:w-auto">
+      <div className={`w-8 h-8 rounded-md flex items-center justify-center flex-shrink-0 ${colors[accent]}`}>{icon}</div>
       <div className="min-w-0 whitespace-nowrap">
         <div className="text-[11px] sm:text-xs text-slate-500 font-medium">{label}</div>
         <div className="text-lg sm:text-xl font-bold text-slate-900 tabular-nums">{value}</div>
