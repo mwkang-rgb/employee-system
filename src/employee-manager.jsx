@@ -499,19 +499,23 @@ export default function EmployeeManager() {
 
   const openAddressSearch = () => {
     const execute = () => {
-      new window.daum.Postcode({
+      const popup = new window.daum.Postcode({
         oncomplete: (data) => {
           const addr = data.roadAddress || data.jibunAddress;
           setEditingProj(prev => ({
             ...prev,
             address: addr,
             addressDetail: "",
-            // TODO: 카카오 지도 API 연동 시 위도/경도 자동 입력 처리
             latitude: null,
             longitude: null,
           }));
         },
-      }).open();
+        width: 500,
+        height: 600,
+      });
+      const left = window.screenX + Math.floor((window.outerWidth - 500) / 2);
+      const top  = window.screenY + Math.floor((window.outerHeight - 600) / 2);
+      popup.open({ left, top });
     };
 
     if (window.daum?.Postcode) {
@@ -554,9 +558,9 @@ export default function EmployeeManager() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans">
-      <div className="max-w-[1400px] mx-auto p-3 sm:p-6">
-        <div className="mb-4 sm:mb-6 flex items-end justify-between border-b border-slate-200 pb-3 sm:pb-5 gap-2">
+    <div className="h-screen bg-slate-50 font-sans flex flex-col overflow-hidden">
+      <div className="max-w-[1400px] w-full mx-auto px-3 sm:px-6 pt-3 sm:pt-6 flex flex-col h-full">
+        <div className="mb-4 sm:mb-6 flex items-end justify-between border-b border-slate-200 pb-3 sm:pb-5 gap-2 flex-shrink-0">
           <div className="min-w-0">
             <div className="text-[10px] sm:text-xs font-semibold tracking-widest text-slate-500 uppercase mb-1">SI개발본부 · 인력운영</div>
             <h1 className="text-lg sm:text-2xl font-bold text-slate-900">직원 투입현황 관리</h1>
@@ -576,13 +580,13 @@ export default function EmployeeManager() {
           </div>
         </div>
 
-        <div className="flex gap-1 mb-4 sm:mb-5 border-b border-slate-200 overflow-x-auto -mx-3 px-3 sm:mx-0 sm:px-0">
+        <div className="flex gap-1 mb-4 sm:mb-5 border-b border-slate-200 overflow-x-auto -mx-3 px-3 sm:mx-0 sm:px-0 flex-shrink-0">
           <TabBtn active={view === "board"} onClick={() => handleViewChange("board")} icon={<FolderKanban size={15} />}>프로젝트 배치 보드</TabBtn>
           <TabBtn active={view === "list"} onClick={() => handleViewChange("list")} icon={<LayoutList size={15} />}>직원 관리</TabBtn>
         </div>
 
         {/* 통계 카드 */}
-        <div className="mb-4 sm:mb-6 -mx-3 px-3 lg:mx-0 lg:px-0 overflow-x-auto lg:overflow-visible">
+        <div className="mb-4 sm:mb-6 -mx-3 px-3 lg:mx-0 lg:px-0 overflow-x-auto lg:overflow-visible flex-shrink-0">
           <div className="flex lg:grid lg:grid-cols-5 gap-2 sm:gap-3 min-w-max lg:min-w-0">
             <StatCard icon={<Users size={18} />} label="전체 인원" value={stats.total} accent="slate" />
             <StatCard icon={<Users size={18} />} label="IBKS" value={stats.ibks} accent="indigo" />
@@ -611,35 +615,37 @@ export default function EmployeeManager() {
           </div>
         </div>
 
-        {loading && (
-          <div className="text-center py-10 text-slate-400">데이터 불러오는 중...</div>
-        )}
+        <div className="flex-1 overflow-y-auto pb-6 min-h-0">
+          {loading && (
+            <div className="text-center py-10 text-slate-400">데이터 불러오는 중...</div>
+          )}
 
-        {!loading && view === "list" && (
-          <EmployeeListView
-            employees={employees}
-            projects={projects}
-            projectById={projectById}
-            partnerList={partnerList}
-            onNewEmp={openNewEmp}
-            onEditEmp={openEditEmp}
-            onDeleteEmp={removeEmp}
-            onBulkUpload={handleBulkUpload}
-          />
-        )}
+          {!loading && view === "list" && (
+            <EmployeeListView
+              employees={employees}
+              projects={projects}
+              projectById={projectById}
+              partnerList={partnerList}
+              onNewEmp={openNewEmp}
+              onEditEmp={openEditEmp}
+              onDeleteEmp={removeEmp}
+              onBulkUpload={handleBulkUpload}
+            />
+          )}
 
-        {!loading && view === "board" && (
-          <ProjectBoardView
-            employees={employees}
-            projects={projects}
-            onDropEmployee={handleDropEmployee}
-            onCardClick={openDetailModal}
-            onEditEmp={openEditEmp}
-            onNewProject={openNewProj}
-            onEditProject={openEditProj}
-            onDeleteProject={removeProj}
-          />
-        )}
+          {!loading && view === "board" && (
+            <ProjectBoardView
+              employees={employees}
+              projects={projects}
+              onDropEmployee={handleDropEmployee}
+              onCardClick={openDetailModal}
+              onEditEmp={openEditEmp}
+              onNewProject={openNewProj}
+              onEditProject={openEditProj}
+              onDeleteProject={removeProj}
+            />
+          )}
+        </div>
       </div>
 
       {/* 직원 등록/수정 모달 */}
