@@ -1,4 +1,4 @@
-import { X } from "lucide-react";
+import { X, UserPlus, UserCog } from "lucide-react";
 import {
   AFFILIATIONS, RANKS, ASSIGNMENT_TYPES, ASSIGNMENT_TYPE_STYLES, SAMPLE_PARTNERS,
 } from "./constants.js";
@@ -44,9 +44,16 @@ export default function EmployeeFormModal({
       >
         {/* 헤더 */}
         <div className="flex items-center justify-between px-4 sm:px-5 py-3 sm:py-4 border-b border-slate-200 flex-shrink-0">
-          <h2 className="text-base sm:text-lg font-bold text-slate-900">
-            {isNew ? "직원 등록" : "직원 정보 수정"}
-          </h2>
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-full bg-indigo-50 flex items-center justify-center flex-shrink-0">
+              {isNew
+                ? <UserPlus size={18} className="text-indigo-600" />
+                : <UserCog size={18} className="text-indigo-600" />}
+            </div>
+            <h2 className="text-base sm:text-lg font-bold text-slate-900">
+              {isNew ? "직원 등록" : "직원 정보 수정"}
+            </h2>
+          </div>
           <button onClick={onClose} className="text-slate-400 hover:text-slate-600">
             <X size={20} />
           </button>

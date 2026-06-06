@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
-import { X, Users, Briefcase, Calendar, FolderKanban, LayoutList, Building2, LogOut, Trash2, UserX } from "lucide-react";
+import { X, Users, Briefcase, Calendar, FolderKanban, LayoutList, Building2, LogOut, Trash2, UserX, FolderPlus, FolderOpen } from "lucide-react";
 import { useRealtimeSync } from "./useRealtimeSync.js";
 import { useAuth } from "./AuthContext.jsx";
 import { COLOR_MAP, COLOR_OPTIONS } from "./constants.js";
@@ -665,12 +665,13 @@ export default function EmployeeManager() {
       {deleteConfirm && (
         <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50" onClick={() => setDeleteConfirm(null)}>
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden" onClick={e => e.stopPropagation()}>
-            <div className="flex flex-col items-center px-6 pt-7 pb-5 gap-3">
-              <div className="w-14 h-14 rounded-full bg-red-100 flex items-center justify-center">
-                <Trash2 size={26} className="text-red-600" />
+            <div className="flex items-center justify-center px-6 pt-5 pb-4 gap-3">
+              <div className="w-11 h-11 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+                <Trash2 size={22} className="text-red-600" />
               </div>
-              <h3 className="text-lg font-bold text-slate-900">프로젝트 삭제</h3>
-              <div className="text-center text-sm text-slate-600 space-y-1.5">
+              <h3 className="text-base font-bold text-slate-900">프로젝트 삭제</h3>
+            </div>
+            <div className="px-6 pb-5 text-left text-sm text-slate-600 space-y-1.5">
                 {deleteConfirm.members.length > 0 ? (
                   <>
                     <p>이 프로젝트에 <span className="font-semibold text-slate-800">{deleteConfirm.members.length}명</span>이 배치되어 있습니다.</p>
@@ -685,7 +686,6 @@ export default function EmployeeManager() {
                   <p>이 프로젝트를 삭제하시겠습니까?</p>
                 )}
                 <p className="pt-0.5 text-slate-500">계속하시겠습니까?</p>
-              </div>
             </div>
             <div className="flex border-t border-slate-200">
               <button onClick={() => setDeleteConfirm(null)} className="flex-1 py-3 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors">취소</button>
@@ -700,15 +700,15 @@ export default function EmployeeManager() {
       {deleteEmpConfirm && (
         <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50" onClick={() => setDeleteEmpConfirm(null)}>
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden" onClick={e => e.stopPropagation()}>
-            <div className="flex flex-col items-center px-6 pt-7 pb-5 gap-3">
-              <div className="w-14 h-14 rounded-full bg-red-100 flex items-center justify-center">
-                <UserX size={26} className="text-red-600" />
+            <div className="flex items-center justify-center px-6 pt-5 pb-4 gap-3">
+              <div className="w-11 h-11 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+                <UserX size={22} className="text-red-600" />
               </div>
-              <h3 className="text-lg font-bold text-slate-900">직원 삭제</h3>
-              <div className="text-center text-sm text-slate-600 space-y-1.5">
-                <p><span className="font-semibold text-slate-800">{deleteEmpConfirm?.name}</span> 님의 정보를 삭제하시겠습니까?</p>
-                <p className="text-slate-500 text-sm">삭제된 정보는 복구할 수 없습니다.</p>
-              </div>
+              <h3 className="text-base font-bold text-slate-900">직원 삭제</h3>
+            </div>
+            <div className="px-6 pb-5 text-left text-sm text-slate-600 space-y-1.5">
+              <p><span className="font-semibold text-slate-800">{deleteEmpConfirm?.name}</span> 님의 정보를 삭제하시겠습니까?</p>
+              <p className="text-slate-500 text-sm">삭제된 정보는 복구할 수 없습니다.</p>
             </div>
             <div className="flex border-t border-slate-200">
               <button onClick={() => setDeleteEmpConfirm(null)} className="flex-1 py-3 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors">취소</button>
@@ -724,7 +724,14 @@ export default function EmployeeManager() {
         <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-2 sm:p-4 z-50" onClick={() => setShowProjModal(false)}>
           <div className="bg-white rounded-lg shadow-xl w-full max-w-md overflow-hidden flex flex-col max-h-[95vh]" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between px-4 sm:px-5 py-3 sm:py-4 border-b border-slate-200 flex-shrink-0">
-              <h2 className="text-base sm:text-lg font-bold text-slate-900">{editingProj.id === null ? "프로젝트 등록" : "프로젝트 수정"}</h2>
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-indigo-50 flex items-center justify-center flex-shrink-0">
+                  {editingProj.id === null
+                    ? <FolderPlus size={18} className="text-indigo-600" />
+                    : <FolderOpen size={18} className="text-indigo-600" />}
+                </div>
+                <h2 className="text-base sm:text-lg font-bold text-slate-900">{editingProj.id === null ? "프로젝트 등록" : "프로젝트 수정"}</h2>
+              </div>
               <button onClick={() => setShowProjModal(false)} className="text-slate-400 hover:text-slate-600"><X size={20} /></button>
             </div>
             <div className="p-4 sm:p-5 space-y-3 sm:space-y-4 overflow-y-auto flex-1">

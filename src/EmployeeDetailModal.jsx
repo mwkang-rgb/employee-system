@@ -55,11 +55,16 @@ export default function EmployeeDetailModal({ detailEmp, assignmentHistory, proj
       >
         {/* 헤더 */}
         <div className="flex items-center justify-between px-4 sm:px-5 py-3 sm:py-4 border-b border-slate-200 flex-shrink-0">
-          <div className="min-w-0">
-            <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-0.5">직원 상세</div>
-            <h2 className="text-lg sm:text-xl font-bold text-slate-900 truncate">
-              {detailEmp.name} <span className="text-sm font-medium text-slate-500">{detailEmp.rank}</span>
-            </h2>
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0">
+              <UserCheck size={18} className="text-slate-600" />
+            </div>
+            <div className="min-w-0">
+              <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-0.5">직원 상세</div>
+              <h2 className="text-lg sm:text-xl font-bold text-slate-900 truncate">
+                {detailEmp.name} <span className="text-sm font-medium text-slate-500">{detailEmp.rank}</span>
+              </h2>
+            </div>
           </div>
           <button onClick={onClose} className="text-slate-400 hover:text-slate-600 flex-shrink-0">
             <X size={22} />
