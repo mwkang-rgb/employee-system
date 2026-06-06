@@ -599,18 +599,20 @@ export default function EmployeeManager() {
                 label="대기 인력"
                 accent="rose"
                 value={
-                  <span className="flex items-center gap-1.5 flex-wrap">
+                  <span className="flex items-center justify-between w-full gap-1.5">
                     <span className="text-lg sm:text-xl font-bold text-slate-900 tabular-nums">{stats.waiting}</span>
-                    {stats.waitingEmp > 0 && (
-                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded border bg-blue-50 text-blue-700 border-blue-200">
-                        직원 {stats.waitingEmp}
-                      </span>
-                    )}
-                    {stats.waitingProf > 0 && (
-                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded border bg-purple-50 text-purple-700 border-purple-200">
-                        교수 {stats.waitingProf}
-                      </span>
-                    )}
+                    <span className="flex flex-col items-end gap-0.5">
+                      {stats.waitingEmp > 0 && (
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded border bg-blue-50 text-blue-700 border-blue-200 whitespace-nowrap">
+                          직원 {stats.waitingEmp}
+                        </span>
+                      )}
+                      {stats.waitingProf > 0 && (
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded border bg-purple-50 text-purple-700 border-purple-200 whitespace-nowrap">
+                          교수 {stats.waitingProf}
+                        </span>
+                      )}
+                    </span>
                   </span>
                 }
               />
@@ -872,9 +874,9 @@ function StatCard({ icon, label, value, accent }) {
   return (
     <div className="bg-white rounded-lg border border-slate-200 p-2 sm:p-3 flex items-center gap-2 flex-shrink-0 w-[140px] lg:w-auto">
       <div className={`w-8 h-8 rounded-md flex items-center justify-center flex-shrink-0 ${colors[accent]}`}>{icon}</div>
-      <div className="min-w-0 whitespace-nowrap">
+      <div className="min-w-0 flex-1">
         <div className="text-[11px] sm:text-xs text-slate-500 font-medium">{label}</div>
-        <div className="text-lg sm:text-xl font-bold text-slate-900 tabular-nums">{value}</div>
+        <div className="text-lg sm:text-xl font-bold text-slate-900 tabular-nums w-full">{value}</div>
       </div>
     </div>
   );
