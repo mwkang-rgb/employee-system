@@ -27,7 +27,7 @@ export default function AlertModal({ title, message, onClose }) {
           </div>
           <h3 className="text-lg font-bold text-slate-900">{title}</h3>
         </div>
-        <div className="overflow-y-auto flex-1 min-h-0 px-6 pb-5">
+        <div className="overflow-y-auto px-6 pb-5 h-[5.5rem]">
           <p className="text-left text-sm text-slate-600 whitespace-pre-wrap">{message}</p>
         </div>
         <div className="border-t border-slate-200 flex-shrink-0">
