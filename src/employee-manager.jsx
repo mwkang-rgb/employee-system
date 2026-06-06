@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
-import { X, Users, Briefcase, Calendar, FolderKanban, LayoutList, Building2, LogOut, Trash2, UserX, FolderPlus, FolderOpen } from "lucide-react";
+import { X, Users, Briefcase, Calendar, CalendarClock, FolderKanban, LayoutList, Building2, LogOut, Trash2, UserX, FolderPlus, FolderOpen } from "lucide-react";
 import { useRealtimeSync } from "./useRealtimeSync.js";
 import { useAuth } from "./AuthContext.jsx";
 import { COLOR_MAP, COLOR_OPTIONS } from "./constants.js";
@@ -174,6 +174,7 @@ export default function EmployeeManager() {
   const stats = useMemo(() => {
     const total = employees.length;
     const active = employees.filter((e) => resolveStatus(e, projectById[e.projectId]?.name).label === "투입중").length;
+    const pending = employees.filter((e) => resolveStatus(e, projectById[e.projectId]?.name).label === "투입예정").length;
     const waitingAll  = employees.filter((e) => e.projectId === "pool");
     const waiting     = waitingAll.length;
     const waitingEmp  = waitingAll.filter((e) => e.rank !== "교수").length;
@@ -181,7 +182,7 @@ export default function EmployeeManager() {
     const ibks = employees.filter(e => e.affiliation === "IBKS").length;
     const partner = employees.filter(e => e.affiliation === "협력사").length;
     const projectCount = projects.filter(p => p.id !== "pool").length;
-    return { total, active, waiting, waitingEmp, waitingProf, ibks, partner, projectCount };
+    return { total, active, pending, waiting, waitingEmp, waitingProf, ibks, partner, projectCount };
   }, [employees, projects]);
 
   const openNewEmp = () => {
@@ -587,11 +588,12 @@ export default function EmployeeManager() {
 
         {/* 통계 카드 */}
         <div className="mb-0 py-1.5 overflow-x-auto lg:overflow-visible flex-shrink-0">
-          <div className="flex lg:grid lg:grid-cols-5 gap-2 sm:gap-3 min-w-max lg:min-w-0">
+          <div className="flex lg:grid lg:grid-cols-6 gap-2 sm:gap-3 min-w-max lg:min-w-0">
             <StatCard icon={<Users size={18} />} label="전체 인원" value={stats.total} accent="slate" />
             <StatCard icon={<Users size={18} />} label="IBKS" value={stats.ibks} accent="indigo" />
             <StatCard icon={<Building2 size={18} />} label="협력사" value={stats.partner} accent="amber" />
             <StatCard icon={<Briefcase size={18} />} label="투입중" value={stats.active} accent="emerald" />
+            <StatCard icon={<CalendarClock size={18} />} label="투입예정" value={stats.pending} accent="sky" />
             <StatCard
                 icon={<Calendar size={18} />}
                 label="대기 인력"
@@ -862,6 +864,7 @@ function StatCard({ icon, label, value, accent }) {
   const colors = {
     slate: "text-slate-600 bg-slate-100",
     emerald: "text-emerald-700 bg-emerald-100",
+    sky: "text-sky-700 bg-sky-100",
     amber: "text-amber-700 bg-amber-100",
     indigo: "text-indigo-700 bg-indigo-100",
     rose: "text-rose-700 bg-rose-100",
