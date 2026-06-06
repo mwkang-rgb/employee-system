@@ -161,9 +161,9 @@ export default function EmployeeListView({
   };
 
   return (
-    <>
-      {/* 검색 + 필터 바 */}
-      <div className="bg-white rounded-lg border border-slate-200 p-2 sm:p-3 mb-1.5">
+    <div className="flex flex-col h-full min-h-0">
+      {/* 검색 + 필터 바 — 고정 */}
+      <div className="bg-white rounded-lg border border-slate-200 p-2 sm:p-3 mb-1.5 flex-shrink-0">
         <div className="relative mb-2">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
@@ -218,93 +218,88 @@ export default function EmployeeListView({
             <Plus size={14} /> 등록
           </button>
         </div>
-        <div className="mt-1 text-xs text-slate-500">
-          총 <span className="font-semibold text-slate-700">{filtered.length}</span>건 / 전체 {employees.length}건
-        </div>
       </div>
 
-      {/* 직원 테이블 */}
-      <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm whitespace-nowrap" style={{ minWidth: "1100px" }}>
-            <thead>
-              <tr className="bg-slate-50 border-b border-slate-200 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                <Th field="id" sortField={sortField} onClick={toggleSort} SortIcon={SortIcon} className="w-12 text-center">No</Th>
-                <Th field="name" sortField={sortField} onClick={toggleSort} SortIcon={SortIcon}>직원명</Th>
-                <Th field="affiliation" sortField={sortField} onClick={toggleSort} SortIcon={SortIcon}>소속</Th>
-                <Th field="rank" sortField={sortField} onClick={toggleSort} SortIcon={SortIcon}>직급</Th>
-                <Th field="duty" sortField={sortField} onClick={toggleSort} SortIcon={SortIcon}>직무</Th>
-                <Th field="role" sortField={sortField} onClick={toggleSort} SortIcon={SortIcon}>역할</Th>
-                <Th field="project" sortField={sortField} onClick={toggleSort} SortIcon={SortIcon}>투입 프로젝트</Th>
-                <Th field="startDate" sortField={sortField} onClick={toggleSort} SortIcon={SortIcon}>투입일자</Th>
-                <Th field="endDate" sortField={sortField} onClick={toggleSort} SortIcon={SortIcon}>철수일자</Th>
-                <th className="px-3 sm:px-4 py-3 text-center">상태</th>
-                <th className="px-3 sm:px-4 py-3 text-center">관리</th>
-              </tr>
-            </thead>
-            <tbody>
-              {paged.length === 0 ? (
-                <tr><td colSpan={11} className="px-4 py-12 text-center text-slate-400">검색 결과가 없습니다.</td></tr>
-              ) : paged.map((e) => {
-                const proj = projectById[e.projectId];
-                const status = resolveStatus(e, proj?.name);
-                const c = COLOR_MAP[proj?.color || "slate"];
-                return (
-                  <tr key={e.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
-                    <td className="px-3 sm:px-4 py-3 text-center text-slate-500">{e.id}</td>
-                    <td className="px-3 sm:px-4 py-3 text-left font-medium text-slate-900">{e.name}</td>
-                    <td className="px-3 sm:px-4 py-3 text-left"><AffiliationBadge affiliation={e.affiliation} partnerName={e.partnerName} /></td>
-                    <td className="px-3 sm:px-4 py-3 text-left text-slate-700">{e.rank}</td>
-                    <td className="px-3 sm:px-4 py-3 text-left text-slate-700">{e.duty || <span className="text-slate-300">-</span>}</td>
-                    <td className="px-3 sm:px-4 py-3 text-left text-slate-600">{e.role || <span className="text-slate-300">-</span>}</td>
-                    <td className="px-3 sm:px-4 py-3 text-left text-slate-700">
-                      {e.projectId === "pool" || e.assignmentType === "대기" || !proj || proj.name === "대기" ? (
-                        <span className="text-slate-300">-</span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1.5">
-                          <span className={`w-2 h-2 rounded-full ${c.dot} flex-shrink-0`}></span>
-                          {proj.name}
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-3 sm:px-4 py-3 text-left text-slate-600 tabular-nums">
-                      {e.startDate === "1111-01-01" || !e.startDate ? <span className="text-slate-300">-</span> : e.startDate}
-                    </td>
-                    <td className="px-3 sm:px-4 py-3 text-left text-slate-600 tabular-nums">
-                      {e.endDate === "9999-12-31" || !e.endDate ? <span className="text-slate-300">-</span> : e.endDate}
-                    </td>
-                    <td className="px-3 sm:px-4 py-3 text-center">
-                      <span className={`inline-block px-2 py-0.5 text-xs font-medium rounded border ${status.color}`}>{status.label}</span>
-                    </td>
-                    <td className="px-3 sm:px-4 py-3">
-                      <div className="flex justify-center gap-1">
-                        <button onClick={() => onEditEmp(e)} className="p-1.5 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors" title="수정"><Edit2 size={14} /></button>
-                        <button onClick={() => onDeleteEmp(e.id)} className="p-1.5 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded transition-colors" title="삭제"><Trash2 size={14} /></button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+      {/* 직원 테이블 — 세로/가로 스크롤 */}
+      <div className="flex-1 overflow-auto min-h-0 bg-white rounded-lg border border-slate-200">
+        <table className="w-full text-sm whitespace-nowrap" style={{ minWidth: "1100px" }}>
+          <thead>
+            <tr className="bg-slate-50 border-b border-slate-200 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+              <Th field="id" sortField={sortField} onClick={toggleSort} SortIcon={SortIcon} className="w-12 text-center">No</Th>
+              <Th field="name" sortField={sortField} onClick={toggleSort} SortIcon={SortIcon}>직원명</Th>
+              <Th field="affiliation" sortField={sortField} onClick={toggleSort} SortIcon={SortIcon}>소속</Th>
+              <Th field="rank" sortField={sortField} onClick={toggleSort} SortIcon={SortIcon}>직급</Th>
+              <Th field="duty" sortField={sortField} onClick={toggleSort} SortIcon={SortIcon}>직무</Th>
+              <Th field="role" sortField={sortField} onClick={toggleSort} SortIcon={SortIcon}>역할</Th>
+              <Th field="project" sortField={sortField} onClick={toggleSort} SortIcon={SortIcon}>투입 프로젝트</Th>
+              <Th field="startDate" sortField={sortField} onClick={toggleSort} SortIcon={SortIcon}>투입일자</Th>
+              <Th field="endDate" sortField={sortField} onClick={toggleSort} SortIcon={SortIcon}>철수일자</Th>
+              <th className="px-3 sm:px-4 py-3 text-center">상태</th>
+              <th className="px-3 sm:px-4 py-3 text-center">관리</th>
+            </tr>
+          </thead>
+          <tbody>
+            {paged.length === 0 ? (
+              <tr><td colSpan={11} className="px-4 py-12 text-center text-slate-400">검색 결과가 없습니다.</td></tr>
+            ) : paged.map((e) => {
+              const proj = projectById[e.projectId];
+              const status = resolveStatus(e, proj?.name);
+              const c = COLOR_MAP[proj?.color || "slate"];
+              return (
+                <tr key={e.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                  <td className="px-3 sm:px-4 py-3 text-center text-slate-500">{e.id}</td>
+                  <td className="px-3 sm:px-4 py-3 text-left font-medium text-slate-900">{e.name}</td>
+                  <td className="px-3 sm:px-4 py-3 text-left"><AffiliationBadge affiliation={e.affiliation} partnerName={e.partnerName} /></td>
+                  <td className="px-3 sm:px-4 py-3 text-left text-slate-700">{e.rank}</td>
+                  <td className="px-3 sm:px-4 py-3 text-left text-slate-700">{e.duty || <span className="text-slate-300">-</span>}</td>
+                  <td className="px-3 sm:px-4 py-3 text-left text-slate-600">{e.role || <span className="text-slate-300">-</span>}</td>
+                  <td className="px-3 sm:px-4 py-3 text-left text-slate-700">
+                    {e.projectId === "pool" || e.assignmentType === "대기" || !proj || proj.name === "대기" ? (
+                      <span className="text-slate-300">-</span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5">
+                        <span className={`w-2 h-2 rounded-full ${c.dot} flex-shrink-0`}></span>
+                        {proj.name}
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-3 sm:px-4 py-3 text-left text-slate-600 tabular-nums">
+                    {e.startDate === "1111-01-01" || !e.startDate ? <span className="text-slate-300">-</span> : e.startDate}
+                  </td>
+                  <td className="px-3 sm:px-4 py-3 text-left text-slate-600 tabular-nums">
+                    {e.endDate === "9999-12-31" || !e.endDate ? <span className="text-slate-300">-</span> : e.endDate}
+                  </td>
+                  <td className="px-3 sm:px-4 py-3 text-center">
+                    <span className={`inline-block px-2 py-0.5 text-xs font-medium rounded border ${status.color}`}>{status.label}</span>
+                  </td>
+                  <td className="px-3 sm:px-4 py-3">
+                    <div className="flex justify-center gap-1">
+                      <button onClick={() => onEditEmp(e)} className="p-1.5 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors" title="수정"><Edit2 size={14} /></button>
+                      <button onClick={() => onDeleteEmp(e.id)} className="p-1.5 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded transition-colors" title="삭제"><Trash2 size={14} /></button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
 
-        {/* 페이지네이션 */}
-        {filtered.length > 0 && (
-          <div className="flex items-center justify-between px-3 sm:px-4 py-3 border-t border-slate-200 bg-slate-50 text-xs sm:text-sm">
-            <div className="text-slate-600 whitespace-nowrap">
-              {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, filtered.length)} / {filtered.length}
-            </div>
-            <div className="flex gap-1">
-              <button onClick={() => setPage(1)} disabled={page === 1} className="px-2 py-1 rounded border border-slate-300 bg-white disabled:opacity-40 hover:bg-slate-100">«</button>
-              <button onClick={() => setPage(Math.max(1, page - 1))} disabled={page === 1} className="px-2 py-1 rounded border border-slate-300 bg-white disabled:opacity-40 hover:bg-slate-100">‹</button>
-              <span className="px-3 py-1 bg-indigo-600 text-white rounded font-medium">{page} / {totalPages}</span>
-              <button onClick={() => setPage(Math.min(totalPages, page + 1))} disabled={page === totalPages} className="px-2 py-1 rounded border border-slate-300 bg-white disabled:opacity-40 hover:bg-slate-100">›</button>
-              <button onClick={() => setPage(totalPages)} disabled={page === totalPages} className="px-2 py-1 rounded border border-slate-300 bg-white disabled:opacity-40 hover:bg-slate-100">»</button>
-            </div>
+      {/* 페이지네이션 */}
+      {filtered.length > 0 && (
+        <div className="flex items-center justify-between px-3 sm:px-4 py-2 border border-slate-200 rounded-lg bg-slate-50 text-xs sm:text-sm flex-shrink-0 mt-1.5">
+          <div className="text-slate-600 whitespace-nowrap">
+            {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, filtered.length)} / {filtered.length}
           </div>
-        )}
-      </div>
+          <div className="flex gap-1">
+            <button onClick={() => setPage(1)} disabled={page === 1} className="px-2 py-1 rounded border border-slate-300 bg-white disabled:opacity-40 hover:bg-slate-100">«</button>
+            <button onClick={() => setPage(Math.max(1, page - 1))} disabled={page === 1} className="px-2 py-1 rounded border border-slate-300 bg-white disabled:opacity-40 hover:bg-slate-100">‹</button>
+            <span className="px-3 py-1 bg-indigo-600 text-white rounded font-medium">{page} / {totalPages}</span>
+            <button onClick={() => setPage(Math.min(totalPages, page + 1))} disabled={page === totalPages} className="px-2 py-1 rounded border border-slate-300 bg-white disabled:opacity-40 hover:bg-slate-100">›</button>
+            <button onClick={() => setPage(totalPages)} disabled={page === totalPages} className="px-2 py-1 rounded border border-slate-300 bg-white disabled:opacity-40 hover:bg-slate-100">»</button>
+          </div>
+        </div>
+      )}
 
       {showUploadWarning && (
         <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50">
@@ -342,6 +337,6 @@ export default function EmployeeListView({
           if (file) { onBulkUpload(file); e.target.value = ""; }
         }}
       />
-    </>
+    </div>
   );
 }
