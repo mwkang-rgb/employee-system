@@ -248,7 +248,7 @@ export default function ProjectBoardView({
   return (
     <>
       {/* 검색 + 프로젝트 등록 */}
-      <div className="bg-white rounded-lg border border-slate-200 p-3 sm:p-4 mb-4">
+      <div className="bg-white rounded-lg border border-slate-200 p-2 sm:p-3 mb-1.5">
         <div className="flex gap-2 items-center">
           <div className="relative flex-1 min-w-0">
             <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -257,17 +257,17 @@ export default function ProjectBoardView({
               placeholder="직원명, 직급, 협력사명"
               value={boardQuery}
               onChange={(e) => setBoardQuery(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full pl-9 pr-3 py-1.5 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
           </div>
           <button
             onClick={onNewProject}
-            className="px-3 py-2 text-sm bg-indigo-600 text-white rounded-md hover:bg-indigo-700 flex items-center gap-1 font-medium flex-shrink-0"
+            className="px-3 py-1.5 text-sm bg-indigo-600 text-white rounded-md hover:bg-indigo-700 flex items-center gap-1 font-medium flex-shrink-0"
           >
             <FolderPlus size={14} /> <span className="hidden sm:inline">프로젝트 </span>등록
           </button>
         </div>
-        <div className="mt-2 text-[11px] sm:text-xs text-slate-500 flex items-center gap-1.5">
+        <div className="mt-1 text-[11px] sm:text-xs text-slate-500 flex items-center gap-1.5">
           <GripVertical size={12} className="flex-shrink-0" />
           <span className="hidden sm:inline">카드를 드래그하여 다른 컬럼으로 이동하거나, 같은 컬럼 내에서 순서를 변경할 수 있습니다.</span>
           <span className="sm:hidden">카드를 드래그하여 이동하거나 순서를 변경하세요.</span>

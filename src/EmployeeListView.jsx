@@ -163,7 +163,7 @@ export default function EmployeeListView({
   return (
     <>
       {/* 검색 + 필터 바 */}
-      <div className="bg-white rounded-lg border border-slate-200 p-3 sm:p-4 mb-4">
+      <div className="bg-white rounded-lg border border-slate-200 p-2 sm:p-3 mb-1.5">
         <div className="relative mb-2">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
@@ -171,54 +171,54 @@ export default function EmployeeListView({
             placeholder="직원명·직급·직무·역할·프로젝트·협력사명 검색"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            className="w-full pl-9 pr-3 py-1.5 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
           />
         </div>
         <div className="flex gap-2 items-center overflow-x-auto -mx-3 px-3 sm:mx-0 sm:px-0 sm:flex-wrap pb-1 sm:pb-0">
-          <select value={filterAffiliation} onChange={(e) => setFilterAffiliation(e.target.value)} className="px-3 py-2 text-sm border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 flex-shrink-0">
+          <select value={filterAffiliation} onChange={(e) => setFilterAffiliation(e.target.value)} className="px-3 py-1.5 text-sm border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 flex-shrink-0">
             <option value="전체">소속 전체</option>
             <option value="IBKS">IBKS</option>
             <option value="협력사">협력사</option>
           </select>
           {filterAffiliation === "협력사" && (
-            <select value={filterPartner} onChange={(e) => setFilterPartner(e.target.value)} className="px-3 py-2 text-sm border border-amber-300 rounded-md bg-amber-50/50 focus:outline-none focus:ring-2 focus:ring-amber-500 flex-shrink-0 max-w-[180px]">
+            <select value={filterPartner} onChange={(e) => setFilterPartner(e.target.value)} className="px-3 py-1.5 text-sm border border-amber-300 rounded-md bg-amber-50/50 focus:outline-none focus:ring-2 focus:ring-amber-500 flex-shrink-0 max-w-[180px]">
               <option value="전체">협력사 전체</option>
               {partnerList.map(p => <option key={p} value={p}>{p}</option>)}
             </select>
           )}
-          <select value={filterRank} onChange={(e) => setFilterRank(e.target.value)} className="px-3 py-2 text-sm border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 flex-shrink-0">
+          <select value={filterRank} onChange={(e) => setFilterRank(e.target.value)} className="px-3 py-1.5 text-sm border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 flex-shrink-0">
             <option value="전체">직급 전체</option>
             {RANKS.map((r) => <option key={r} value={r}>{r}</option>)}
           </select>
-          <select value={filterDuty} onChange={(e) => setFilterDuty(e.target.value)} className="px-3 py-2 text-sm border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 flex-shrink-0 max-w-[160px]">
+          <select value={filterDuty} onChange={(e) => setFilterDuty(e.target.value)} className="px-3 py-1.5 text-sm border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 flex-shrink-0 max-w-[160px]">
             <option value="전체">직무 전체</option>
             {dutyList.map(d => <option key={d} value={d}>{d}</option>)}
           </select>
-          <select value={filterProject} onChange={(e) => setFilterProject(e.target.value)} className="px-3 py-2 text-sm border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 flex-shrink-0 max-w-[200px]">
+          <select value={filterProject} onChange={(e) => setFilterProject(e.target.value)} className="px-3 py-1.5 text-sm border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 flex-shrink-0 max-w-[200px]">
             <option value="전체">프로젝트 전체</option>
             {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
           </select>
-          <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="px-3 py-2 text-sm border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 flex-shrink-0">
+          <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="px-3 py-1.5 text-sm border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 flex-shrink-0">
             <option value="전체">상태 전체</option>
             <option value="대기">대기</option>
             <option value="투입예정">투입예정</option>
             <option value="투입중">투입중</option>
             <option value="철수">철수</option>
           </select>
-          <button onClick={exportCSV} className="px-3 py-2 text-sm border border-slate-300 rounded-md bg-white hover:bg-slate-50 flex items-center gap-1 text-slate-700 flex-shrink-0">
+          <button onClick={exportCSV} className="px-3 py-1.5 text-sm border border-slate-300 rounded-md bg-white hover:bg-slate-50 flex items-center gap-1 text-slate-700 flex-shrink-0">
             <Download size={14} /> CSV
           </button>
-          <button onClick={downloadTemplate} className="px-3 py-2 text-sm border border-slate-300 rounded-md bg-white hover:bg-slate-50 flex items-center gap-1 text-slate-700 flex-shrink-0">
+          <button onClick={downloadTemplate} className="px-3 py-1.5 text-sm border border-slate-300 rounded-md bg-white hover:bg-slate-50 flex items-center gap-1 text-slate-700 flex-shrink-0">
             📥 양식 다운로드
           </button>
-          <button onClick={() => setShowUploadWarning(true)} className="px-3 py-2 text-sm border border-emerald-300 rounded-md bg-emerald-50 hover:bg-emerald-100 flex items-center gap-1 text-emerald-700 flex-shrink-0">
+          <button onClick={() => setShowUploadWarning(true)} className="px-3 py-1.5 text-sm border border-emerald-300 rounded-md bg-emerald-50 hover:bg-emerald-100 flex items-center gap-1 text-emerald-700 flex-shrink-0">
             📤 직원정보 업로드
           </button>
-          <button onClick={onNewEmp} className="px-3 py-2 text-sm bg-indigo-600 text-white rounded-md hover:bg-indigo-700 flex items-center gap-1 font-medium flex-shrink-0 ml-auto sm:ml-0">
+          <button onClick={onNewEmp} className="px-3 py-1.5 text-sm bg-indigo-600 text-white rounded-md hover:bg-indigo-700 flex items-center gap-1 font-medium flex-shrink-0 ml-auto sm:ml-0">
             <Plus size={14} /> 등록
           </button>
         </div>
-        <div className="mt-2 text-xs text-slate-500">
+        <div className="mt-1 text-xs text-slate-500">
           총 <span className="font-semibold text-slate-700">{filtered.length}</span>건 / 전체 {employees.length}건
         </div>
       </div>
