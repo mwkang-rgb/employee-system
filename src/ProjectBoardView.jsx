@@ -246,9 +246,9 @@ export default function ProjectBoardView({
   }, [projects, columnOrder]);
 
   return (
-    <>
-      {/* 검색 + 프로젝트 등록 */}
-      <div className="bg-white rounded-lg border border-slate-200 p-2 sm:p-3 mb-1.5">
+    <div className="flex flex-col h-full min-h-0">
+      {/* 검색 + 프로젝트 등록 — 고정 */}
+      <div className="bg-white rounded-lg border border-slate-200 p-2 sm:p-3 mb-0 flex-shrink-0">
         <div className="flex gap-2 items-center">
           <div className="relative flex-1 min-w-0">
             <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -274,8 +274,9 @@ export default function ProjectBoardView({
         </div>
       </div>
 
-      {/* 칸반 보드 */}
-      <div className="flex gap-2 sm:gap-3 overflow-x-auto pb-4 -mx-3 px-3 sm:mx-0 sm:px-0" style={{ minHeight: "600px" }}>
+      {/* 칸반 보드 — 가로+세로 스크롤 */}
+      <div className="flex-1 overflow-auto min-h-0 mt-1.5" style={{ minWidth: 0 }}>
+        <div className="flex gap-2 sm:gap-3 pb-4 h-full" style={{ minWidth: "max-content" }}>
         {orderedProjects.map((proj) => {
           const c = COLOR_MAP[proj.color] || COLOR_MAP.slate;
           const q = boardQuery.trim().toLowerCase();
@@ -569,7 +570,7 @@ export default function ProjectBoardView({
               )}
 
               {/* 카드 목록 */}
-              <div className="p-2 space-y-2 overflow-y-auto flex-1" style={{ maxHeight: "584px" }}>
+              <div className="p-2 space-y-2 overflow-y-auto flex-1">
                 {members.length === 0 && (
                   <div className="text-center text-xs text-slate-400 py-8 border-2 border-dashed border-slate-200 rounded-md">
                     {isOver ? (isPartnerDropWarning ? "여기 놓으면 자동 삭제" : "여기에 놓기") : "배치된 인원 없음"}
@@ -704,8 +705,9 @@ export default function ProjectBoardView({
             </div>
           );
         })}
+        </div>
       </div>
 
-    </>
+    </div>
   );
 }

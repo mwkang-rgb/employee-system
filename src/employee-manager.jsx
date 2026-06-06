@@ -615,7 +615,7 @@ export default function EmployeeManager() {
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto pb-4 pt-1.5 min-h-0">
+        <div className="flex-1 overflow-hidden pt-0 pb-0 min-h-0 flex flex-col">
           {loading && (
             <div className="text-center py-10 text-slate-400">데이터 불러오는 중...</div>
           )}
