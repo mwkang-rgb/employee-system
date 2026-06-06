@@ -276,7 +276,7 @@ export default function ProjectBoardView({
 
       {/* 칸반 보드 — 가로+세로 스크롤 */}
       <div className="flex-1 overflow-auto min-h-0 mt-1.5" style={{ minWidth: 0 }}>
-        <div className="flex gap-2 sm:gap-3 pb-4" style={{ minWidth: "max-content" }}>
+        <div className="flex gap-2 sm:gap-3 pb-4 items-start" style={{ minWidth: "max-content" }}>
         {orderedProjects.map((proj) => {
           const c = COLOR_MAP[proj.color] || COLOR_MAP.slate;
           const q = boardQuery.trim().toLowerCase();
@@ -389,7 +389,7 @@ export default function ProjectBoardView({
                 isColumnOver ? "border-amber-400 bg-amber-50/30" :
                 isOver ? "border-indigo-400 bg-indigo-50/30" :
                 `${c.border} ${c.bg}`
-              } flex flex-col transition-colors`}
+              } transition-colors`}
             >
               {/* 컬럼 헤더 */}
               <div
@@ -572,7 +572,7 @@ export default function ProjectBoardView({
               {/* 카드 목록 */}
               <div className="p-2 space-y-2">
                 {members.length === 0 && (
-                  <div className="text-center text-xs text-slate-400 py-8 border-2 border-dashed border-slate-200 rounded-md">
+                  <div className="text-center text-xs text-slate-400 py-8 border-2 border-dashed border-slate-200 rounded-md min-h-[80px] flex items-center justify-center">
                     {isOver ? (isPartnerDropWarning ? "여기 놓으면 자동 삭제" : "여기에 놓기") : "배치된 인원 없음"}
                   </div>
                 )}
