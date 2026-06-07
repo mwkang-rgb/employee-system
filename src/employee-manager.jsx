@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
-import { X, Users, Briefcase, Calendar, CalendarClock, FolderKanban, LayoutList, Building2, LogOut, Trash2, UserX, FolderPlus, FolderOpen } from "lucide-react";
+import { Link } from "react-router-dom";
+import { X, Users, Briefcase, Calendar, CalendarClock, FolderKanban, LayoutList, Building2, LogOut, Trash2, UserX, FolderPlus, FolderOpen, ShieldCheck } from "lucide-react";
 import { useRealtimeSync } from "./useRealtimeSync.js";
 import { useAuth } from "./AuthContext.jsx";
 import { COLOR_MAP, COLOR_OPTIONS } from "./constants.js";
@@ -80,7 +81,7 @@ export default function EmployeeManager() {
   const [projects, setProjects] = useState([{ id: "pool", name: "대기", color: "slate" }]);
   const [employees, setEmployees] = useState([]);
 
-  const { session, user, signOut } = useAuth();
+  const { session, user, profile, signOut } = useAuth();
   useRealtimeSync({ setEmployees, setProjects, enabled: !!session });
 
   const [view, setView] = useState(() => {
@@ -570,6 +571,15 @@ export default function EmployeeManager() {
             <div className="text-[10px] sm:text-xs text-slate-500 hidden sm:block">기준일 {new Date().toISOString().slice(0, 10)}</div>
             <div className="flex items-center gap-2">
               <span className="text-xs text-slate-500 hidden sm:block">{user?.email}</span>
+              {profile?.role === "admin" && (
+                <Link
+                  to="/admin/user-approvals"
+                  className="px-3 py-1.5 text-xs border border-indigo-200 rounded-md bg-indigo-50 hover:bg-indigo-100 text-indigo-700 flex items-center gap-1.5 font-medium transition-colors"
+                >
+                  <ShieldCheck size={12} />
+                  가입 승인
+                </Link>
+              )}
               <button
                 onClick={signOut}
                 className="px-3 py-1.5 text-xs border border-slate-200 rounded-md bg-white hover:bg-slate-50 text-slate-600 flex items-center gap-1.5"

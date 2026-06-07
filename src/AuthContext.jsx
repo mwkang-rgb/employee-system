@@ -6,13 +6,15 @@
  * 제공 값:
  *   session       — Supabase Session 객체 (null = 미로그인, undefined = 로딩 중)
  *   user          — session?.user 단축키
- *   loading       — 초기 세션 확인 중 여부
+ *   profile       — public.profiles 행 (approval_status, role 포함)
+ *   loading       — 초기 세션 + 프로필 확인 중 여부
  *   signInEmail   — 이메일/비밀번호 로그인
  *   signUpEmail   — 이메일/비밀번호 회원가입
  *   signInGoogle  — 구글 OAuth 로그인 (팝업 방식)
  *   signOut       — 로그아웃
  *   authError     — 최근 auth 오류 메시지 (string | null)
  *   clearError    — authError 초기화
+ *   refetchProfile — 프로필 강제 재조회 (관리자 화면 등에서 사용)
  */
 
 import { createContext, useContext, useEffect, useState, useCallback } from "react";
@@ -45,6 +47,8 @@ const AuthContext = createContext(null);
 export function AuthProvider({ children }) {
   // undefined = 아직 초기 세션 체크 전 (스플래시/로딩 화면 표시용)
   const [session, setSession] = useState(undefined);
+  // undefined = 프로필 로딩 중, null = 없음 또는 오류
+  const [profile, setProfile] = useState(undefined);
   const [authError, setAuthError] = useState(null);
 
   /* ── 초기 세션 확인 + 변경 구독 ─────────────────────────── */
@@ -63,6 +67,42 @@ export function AuthProvider({ children }) {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  /* ── 프로필 조회 (세션 변경 시) ──────────────────────────── */
+  // Google OAuth 신규 가입 시 트리거가 profiles를 생성하는 데
+  // 짧은 지연이 있을 수 있으므로 최대 6회 재시도한다.
+  useEffect(() => {
+    if (session === undefined) return;
+    if (!session) {
+      setProfile(null);
+      return;
+    }
+
+    let cancelled = false;
+    let attempt = 0;
+    const MAX_ATTEMPTS = 6;
+
+    async function fetchProfile() {
+      if (cancelled) return;
+      const { data } = await supabase
+        .from("profiles")
+        .select("id, email, full_name, avatar_url, approval_status, role, rejected_reason")
+        .eq("id", session.user.id)
+        .single();
+
+      if (cancelled) return;
+      if (!data && attempt < MAX_ATTEMPTS) {
+        attempt++;
+        setTimeout(fetchProfile, 800);
+        return;
+      }
+      setProfile(data ?? null);
+    }
+
+    setProfile(undefined);
+    fetchProfile();
+    return () => { cancelled = true; };
+  }, [session]);
 
   /* ── Auth 메서드 ─────────────────────────────────────────── */
   const signInEmail = useCallback(async (email, password) => {
@@ -106,17 +146,30 @@ export function AuthProvider({ children }) {
 
   const clearError = useCallback(() => setAuthError(null), []);
 
+  const refetchProfile = useCallback(async () => {
+    if (!session) return;
+    const { data } = await supabase
+      .from("profiles")
+      .select("id, email, full_name, avatar_url, approval_status, role, rejected_reason")
+      .eq("id", session.user.id)
+      .single();
+    if (data) setProfile(data);
+  }, [session]);
+
   /* ── 값 제공 ─────────────────────────────────────────────── */
   const value = {
     session,
     user: session?.user ?? null,
-    loading: session === undefined,   // 초기 체크 완료 전
+    profile,
+    // 세션 확인 전 또는 세션이 있는데 프로필이 아직 로딩 중이면 true
+    loading: session === undefined || (session !== null && profile === undefined),
     signInEmail,
     signUpEmail,
     signInGoogle,
     signOut,
     authError,
     clearError,
+    refetchProfile,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
