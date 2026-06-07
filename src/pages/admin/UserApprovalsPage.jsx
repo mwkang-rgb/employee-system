@@ -16,7 +16,7 @@ function StatusBadge({ status }) {
   };
   const { label, cls } = cfg[status] ?? { label: status, cls: "bg-slate-100 text-slate-600 border-slate-200" };
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold border ${cls}`}>
+    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold border whitespace-nowrap ${cls}`}>
       {label}
     </span>
   );
@@ -231,7 +231,7 @@ export default function UserApprovalsPage() {
   function fmtDate(iso) {
     if (!iso) return "-";
     const d = new Date(iso);
-    return `${d.getMonth() + 1}.${String(d.getDate()).padStart(2, "0")}`;
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   }
 
   /* ── 렌더 ──────────────────────────────────────────────────── */
@@ -348,18 +348,18 @@ export default function UserApprovalsPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-slate-200 bg-slate-50">
-                    <th className="text-left text-xs font-semibold text-slate-500 px-4 py-3 w-16">상태</th>
-                    <th className="text-left text-xs font-semibold text-slate-500 px-4 py-3">사용자</th>
+                    <th className="text-center text-xs font-semibold text-slate-500 px-4 py-3 w-16">상태</th>
+                    <th className="text-center text-xs font-semibold text-slate-500 px-4 py-3">사용자</th>
                     <th className="text-left text-xs font-semibold text-slate-500 px-4 py-3 hidden sm:table-cell">이메일</th>
-                    <th className="text-left text-xs font-semibold text-slate-500 px-4 py-3 hidden md:table-cell w-20">요청일</th>
-                    <th className="text-left text-xs font-semibold text-slate-500 px-4 py-3 hidden md:table-cell w-20">처리일</th>
-                    <th className="text-right text-xs font-semibold text-slate-500 px-4 py-3 w-36">처리</th>
+                    <th className="text-center text-xs font-semibold text-slate-500 px-4 py-3 hidden md:table-cell w-28">요청일</th>
+                    <th className="text-center text-xs font-semibold text-slate-500 px-4 py-3 hidden md:table-cell w-28">처리일</th>
+                    <th className="text-center text-xs font-semibold text-slate-500 px-4 py-3 w-36">처리</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filtered.map((u) => (
                     <tr key={u.id} className="border-b border-slate-100 last:border-0 hover:bg-slate-50/50 transition-colors">
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-3 text-center">
                         <StatusBadge status={u.approval_status} />
                       </td>
                       <td className="px-4 py-3">
@@ -376,20 +376,20 @@ export default function UserApprovalsPage() {
                       <td className="px-4 py-3 text-slate-600 hidden sm:table-cell truncate max-w-[200px]">
                         {u.email}
                       </td>
-                      <td className="px-4 py-3 text-slate-500 hidden md:table-cell">
+                      <td className="px-4 py-3 text-slate-500 text-center hidden md:table-cell">
                         {fmtDate(u.requested_at)}
                       </td>
-                      <td className="px-4 py-3 text-slate-500 hidden md:table-cell">
+                      <td className="px-4 py-3 text-slate-500 text-center hidden md:table-cell">
                         {u.approval_status === "approved" ? fmtDate(u.approved_at) :
                          u.approval_status === "rejected" ? fmtDate(u.rejected_at) : "-"}
                       </td>
-                      <td className="px-4 py-3 text-right">
+                      <td className="px-4 py-3 text-center">
                         {u.approval_status === "pending" ? (
-                          <div className="flex items-center justify-end gap-1.5">
+                          <div className="flex items-center justify-center gap-1.5">
                             <button
                               onClick={() => handleApprove(u.id)}
                               disabled={actionBusy === u.id}
-                              className="flex items-center gap-1 px-2.5 py-1 text-xs bg-emerald-500 text-white rounded-md hover:bg-emerald-600 font-semibold transition-colors disabled:opacity-50"
+                              className="flex items-center gap-1 px-2.5 py-1 text-xs bg-emerald-500 text-white rounded-md hover:bg-emerald-600 font-semibold transition-colors disabled:opacity-50 whitespace-nowrap"
                             >
                               <UserCheck size={12} />
                               승인
@@ -397,7 +397,7 @@ export default function UserApprovalsPage() {
                             <button
                               onClick={() => setRejectTarget(u)}
                               disabled={actionBusy === u.id}
-                              className="flex items-center gap-1 px-2.5 py-1 text-xs border border-red-200 text-red-600 rounded-md hover:bg-red-50 font-semibold transition-colors disabled:opacity-50"
+                              className="flex items-center gap-1 px-2.5 py-1 text-xs border border-red-200 text-red-600 rounded-md hover:bg-red-50 font-semibold transition-colors disabled:opacity-50 whitespace-nowrap"
                             >
                               <UserX size={12} />
                               반려
