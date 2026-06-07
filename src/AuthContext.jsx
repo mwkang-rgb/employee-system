@@ -114,12 +114,21 @@ export function AuthProvider({ children }) {
 
   const signUpEmail = useCallback(async (email, password) => {
     setAuthError(null);
-    const { error } = await supabase.auth.signUp({ email, password });
+    const { data, error } = await supabase.auth.signUp({ email, password });
     if (error) {
       setAuthError(toKoreanError(error.message));
-      return { ok: false };
+      return { ok: false, status: "error" };
     }
-    // 이메일 확인이 필요한 경우 Supabase가 자동 처리
+    // identities가 빈 배열이면 이미 가입된 이메일 (Supabase 보안 정책상 오류 미반환)
+    if (!data.user || data.user.identities?.length === 0) {
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("approval_status, rejected_reason")
+        .eq("email", email)
+        .maybeSingle();
+      const status = profileData?.approval_status ?? "exists";
+      return { ok: false, status, reason: profileData?.rejected_reason ?? null };
+    }
     return { ok: true };
   }, []);
 

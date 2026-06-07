@@ -10,7 +10,7 @@
  */
 
 import { useState } from "react";
-import { Mail, Lock, LogIn, UserPlus, AlertCircle, Loader2 } from "lucide-react";
+import { Mail, Lock, LogIn, UserPlus, AlertCircle, Loader2, XCircle } from "lucide-react";
 import { useAuth } from "./AuthContext.jsx";
 
 export default function LoginPage() {
@@ -21,6 +21,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [signupDone, setSignupDone] = useState(false); // 회원가입 완료 안내
+  const [signupResult, setSignupResult] = useState(null); // null | { status, reason }
 
   const isLogin = mode === "login";
 
@@ -35,8 +36,12 @@ export default function LoginPage() {
         await signInEmail(email, password);
         // 성공 시 AuthContext → App.jsx 에서 자동으로 메인 화면 표시
       } else {
-        const { ok } = await signUpEmail(email, password);
-        if (ok) setSignupDone(true);
+        const result = await signUpEmail(email, password);
+        if (result.ok) {
+          setSignupDone(true);
+        } else if (result.status !== "error") {
+          setSignupResult({ status: result.status, reason: result.reason ?? null });
+        }
       }
     } finally {
       setBusy(false);
@@ -70,6 +75,64 @@ export default function LoginPage() {
           </p>
           <button
             onClick={() => { setSignupDone(false); setMode("login"); }}
+            className="w-full px-4 py-2.5 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium transition-colors"
+          >
+            로그인 화면으로
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  /* ── 반려 계정 안내 화면 ────────────────────────────────── */
+  if (signupResult?.status === "rejected") {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+        <div className="w-full max-w-sm bg-white rounded-2xl shadow-xl p-8 text-center space-y-4">
+          <div className="w-14 h-14 bg-red-50 rounded-full flex items-center justify-center mx-auto">
+            <XCircle size={28} className="text-red-500" />
+          </div>
+          <h2 className="text-xl font-bold text-slate-900">가입이 반려된 계정입니다</h2>
+          <p className="text-sm text-slate-500 leading-relaxed">
+            <span className="font-medium text-slate-700">{email}</span> 계정은<br />
+            관리자에 의해 가입이 반려되었습니다.<br />
+            문의가 필요하시면 관리자에게 연락해 주세요.
+          </p>
+          {signupResult.reason && (
+            <div className="text-sm text-left bg-red-50 border border-red-100 rounded-lg px-4 py-3">
+              <span className="font-semibold text-red-700">반려 사유:</span>{" "}
+              <span className="text-slate-700">{signupResult.reason}</span>
+            </div>
+          )}
+          <button
+            onClick={() => { setSignupResult(null); setMode("login"); }}
+            className="w-full px-4 py-2.5 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium transition-colors"
+          >
+            로그인 화면으로
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  /* ── 이미 가입된 계정 안내 화면 (pending / approved / exists) ── */
+  if (signupResult) {
+    const cfg = {
+      pending:  { title: "이미 가입 신청된 계정입니다",  body: "관리자 승인을 기다리고 있습니다. 승인 완료 후 로그인할 수 있습니다." },
+      approved: { title: "이미 가입된 계정입니다",        body: "이미 승인된 계정입니다. 로그인 화면에서 로그인해 주세요." },
+      exists:   { title: "이미 가입된 계정입니다",        body: "해당 이메일로 이미 가입된 계정이 있습니다. 로그인 화면을 이용해 주세요." },
+    };
+    const { title, body } = cfg[signupResult.status] ?? cfg.exists;
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+        <div className="w-full max-w-sm bg-white rounded-2xl shadow-xl p-8 text-center space-y-4">
+          <div className="w-14 h-14 bg-amber-50 rounded-full flex items-center justify-center mx-auto">
+            <AlertCircle size={28} className="text-amber-500" />
+          </div>
+          <h2 className="text-xl font-bold text-slate-900">{title}</h2>
+          <p className="text-sm text-slate-500 leading-relaxed">{body}</p>
+          <button
+            onClick={() => { setSignupResult(null); setMode("login"); }}
             className="w-full px-4 py-2.5 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium transition-colors"
           >
             로그인 화면으로
