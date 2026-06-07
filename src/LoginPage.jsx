@@ -120,7 +120,7 @@ export default function LoginPage() {
   if (signupResult) {
     const cfg = {
       pending:  { title: "이미 가입 신청된 계정입니다",  body: "관리자 승인을 기다리고 있습니다. 승인 완료 후 로그인할 수 있습니다." },
-      approved: { title: "이미 가입된 계정입니다",        body: "이미 승인된 계정입니다. 로그인 화면에서 로그인해 주세요." },
+      approved: { title: "이미 가입된 계정입니다",        body: "이미 승인된 계정입니다.\n로그인 화면에서 로그인해 주세요." },
       exists:   { title: "이미 가입된 계정입니다",        body: "해당 이메일로 이미 가입된 계정이 있습니다. 로그인 화면을 이용해 주세요." },
     };
     const { title, body } = cfg[signupResult.status] ?? cfg.exists;
@@ -131,7 +131,7 @@ export default function LoginPage() {
             <AlertCircle size={28} className="text-amber-500" />
           </div>
           <h2 className="text-xl font-bold text-slate-900">{title}</h2>
-          <p className="text-sm text-slate-500 leading-relaxed">{body}</p>
+          <p className="text-sm text-slate-500 leading-relaxed whitespace-pre-line">{body}</p>
           <button
             onClick={() => { setSignupResult(null); setMode("login"); }}
             className="w-full px-4 py-2.5 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium transition-colors"
