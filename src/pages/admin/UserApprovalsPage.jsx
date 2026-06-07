@@ -231,7 +231,9 @@ export default function UserApprovalsPage() {
   function fmtDate(iso) {
     if (!iso) return "-";
     const d = new Date(iso);
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    const date = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+    const time = `${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}:${String(d.getSeconds()).padStart(2,"0")}`;
+    return `${date} ${time}`;
   }
 
   /* ── 렌더 ──────────────────────────────────────────────────── */
@@ -349,10 +351,10 @@ export default function UserApprovalsPage() {
                 <thead>
                   <tr className="border-b border-slate-200 bg-slate-50">
                     <th className="text-center text-xs font-semibold text-slate-500 px-4 py-3 w-16">상태</th>
-                    <th className="text-center text-xs font-semibold text-slate-500 px-4 py-3">사용자</th>
+                    <th className="text-left text-xs font-semibold text-slate-500 px-4 py-3">사용자</th>
                     <th className="text-left text-xs font-semibold text-slate-500 px-4 py-3 hidden sm:table-cell">이메일</th>
-                    <th className="text-center text-xs font-semibold text-slate-500 px-4 py-3 hidden md:table-cell w-28">요청일</th>
-                    <th className="text-center text-xs font-semibold text-slate-500 px-4 py-3 hidden md:table-cell w-28">처리일</th>
+                    <th className="text-center text-xs font-semibold text-slate-500 px-4 py-3 hidden md:table-cell w-40">요청일시</th>
+                    <th className="text-center text-xs font-semibold text-slate-500 px-4 py-3 hidden md:table-cell w-40">처리일시</th>
                     <th className="text-center text-xs font-semibold text-slate-500 px-4 py-3 w-36">처리</th>
                   </tr>
                 </thead>
@@ -376,10 +378,10 @@ export default function UserApprovalsPage() {
                       <td className="px-4 py-3 text-slate-600 hidden sm:table-cell truncate max-w-[200px]">
                         {u.email}
                       </td>
-                      <td className="px-4 py-3 text-slate-500 text-center hidden md:table-cell">
+                      <td className="px-4 py-3 text-slate-500 text-center hidden md:table-cell whitespace-nowrap">
                         {fmtDate(u.requested_at)}
                       </td>
-                      <td className="px-4 py-3 text-slate-500 text-center hidden md:table-cell">
+                      <td className="px-4 py-3 text-slate-500 text-center hidden md:table-cell whitespace-nowrap">
                         {u.approval_status === "approved" ? fmtDate(u.approved_at) :
                          u.approval_status === "rejected" ? fmtDate(u.rejected_at) : "-"}
                       </td>
