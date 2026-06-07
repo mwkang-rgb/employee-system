@@ -112,9 +112,13 @@ export function AuthProvider({ children }) {
     return !error;
   }, []);
 
-  const signUpEmail = useCallback(async (email, password) => {
+  const signUpEmail = useCallback(async (email, password, fullName = "") => {
     setAuthError(null);
-    const { data, error } = await supabase.auth.signUp({ email, password });
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { full_name: fullName || null } },
+    });
     if (error) {
       setAuthError(toKoreanError(error.message));
       return { ok: false, status: "error" };

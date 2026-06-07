@@ -10,7 +10,7 @@
  */
 
 import { useState } from "react";
-import { Mail, Lock, LogIn, UserPlus, AlertCircle, Loader2, XCircle } from "lucide-react";
+import { Mail, Lock, LogIn, UserPlus, AlertCircle, Loader2, XCircle, User } from "lucide-react";
 import { useAuth } from "./AuthContext.jsx";
 
 export default function LoginPage() {
@@ -19,6 +19,7 @@ export default function LoginPage() {
   const [mode, setMode] = useState("login");          // "login" | "signup"
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [fullName, setFullName] = useState("");
   const [busy, setBusy] = useState(false);
   const [signupDone, setSignupDone] = useState(false); // 회원가입 완료 안내
   const [signupResult, setSignupResult] = useState(null); // null | { status, reason }
@@ -36,7 +37,7 @@ export default function LoginPage() {
         await signInEmail(email, password);
         // 성공 시 AuthContext → App.jsx 에서 자동으로 메인 화면 표시
       } else {
-        const result = await signUpEmail(email, password);
+        const result = await signUpEmail(email, password, fullName.trim());
         if (result.ok) {
           setSignupDone(true);
         } else if (result.status !== "error") {
@@ -198,6 +199,24 @@ export default function LoginPage() {
 
           {/* 이메일 폼 */}
           <form onSubmit={handleSubmit} className="space-y-3" noValidate>
+            {/* 이름 — 회원가입 모드에만 표시 */}
+            {!isLogin && (
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1.5">이름</label>
+                <div className="relative">
+                  <User size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="text"
+                    value={fullName}
+                    onChange={(e) => { setFullName(e.target.value); clearError(); }}
+                    required
+                    className="w-full pl-9 pr-3 py-2.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-shadow"
+                    placeholder="홍길동"
+                    autoComplete="name"
+                  />
+                </div>
+              </div>
+            )}
             {/* 이메일 */}
             <div>
               <label className="block text-xs font-semibold text-slate-600 mb-1.5">이메일</label>
@@ -236,7 +255,7 @@ export default function LoginPage() {
             {/* 제출 버튼 */}
             <button
               type="submit"
-              disabled={busy || !email || !password}
+              disabled={busy || !email || !password || (!isLogin && !fullName.trim())}
               className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 text-white text-sm font-semibold rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors mt-1"
             >
               {busy ? (
@@ -255,7 +274,7 @@ export default function LoginPage() {
         <p className="text-center text-sm text-slate-500 mt-5">
           {isLogin ? "아직 계정이 없으신가요?" : "이미 계정이 있으신가요?"}{" "}
           <button
-            onClick={() => { setMode(isLogin ? "signup" : "login"); clearError(); }}
+            onClick={() => { setMode(isLogin ? "signup" : "login"); clearError(); setFullName(""); }}
             className="font-semibold text-indigo-600 hover:text-indigo-700 underline underline-offset-2"
           >
             {isLogin ? "회원가입" : "로그인"}
