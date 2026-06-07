@@ -120,12 +120,11 @@ export function AuthProvider({ children }) {
       return { ok: false, status: "error" };
     }
     // identities가 빈 배열이면 이미 가입된 이메일 (Supabase 보안 정책상 오류 미반환)
+    // RPC 함수로 조회: anon 상태에서 RLS 우회하여 profiles 접근
     if (!data.user || data.user.identities?.length === 0) {
-      const { data: profileData } = await supabase
-        .from("profiles")
-        .select("approval_status, rejected_reason")
-        .eq("email", email)
-        .maybeSingle();
+      const { data: rows } = await supabase
+        .rpc("get_approval_status_by_email", { p_email: email });
+      const profileData = rows?.[0] ?? null;
       const status = profileData?.approval_status ?? "exists";
       return { ok: false, status, reason: profileData?.rejected_reason ?? null };
     }
