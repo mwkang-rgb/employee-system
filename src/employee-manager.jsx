@@ -598,7 +598,8 @@ export default function EmployeeManager() {
 
         {/* 통계 카드 */}
         <div className="mb-0 py-1.5 overflow-x-auto lg:overflow-visible flex-shrink-0">
-          <div className="flex lg:grid lg:grid-cols-6 gap-2 sm:gap-3 min-w-max lg:min-w-0">
+          <div className="flex lg:grid lg:grid-cols-7 gap-2 sm:gap-3 min-w-max lg:min-w-0">
+            <StatCard icon={<FolderKanban size={18} />} label="프로젝트" value={stats.projectCount} accent="violet" />
             <StatCard icon={<Users size={18} />} label="전체 인원" value={stats.total} accent="slate" />
             <StatCard icon={<Users size={18} />} label="IBKS" value={stats.ibks} accent="indigo" />
             <StatCard icon={<Building2 size={18} />} label="협력사" value={stats.partner} accent="amber" />
@@ -881,6 +882,7 @@ function StatCard({ icon, label, value, accent, wide }) {
     amber: "text-amber-700 bg-amber-100",
     indigo: "text-indigo-700 bg-indigo-100",
     rose: "text-rose-700 bg-rose-100",
+    violet: "text-violet-700 bg-violet-100",
   };
   return (
     <div className={`bg-white rounded-lg border border-slate-200 p-2 sm:p-3 flex items-center gap-2 flex-shrink-0 lg:w-auto ${wide ? "w-[160px]" : "w-[140px]"}`}>
