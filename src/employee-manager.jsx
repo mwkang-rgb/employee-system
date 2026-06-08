@@ -785,7 +785,7 @@ export default function EmployeeManager() {
                   })}
                 </div>
               </Field>
-              <Field label="프로젝트 기간">
+              <Field label="프로젝트 기간 *">
                 <div className="flex gap-2 items-center">
                   <input
                     type="date"
@@ -818,7 +818,7 @@ export default function EmployeeManager() {
                   <option value="사내 프로젝트">사내 프로젝트</option>
                 </select>
               </Field>
-              <Field label="주소">
+              <Field label="주소 *">
                 <div className="flex gap-2">
                   <input
                     type="text"
@@ -846,7 +846,7 @@ export default function EmployeeManager() {
                   />
                 )}
               </Field>
-              <Field label="장소 (건물 내 사무실 위치)">
+              <Field label="장소 (건물 내 사무실 위치) *">
                 <input
                   type="text"
                   value={editingProj.locationName || ""}
