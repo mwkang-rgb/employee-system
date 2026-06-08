@@ -67,6 +67,7 @@ export default function EmployeeListView({
   const [filterAffiliation, setFilterAffiliation] = useState("전체");
   const [filterPartner, setFilterPartner] = useState("전체");
   const [filterDuty, setFilterDuty] = useState("전체");
+  const [filterType, setFilterType] = useState("전체");
   const [sortField, setSortField] = useState("id");
   const [sortDir, setSortDir] = useState("asc");
   const [page, setPage] = useState(1);
@@ -76,7 +77,7 @@ export default function EmployeeListView({
   // 필터 변경 시 1페이지로 복귀
   useEffect(() => {
     setPage(1);
-  }, [query, filterRank, filterProject, filterStatus, filterAffiliation, filterPartner, filterDuty]);
+  }, [query, filterRank, filterProject, filterStatus, filterAffiliation, filterPartner, filterDuty, filterType]);
 
   // 소속 필터가 협력사가 아니면 협력사 상세 필터 초기화
   useEffect(() => {
@@ -108,7 +109,8 @@ export default function EmployeeListView({
       const matchAffil = filterAffiliation === "전체" || e.affiliation === filterAffiliation;
       const matchPartner = filterPartner === "전체" || e.partnerName === filterPartner;
       const matchDuty = filterDuty === "전체" || (e.duty || "") === filterDuty;
-      return matchQuery && matchRank && matchProj && matchStatus && matchAffil && matchPartner && matchDuty;
+      const matchType = filterType === "전체" || projectById[e.projectId]?.projectType === filterType;
+      return matchQuery && matchRank && matchProj && matchStatus && matchAffil && matchPartner && matchDuty && matchType;
     });
 
     list.sort((a, b) => {
@@ -126,7 +128,7 @@ export default function EmployeeListView({
       return 0;
     });
     return list;
-  }, [employees, query, filterRank, filterProject, filterStatus, filterAffiliation, filterPartner, filterDuty, sortField, sortDir, projectById]);
+  }, [employees, query, filterRank, filterProject, filterStatus, filterAffiliation, filterPartner, filterDuty, filterType, sortField, sortDir, projectById]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
@@ -198,6 +200,16 @@ export default function EmployeeListView({
             <option value="전체">프로젝트 전체</option>
             {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
           </select>
+          <select
+            value={filterType}
+            onChange={(e) => setFilterType(e.target.value)}
+            className="px-3 py-1.5 text-sm border border-violet-300 rounded-md bg-violet-50 focus:outline-none focus:ring-2 focus:ring-violet-500 flex-shrink-0"
+          >
+            <option value="전체">유형 전체</option>
+            <option value="대외 프로젝트">대외 프로젝트</option>
+            <option value="행내 프로젝트">행내 프로젝트</option>
+            <option value="사내 프로젝트">사내 프로젝트</option>
+          </select>
           <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="px-3 py-1.5 text-sm border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 flex-shrink-0">
             <option value="전체">상태 전체</option>
             <option value="대기">대기</option>
@@ -222,7 +234,7 @@ export default function EmployeeListView({
 
       {/* 직원 테이블 — 세로/가로 스크롤 */}
       <div className="flex-1 overflow-auto min-h-0 bg-white rounded-lg border border-slate-200">
-        <table className="w-full text-sm whitespace-nowrap" style={{ minWidth: "1100px" }}>
+        <table className="w-full text-sm whitespace-nowrap" style={{ minWidth: "1300px" }}>
           <thead className="sticky top-0 z-10">
             <tr className="bg-slate-50 border-b border-slate-200 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
               <Th field="id" sortField={sortField} onClick={toggleSort} SortIcon={SortIcon} className="w-12 text-center">No</Th>
@@ -240,7 +252,15 @@ export default function EmployeeListView({
           </thead>
           <tbody>
             {paged.length === 0 ? (
-              <tr><td colSpan={11} className="px-4 py-12 text-center text-slate-400">검색 결과가 없습니다.</td></tr>
+              <tr>
+                <td colSpan={11} className="px-4 py-12 text-center text-slate-400">
+                  <div className="flex flex-col items-center gap-2">
+                    <span className="text-2xl">🔍</span>
+                    <span className="font-medium text-slate-500">검색 결과가 없습니다.</span>
+                    <span className="text-xs text-slate-400">필터 조건을 변경하거나 검색어를 확인해 주세요.</span>
+                  </div>
+                </td>
+              </tr>
             ) : paged.map((e) => {
               const proj = projectById[e.projectId];
               const status = resolveStatus(e, proj?.name);
@@ -252,14 +272,18 @@ export default function EmployeeListView({
                   <td className="px-3 sm:px-4 py-3 text-left"><AffiliationBadge affiliation={e.affiliation} partnerName={e.partnerName} /></td>
                   <td className="px-3 sm:px-4 py-3 text-left text-slate-700">{e.rank}</td>
                   <td className="px-3 sm:px-4 py-3 text-left text-slate-700">{e.duty || <span className="text-slate-300">-</span>}</td>
-                  <td className="px-3 sm:px-4 py-3 text-left text-slate-600">{e.role || <span className="text-slate-300">-</span>}</td>
+                  <td className="px-3 sm:px-4 py-3 text-left text-slate-600 max-w-[130px]">
+                    {e.role
+                      ? <span className="block truncate" title={e.role}>{e.role}</span>
+                      : <span className="text-slate-300">-</span>
+                    }
+                  </td>
                   <td className="px-3 sm:px-4 py-3 text-left text-slate-700">
                     {e.projectId === "pool" || e.assignmentType === "대기" || !proj || proj.name === "대기" ? (
                       <span className="text-slate-300">-</span>
                     ) : (
                       <span className="inline-flex items-center gap-1.5">
                         <span className={`w-2 h-2 rounded-full ${c.dot} flex-shrink-0`}></span>
-                        {proj.name}
                         {proj.projectType && (() => {
                           const typeStyle =
                             proj.projectType === "대외 프로젝트"
@@ -267,12 +291,19 @@ export default function EmployeeListView({
                               : proj.projectType === "행내 프로젝트"
                               ? "bg-violet-50 text-violet-800 border-violet-200"
                               : "bg-emerald-50 text-emerald-800 border-emerald-200";
+                          const typeShort =
+                            proj.projectType === "대외 프로젝트" ? "대외"
+                            : proj.projectType === "행내 프로젝트" ? "행내"
+                            : "사내";
                           return (
-                            <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold border ${typeStyle}`}>
-                              {proj.projectType}
+                            <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold border flex-shrink-0 ${typeStyle}`}>
+                              {typeShort}
                             </span>
                           );
                         })()}
+                        <span className="max-w-[120px] truncate" title={proj.name}>
+                          {proj.name}
+                        </span>
                       </span>
                     )}
                   </td>

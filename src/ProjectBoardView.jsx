@@ -52,6 +52,7 @@ export default function ProjectBoardView({
   onNewProject, onEditProject, onDeleteProject,
 }) {
   const [boardQuery, setBoardQuery] = useState("");
+  const [filterBoardType, setFilterBoardType] = useState("전체");
   const [dragId, setDragId] = useState(null);
   const [dragOverProj, setDragOverProj] = useState(null);
   const [poolSortField, setPoolSortFieldState] = useState(loadPoolSort);
@@ -267,6 +268,21 @@ export default function ProjectBoardView({
             <FolderPlus size={14} /> <span className="hidden sm:inline">프로젝트 </span>등록
           </button>
         </div>
+        <div className="mt-1.5 flex items-center gap-2 flex-wrap">
+          {filterBoardType !== "전체" && (
+            <span className="text-xs text-violet-600 font-medium">· 유형 필터 적용 중</span>
+          )}
+          <select
+            value={filterBoardType}
+            onChange={(e) => setFilterBoardType(e.target.value)}
+            className="px-3 py-1.5 text-sm border border-violet-300 rounded-md bg-violet-50 focus:outline-none focus:ring-2 focus:ring-violet-500 flex-shrink-0"
+          >
+            <option value="전체">유형 전체</option>
+            <option value="대외 프로젝트">대외 프로젝트</option>
+            <option value="행내 프로젝트">행내 프로젝트</option>
+            <option value="사내 프로젝트">사내 프로젝트</option>
+          </select>
+        </div>
         <div className="mt-1 text-[11px] sm:text-xs text-slate-500 flex items-center gap-1.5">
           <GripVertical size={12} className="flex-shrink-0" />
           <span className="hidden sm:inline">카드를 드래그하여 다른 컬럼으로 이동하거나, 같은 컬럼 내에서 순서를 변경할 수 있습니다.</span>
@@ -277,7 +293,9 @@ export default function ProjectBoardView({
       {/* 칸반 보드 — 가로+세로 스크롤 */}
       <div className="flex-1 overflow-auto min-h-0 mt-1.5" style={{ minWidth: 0 }}>
         <div className="flex gap-2 sm:gap-3 pb-4 items-start" style={{ minWidth: "max-content" }}>
-        {orderedProjects.map((proj) => {
+        {orderedProjects
+          .filter(proj => proj.id === "pool" || filterBoardType === "전체" || proj.projectType === filterBoardType)
+          .map((proj) => {
           const c = COLOR_MAP[proj.color] || COLOR_MAP.slate;
           const q = boardQuery.trim().toLowerCase();
           const isPool = proj.id === "pool";
