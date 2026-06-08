@@ -451,29 +451,32 @@ export default function ProjectBoardView({
                     elapsedLabel = diffDays >= 0 ? `D+${diffDays}` : `D${diffDays}`;
                   }
                   return (
-                    <div className={`grid items-center text-[11px] font-semibold mt-0.5 gap-x-1 gap-y-0.5 ${c.text}`}
-                         style={{ gridTemplateColumns: '10px auto auto 1fr' }}>
-                      <Calendar size={10} className="opacity-60" />
-                      <span className="opacity-80 w-6">기간</span>
-                      <span className="opacity-40">:</span>
-                      <span className="tabular-nums opacity-80">{proj.startDate || "미정"} ~ {proj.endDate || "미정"}</span>
-
-                      {elapsedLabel && <>
-                        <Clock size={10} className="opacity-60" />
-                        <span className="opacity-80 w-6">경과</span>
-                        <span className="opacity-40">:</span>
-                        <span className="flex-1">
-                          <span className="px-2 py-0.5 rounded text-[11px] font-bold border bg-slate-100 text-slate-700 border-slate-300">{elapsedLabel}</span>
-                        </span>
-                      </>}
-
-                      <Briefcase size={10} className={pmEmp ? "opacity-60" : "text-red-600"} />
-                      <span className={`w-6 ${pmEmp ? "opacity-80" : "text-red-600"}`}>PM</span>
-                      <span className={`opacity-40 ${pmEmp ? "" : "text-red-600"}`}>:</span>
-                      {pmEmp
-                        ? <span className="opacity-70">{pmEmp.name}{pmEmp.rank ? ` ${pmEmp.rank}` : ""}</span>
-                        : <span className="text-red-600">PM 등록 필수</span>
-                      }
+                    <div className={`flex flex-col gap-0.5 text-[11px] font-semibold mt-0.5 ${c.text}`}>
+                      <div className="flex items-center gap-1">
+                        <Calendar size={10} className="opacity-60 flex-shrink-0" />
+                        <span className="opacity-80 w-6 flex-shrink-0">기간</span>
+                        <span className="opacity-40 flex-shrink-0">:</span>
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-bold border bg-slate-50 text-slate-700 border-slate-200 tabular-nums">{proj.startDate || "미정"}</span>
+                        <span className="opacity-40 text-[9px]">→</span>
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-bold border bg-slate-50 text-slate-700 border-slate-200 tabular-nums">{proj.endDate || "미정"}</span>
+                      </div>
+                      {elapsedLabel && (
+                        <div className="flex items-center gap-1">
+                          <Clock size={10} className="opacity-60 flex-shrink-0" />
+                          <span className="opacity-80 w-6 flex-shrink-0">경과</span>
+                          <span className="opacity-40 flex-shrink-0">:</span>
+                          <span className="px-1.5 py-0.5 rounded text-[10px] font-bold border bg-slate-100 text-slate-700 border-slate-300">{elapsedLabel}</span>
+                        </div>
+                      )}
+                      <div className="flex items-center gap-1">
+                        <Briefcase size={10} className={`flex-shrink-0 ${pmEmp ? "opacity-60" : "text-red-600"}`} />
+                        <span className={`w-6 flex-shrink-0 ${pmEmp ? "opacity-80" : "text-red-600"}`}>PM</span>
+                        <span className={`opacity-40 flex-shrink-0 ${pmEmp ? "" : "text-red-600"}`}>:</span>
+                        {pmEmp
+                          ? <span className="px-1.5 py-0.5 rounded text-[10px] font-bold border bg-blue-50 text-blue-700 border-blue-200">{pmEmp.name}{pmEmp.rank ? ` ${pmEmp.rank}` : ""}</span>
+                          : <span className="px-1.5 py-0.5 rounded text-[10px] font-bold border bg-red-50 text-red-600 border-red-200">PM 등록 필수</span>
+                        }
+                      </div>
                     </div>
                   );
                 })()}

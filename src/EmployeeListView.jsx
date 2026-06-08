@@ -260,6 +260,19 @@ export default function EmployeeListView({
                       <span className="inline-flex items-center gap-1.5">
                         <span className={`w-2 h-2 rounded-full ${c.dot} flex-shrink-0`}></span>
                         {proj.name}
+                        {proj.projectType && (() => {
+                          const typeStyle =
+                            proj.projectType === "대외 프로젝트"
+                              ? "bg-amber-50 text-amber-800 border-amber-200"
+                              : proj.projectType === "행내 프로젝트"
+                              ? "bg-violet-50 text-violet-800 border-violet-200"
+                              : "bg-emerald-50 text-emerald-800 border-emerald-200";
+                          return (
+                            <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold border ${typeStyle}`}>
+                              {proj.projectType}
+                            </span>
+                          );
+                        })()}
                       </span>
                     )}
                   </td>
