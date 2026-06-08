@@ -145,14 +145,14 @@ export default function EmployeeFormModal({
                 const newType = e.target.value;
                 if (newType === "투입예정") {
                   const newProjectId = editingEmp.projectId === "pool"
-                    ? (projects.find(p => p.id !== "pool")?.id || "pool")
+                    ? ""
                     : editingEmp.projectId;
                   setEditingEmp({ ...editingEmp, assignmentType: "투입예정", projectId: newProjectId });
                 } else if (newType === "대기") {
                   setEditingEmp({ ...editingEmp, assignmentType: "대기", projectId: "pool", startDate: "", endDate: "", duty: "", role: "" });
                 } else {
                   const newProjectId = editingEmp.projectId === "pool"
-                    ? (projects.find(p => p.id !== "pool")?.id || "pool")
+                    ? ""
                     : editingEmp.projectId;
                   setEditingEmp({ ...editingEmp, assignmentType: newType, projectId: newProjectId });
                 }
@@ -181,6 +181,7 @@ export default function EmployeeFormModal({
                 onChange={(e) => setEditingEmp({ ...editingEmp, projectId: e.target.value })}
                 className="w-full px-3 py-2 text-base sm:text-sm border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
+                <option value="">선택하세요</option>
                 {projects.filter(p => p.id !== "pool").map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
               </select>
             )}

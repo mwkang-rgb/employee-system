@@ -188,7 +188,7 @@ export default function EmployeeManager() {
   }, [employees, projects]);
 
   const openNewEmp = () => {
-    setEditingEmp({ id: null, name: "", rank: "사원", projectId: "pool", startDate: "", endDate: "", affiliation: "IBKS", partnerName: "", duty: "", role: "", assignmentType: "대기" });
+    setEditingEmp({ id: null, name: "", rank: "사원", projectId: "", startDate: "", endDate: "", affiliation: "IBKS", partnerName: "", duty: "", role: "", assignmentType: "" });
     setShowEmpModal(true);
   };
   const openEditEmp = (emp) => {
@@ -223,6 +223,9 @@ export default function EmployeeManager() {
     }
     if (editingEmp.projectId !== "pool" && editingEmp.assignmentType === "대기") {
       showAlert("투입 형태 오류", "올바른 투입 형태를 선택한 후 저장해 주세요."); return;
+    }
+    if (!editingEmp.projectId && !isPool) {
+      showAlert("필수 항목 누락", "투입 프로젝트를 선택해 주세요."); return;
     }
     if (editingEmp.projectId !== "pool") {
       const duty = (editingEmp.duty || "").trim();
