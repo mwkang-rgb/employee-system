@@ -608,6 +608,7 @@ export default function EmployeeManager() {
                 icon={<Calendar size={18} />}
                 label="대기 인력"
                 accent="rose"
+                wide
                 value={
                   <span className="flex items-center justify-between w-full gap-1.5">
                     <span className="text-lg sm:text-xl font-bold text-slate-900 tabular-nums">{stats.waiting}</span>
@@ -872,7 +873,7 @@ function TabBtn({ active, onClick, icon, children }) {
   );
 }
 
-function StatCard({ icon, label, value, accent }) {
+function StatCard({ icon, label, value, accent, wide }) {
   const colors = {
     slate: "text-slate-600 bg-slate-100",
     emerald: "text-emerald-700 bg-emerald-100",
@@ -882,7 +883,7 @@ function StatCard({ icon, label, value, accent }) {
     rose: "text-rose-700 bg-rose-100",
   };
   return (
-    <div className="bg-white rounded-lg border border-slate-200 p-2 sm:p-3 flex items-center gap-2 flex-shrink-0 w-[140px] lg:w-auto">
+    <div className={`bg-white rounded-lg border border-slate-200 p-2 sm:p-3 flex items-center gap-2 flex-shrink-0 lg:w-auto ${wide ? "w-[160px]" : "w-[140px]"}`}>
       <div className={`w-8 h-8 rounded-md flex items-center justify-center flex-shrink-0 ${colors[accent]}`}>{icon}</div>
       <div className="min-w-0 flex-1">
         <div className="text-[11px] sm:text-xs text-slate-500 font-medium">{label}</div>
