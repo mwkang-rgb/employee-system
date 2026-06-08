@@ -74,6 +74,7 @@ function mapProject(row) {
     endDate:       row.end_date       || "",
     locationName:  row.location_name  || "",
     addressDetail: row.address_detail || "",
+    projectType:   row.project_type   || "",
   };
 }
 
@@ -374,18 +375,19 @@ export default function EmployeeManager() {
   const openNewProj = () => {
     setEditingProj({
       id: null, name: "", color: COLOR_OPTIONS[Math.floor(Math.random() * COLOR_OPTIONS.length)],
-      startDate: "", endDate: "", locationName: "", address: "", addressDetail: "",
+      startDate: "", endDate: "", projectType: "", locationName: "", address: "", addressDetail: "",
       latitude: null, longitude: null,
     });
     setShowProjModal(true);
   };
   const openEditProj = (proj) => {
     setEditingProj({
-      startDate: "", endDate: "", locationName: "", address: "", addressDetail: "",
+      startDate: "", endDate: "", projectType: "", locationName: "", address: "", addressDetail: "",
       latitude: null, longitude: null,
       ...proj,
       startDate:     proj.start_date     || proj.startDate     || "",
       endDate:       proj.end_date       || proj.endDate       || "",
+      projectType:   proj.project_type   || proj.projectType   || "",
       locationName:  proj.location_name  || proj.locationName  || "",
       addressDetail: proj.address_detail || proj.addressDetail || "",
     });
@@ -440,6 +442,7 @@ export default function EmployeeManager() {
     }
     const missing = [];
     if (!editingProj.startDate || !editingProj.endDate) missing.push("프로젝트 기간");
+    if (!editingProj.projectType)                        missing.push("프로젝트 유형");
     if (!editingProj.locationName?.trim())              missing.push("장소");
     if (!editingProj.address?.trim())                   missing.push("주소");
     if (missing.length === 1) {
@@ -464,6 +467,7 @@ export default function EmployeeManager() {
       color:          editingProj.color,
       start_date:     editingProj.startDate    || null,
       end_date:       editingProj.endDate      || null,
+      project_type:   editingProj.projectType  || null,
       location_name:  editingProj.locationName || null,
       address:        editingProj.address      || null,
       address_detail: editingProj.addressDetail || null,
@@ -801,6 +805,18 @@ export default function EmployeeManager() {
                 {editingProj.startDate && editingProj.endDate && editingProj.endDate < editingProj.startDate && (
                   <p className="text-xs text-red-500 mt-1">종료일은 시작일 이후여야 합니다.</p>
                 )}
+              </Field>
+              <Field label="프로젝트 유형 *">
+                <select
+                  value={editingProj.projectType || ""}
+                  onChange={(e) => setEditingProj({ ...editingProj, projectType: e.target.value })}
+                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
+                >
+                  <option value="">선택하세요</option>
+                  <option value="대외 프로젝트">대외 프로젝트</option>
+                  <option value="행내 프로젝트">행내 프로젝트</option>
+                  <option value="사내 프로젝트">사내 프로젝트</option>
+                </select>
               </Field>
               <Field label="주소">
                 <div className="flex gap-2">
