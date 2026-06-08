@@ -802,16 +802,6 @@ export default function EmployeeManager() {
                   <p className="text-xs text-red-500 mt-1">종료일은 시작일 이후여야 합니다.</p>
                 )}
               </Field>
-              <Field label="장소">
-                <input
-                  type="text"
-                  value={editingProj.locationName || ""}
-                  onChange={(e) => setEditingProj({ ...editingProj, locationName: e.target.value })}
-                  maxLength={200}
-                  placeholder="예: 본사 3층 회의실"
-                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                />
-              </Field>
               <Field label="주소">
                 <div className="flex gap-2">
                   <input
@@ -839,6 +829,16 @@ export default function EmployeeManager() {
                     className="mt-1.5 w-full px-3 py-2 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   />
                 )}
+              </Field>
+              <Field label="장소 (건물 내 사무실 위치)">
+                <input
+                  type="text"
+                  value={editingProj.locationName || ""}
+                  onChange={(e) => setEditingProj({ ...editingProj, locationName: e.target.value })}
+                  maxLength={200}
+                  placeholder="예: 본사 3층 회의실"
+                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
               </Field>
             </div>
             <div className="px-4 sm:px-5 py-3 sm:py-4 border-t border-slate-200 flex justify-end gap-2 bg-slate-50 flex-shrink-0">
