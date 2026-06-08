@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef } from "react";
-import { Search, Edit2, Trash2, GripVertical, FolderPlus, Building2, Briefcase, UserCheck, Clock, CalendarClock, CheckCircle2, LogOut, Timer, Calendar, Users } from "lucide-react";
+import { Search, Edit2, Trash2, GripVertical, FolderPlus, Building2, Briefcase, UserCheck, Clock, CalendarClock, CheckCircle2, LogOut, Timer, Calendar, Users, Tag } from "lucide-react";
 import { COLOR_MAP, POOL_SORT_OPTIONS, RANK_ORDER } from "./constants.js";
 import { resolveStatus, calcWaitingDuration, formatWaitingLabel } from "./helpers.js";
 
@@ -505,6 +505,24 @@ export default function ProjectBoardView({
                             교수 {profCount}
                           </span>
                         )}
+                      </span>
+                    </div>
+                  );
+                })()}
+                {!isPool && proj.projectType && (() => {
+                  const typeStyle =
+                    proj.projectType === "대외 프로젝트"
+                      ? "bg-amber-50 text-amber-800 border-amber-200"
+                      : proj.projectType === "행내 프로젝트"
+                      ? "bg-violet-50 text-violet-800 border-violet-200"
+                      : "bg-emerald-50 text-emerald-800 border-emerald-200";
+                  return (
+                    <div className={`flex items-center gap-1 text-[11px] ${c.text} opacity-90 mt-0.5`}>
+                      <Tag size={10} className="flex-shrink-0" />
+                      <span className="font-semibold flex-shrink-0 w-6">유형</span>
+                      <span className="opacity-40 flex-shrink-0">:</span>
+                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold border ${typeStyle}`}>
+                        {proj.projectType}
                       </span>
                     </div>
                   );
