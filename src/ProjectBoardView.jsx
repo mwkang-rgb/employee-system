@@ -622,7 +622,7 @@ export default function ProjectBoardView({
                         onDragOver={(e) => handleCardDragOver(e, emp.id, proj.id)}
                         onDrop={(e) => handleCardDrop(e, emp.id, proj.id)}
                         onClick={() => onCardClick(emp)}
-                        className={`bg-white rounded-md border border-slate-200 p-2.5 shadow-sm hover:shadow-md hover:border-indigo-300 cursor-pointer transition-all select-none ${isDragging ? "opacity-40 scale-95" : ""}`}
+                        className={`bg-white rounded-md border border-slate-200 p-2.5 shadow-sm hover:shadow-md hover:border-indigo-300 cursor-pointer transition-all select-none min-w-0 ${isDragging ? "opacity-40 scale-95" : ""}`}
                         title="클릭하여 상세 보기"
                       >
                         <div className="flex items-start justify-between gap-2">
@@ -661,7 +661,7 @@ export default function ProjectBoardView({
                             )}
                           </div>
                         </div>
-                        <div className="mt-1.5 flex flex-wrap gap-1">
+                        <div className="mt-1.5 flex flex-wrap gap-1 min-w-0 overflow-hidden">
                           <AffiliationBadge affiliation={emp.affiliation} partnerName={emp.partnerName} />
                           {emp.duty && emp.duty !== "없음" && (
                             <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-medium rounded border bg-slate-50 text-slate-600 border-slate-200">

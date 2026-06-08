@@ -561,7 +561,7 @@ export default function EmployeeManager() {
 
   return (
     <div className="h-screen bg-slate-50 font-sans flex flex-col overflow-hidden">
-      <div className="max-w-[1400px] w-full mx-auto px-3 sm:px-6 pt-[5px] flex flex-col h-full">
+      <div className="w-full px-3 sm:px-6 md:px-8 lg:px-12 xl:px-16 pt-[5px] flex flex-col h-full">
         <div className="mb-0 flex items-end justify-between border-b border-slate-200 pb-[5px] gap-2 flex-shrink-0">
           <div className="min-w-0">
             <div className="text-[10px] sm:text-xs font-semibold tracking-widest text-slate-500 uppercase mb-0">SI개발본부 · 인력운영</div>
