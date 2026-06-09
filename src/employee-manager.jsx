@@ -626,22 +626,22 @@ export default function EmployeeManager() {
               value={
                 <span className="flex items-center justify-between w-full gap-1.5">
                   <span className="text-lg sm:text-xl font-bold text-slate-900 tabular-nums">{stats.projectCount}</span>
-                  <span className="flex flex-col items-end gap-0.5">
+                  <span className="flex flex-col items-end gap-[2px]">
                     <span
-                      className="text-[10px] font-bold py-0.5 rounded border flex justify-between"
-                      style={{ width: '62px', paddingLeft: '5px', paddingRight: '5px', backgroundColor: '#FFF7ED', borderColor: '#FED7AA', color: stats.projectExt > 0 ? '#C2410C' : '#FDBA74', opacity: stats.projectExt > 0 ? 1 : 0.45 }}
+                      className="text-[10px] font-bold rounded border flex justify-between"
+                      style={{ width: '62px', padding: '1px 5px', backgroundColor: '#FFF7ED', borderColor: '#FED7AA', color: stats.projectExt > 0 ? '#C2410C' : '#FDBA74', opacity: stats.projectExt > 0 ? 1 : 0.45 }}
                     >
                       <span>대외</span><span>{stats.projectExt}</span>
                     </span>
                     <span
-                      className="text-[10px] font-bold py-0.5 rounded border flex justify-between"
-                      style={{ width: '62px', paddingLeft: '5px', paddingRight: '5px', backgroundColor: '#EFF6FF', borderColor: '#BFDBFE', color: stats.projectBank > 0 ? '#1D4ED8' : '#93C5FD', opacity: stats.projectBank > 0 ? 1 : 0.45 }}
+                      className="text-[10px] font-bold rounded border flex justify-between"
+                      style={{ width: '62px', padding: '1px 5px', backgroundColor: '#EFF6FF', borderColor: '#BFDBFE', color: stats.projectBank > 0 ? '#1D4ED8' : '#93C5FD', opacity: stats.projectBank > 0 ? 1 : 0.45 }}
                     >
                       <span>행내</span><span>{stats.projectBank}</span>
                     </span>
                     <span
-                      className="text-[10px] font-bold py-0.5 rounded border flex justify-between"
-                      style={{ width: '62px', paddingLeft: '5px', paddingRight: '5px', backgroundColor: '#F0FDF4', borderColor: '#BBF7D0', color: stats.projectInt > 0 ? '#15803D' : '#86EFAC', opacity: stats.projectInt > 0 ? 1 : 0.45 }}
+                      className="text-[10px] font-bold rounded border flex justify-between"
+                      style={{ width: '62px', padding: '1px 5px', backgroundColor: '#F0FDF4', borderColor: '#BBF7D0', color: stats.projectInt > 0 ? '#15803D' : '#86EFAC', opacity: stats.projectInt > 0 ? 1 : 0.45 }}
                     >
                       <span>사내</span><span>{stats.projectInt}</span>
                     </span>
@@ -662,13 +662,12 @@ export default function EmployeeManager() {
                 value={
                   <span className="flex items-center justify-between w-full gap-1.5">
                     <span className="text-lg sm:text-xl font-bold text-slate-900 tabular-nums">{stats.waiting}</span>
-                    <span className="flex flex-col items-end gap-0.5">
+                    <span className="flex flex-col items-end gap-[2px]">
                       <span
-                        className="text-[10px] font-bold py-0.5 rounded border flex justify-between"
+                        className="text-[10px] font-bold rounded border flex justify-between"
                         style={{
                           width: '62px',
-                          paddingLeft: '5px',
-                          paddingRight: '5px',
+                          padding: '1px 5px',
                           backgroundColor: '#EFF6FF',
                           borderColor: '#BFDBFE',
                           color: stats.waitingEmp > 0 ? '#1D4ED8' : '#93C5FD',
@@ -678,11 +677,10 @@ export default function EmployeeManager() {
                         <span>직원</span><span>{stats.waitingEmp}</span>
                       </span>
                       <span
-                        className="text-[10px] font-bold py-0.5 rounded border flex justify-between"
+                        className="text-[10px] font-bold rounded border flex justify-between"
                         style={{
                           width: '62px',
-                          paddingLeft: '5px',
-                          paddingRight: '5px',
+                          padding: '1px 5px',
                           backgroundColor: '#F5F3FF',
                           borderColor: '#DDD6FE',
                           color: stats.waitingProf > 0 ? '#6D28D9' : '#C4B5FD',
@@ -964,9 +962,9 @@ function StatCard({ icon, label, value, accent, wide }) {
     violet: "text-violet-700 bg-violet-100",
   };
   return (
-    <div className={`bg-white rounded-lg border border-slate-200 p-2 sm:p-3 flex items-center gap-2 flex-shrink-0 lg:w-auto ${wide ? "w-[160px]" : "w-[140px]"}`}>
+    <div className={`bg-white rounded-lg border border-slate-200 p-2 sm:p-3 flex items-center gap-2 flex-shrink-0 lg:w-auto ${wide ? "w-[160px]" : "w-[140px]"}`} style={{ height: '64px', boxSizing: 'border-box' }}>
       <div className={`w-8 h-8 rounded-md flex items-center justify-center flex-shrink-0 ${colors[accent]}`}>{icon}</div>
-      <div className="min-w-0 flex-1">
+      <div className="min-w-0 flex-1 flex flex-col justify-center" style={{ height: '100%' }}>
         <div className="text-[11px] sm:text-xs text-slate-500 font-medium">{label}</div>
         <div className="text-lg sm:text-xl font-bold text-slate-900 tabular-nums w-full">{value}</div>
       </div>
