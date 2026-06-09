@@ -624,7 +624,7 @@ export default function EmployeeManager() {
               accent="violet"
               value={
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', height: '100%' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100%' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                     <span className="text-lg sm:text-xl font-bold text-slate-900 tabular-nums">{stats.projectCount}</span>
                   </div>
                   <span style={{ display: 'flex', flexDirection: 'column', gap: '2px', alignItems: 'flex-end', justifyContent: 'center', height: '100%' }}>
@@ -652,7 +652,7 @@ export default function EmployeeManager() {
                 accent="rose"
                 value={
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', height: '100%' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100%' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                       <span className="text-lg sm:text-xl font-bold text-slate-900 tabular-nums">{stats.waiting}</span>
                     </div>
                     <span style={{ display: 'flex', flexDirection: 'column', gap: '2px', alignItems: 'flex-end', justifyContent: 'center', height: '100%' }}>
@@ -935,7 +935,7 @@ function StatCard({ icon, label, value, accent }) {
     violet: "text-violet-700 bg-violet-100",
   };
   return (
-    <div className="bg-white rounded-lg border border-slate-200 p-2 sm:p-3 flex items-center gap-2 flex-shrink-0" style={{ width: '185px', height: '64px', boxSizing: 'border-box' }}>
+    <div className="bg-white rounded-lg border border-slate-200 p-2 sm:p-3 flex items-center gap-2 flex-shrink-0" style={{ width: '170px', height: '64px', boxSizing: 'border-box' }}>
       <div className={`w-8 h-8 rounded-md flex items-center justify-center flex-shrink-0 ${colors[accent]}`}>{icon}</div>
       <div className="min-w-0 flex-1 flex flex-col justify-center" style={{ height: '100%' }}>
         <div className="text-[11px] sm:text-xs text-slate-500 font-medium" style={{ whiteSpace: 'nowrap' }}>{label}</div>
