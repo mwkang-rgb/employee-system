@@ -203,7 +203,7 @@ export default function EmployeeListView({
           <select
             value={filterType}
             onChange={(e) => setFilterType(e.target.value)}
-            className="px-3 py-1.5 text-sm border border-violet-300 rounded-md focus:outline-none focus:ring-2 focus:ring-violet-500 flex-shrink-0"
+            className="px-3 py-1.5 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 flex-shrink-0"
           >
             <option value="전체">유형 전체</option>
             <option value="대외 프로젝트">대외 프로젝트</option>
