@@ -186,8 +186,17 @@ export default function EmployeeManager() {
     }
     const ibks = employees.filter(e => e.affiliation === "IBKS").length;
     const partner = employees.filter(e => e.affiliation === "협력사").length;
-    const projectCount = projects.filter(p => p.id !== "pool").length;
-    return { total, active, pending, waiting, waitingEmp, waitingProf, ibks, partner, projectCount };
+    const activeProjects = projects.filter(p => p.id !== "pool");
+    const projectCount = activeProjects.length;
+    const projectExt  = activeProjects.filter(p => p.projectType === "대외 프로젝트").length;
+    const projectBank = activeProjects.filter(p => p.projectType === "행내 프로젝트").length;
+    const projectInt  = activeProjects.filter(p => p.projectType === "사내 프로젝트").length;
+
+    if (projectCount !== projectExt + projectBank + projectInt) {
+      console.warn('[프로젝트] 유형 합계 불일치 (미입력 데이터 존재 가능):', projectCount, '!=', projectExt, '+', projectBank, '+', projectInt);
+    }
+
+    return { total, active, pending, waiting, waitingEmp, waitingProf, ibks, partner, projectCount, projectExt, projectBank, projectInt };
   }, [employees, projects]);
 
   const openNewEmp = () => {
@@ -609,7 +618,37 @@ export default function EmployeeManager() {
         {/* 통계 카드 */}
         <div className="mb-0 py-1.5 overflow-x-auto lg:overflow-visible flex-shrink-0">
           <div className="flex lg:grid lg:grid-cols-7 gap-2 sm:gap-3 min-w-max lg:min-w-0">
-            <StatCard icon={<FolderKanban size={18} />} label="프로젝트" value={stats.projectCount} accent="violet" />
+            <StatCard
+              icon={<FolderKanban size={18} />}
+              label="프로젝트"
+              accent="violet"
+              wide
+              value={
+                <span className="flex items-center justify-between w-full gap-1.5">
+                  <span className="text-lg sm:text-xl font-bold text-slate-900 tabular-nums">{stats.projectCount}</span>
+                  <span className="flex flex-col items-end gap-0.5">
+                    <span
+                      className="text-[10px] font-bold py-0.5 rounded border flex justify-between"
+                      style={{ width: '62px', paddingLeft: '5px', paddingRight: '5px', backgroundColor: '#FFF7ED', borderColor: '#FED7AA', color: stats.projectExt > 0 ? '#C2410C' : '#FDBA74', opacity: stats.projectExt > 0 ? 1 : 0.45 }}
+                    >
+                      <span>대외</span><span>{stats.projectExt}</span>
+                    </span>
+                    <span
+                      className="text-[10px] font-bold py-0.5 rounded border flex justify-between"
+                      style={{ width: '62px', paddingLeft: '5px', paddingRight: '5px', backgroundColor: '#EFF6FF', borderColor: '#BFDBFE', color: stats.projectBank > 0 ? '#1D4ED8' : '#93C5FD', opacity: stats.projectBank > 0 ? 1 : 0.45 }}
+                    >
+                      <span>행내</span><span>{stats.projectBank}</span>
+                    </span>
+                    <span
+                      className="text-[10px] font-bold py-0.5 rounded border flex justify-between"
+                      style={{ width: '62px', paddingLeft: '5px', paddingRight: '5px', backgroundColor: '#F0FDF4', borderColor: '#BBF7D0', color: stats.projectInt > 0 ? '#15803D' : '#86EFAC', opacity: stats.projectInt > 0 ? 1 : 0.45 }}
+                    >
+                      <span>사내</span><span>{stats.projectInt}</span>
+                    </span>
+                  </span>
+                </span>
+              }
+            />
             <StatCard icon={<Users size={18} />} label="전체 인원" value={stats.total} accent="slate" />
             <StatCard icon={<Users size={18} />} label="IBKS" value={stats.ibks} accent="indigo" />
             <StatCard icon={<Building2 size={18} />} label="협력사" value={stats.partner} accent="amber" />
