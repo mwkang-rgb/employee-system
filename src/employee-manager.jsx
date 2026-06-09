@@ -617,7 +617,7 @@ export default function EmployeeManager() {
 
         {/* 통계 카드 */}
         <div className="mb-0 py-1.5 overflow-x-auto lg:overflow-visible flex-shrink-0">
-          <div className="flex gap-2 sm:gap-3 min-w-max">
+          <div className="flex gap-2 sm:gap-3 w-full">
             <StatCard
               icon={<FolderKanban size={18} />}
               label="프로젝트"
@@ -626,7 +626,7 @@ export default function EmployeeManager() {
               value={
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
                   <span className="text-lg sm:text-xl font-bold text-slate-900 tabular-nums">{stats.projectCount}</span>
-                  <span style={{ display: 'flex', flexDirection: 'row', gap: '3px', alignItems: 'center' }}>
+                  <span style={{ display: 'flex', flexDirection: 'row', gap: '3px', alignItems: 'center', flexShrink: 0 }}>
                     <span className="text-[10px] font-bold rounded border flex gap-1" style={{ padding: '1px 5px', backgroundColor: '#FFF7ED', borderColor: '#FED7AA', color: stats.projectExt > 0 ? '#C2410C' : '#FDBA74', opacity: stats.projectExt > 0 ? 1 : 0.45 }}>
                       <span>대외</span><span>{stats.projectExt}</span>
                     </span>
@@ -640,11 +640,11 @@ export default function EmployeeManager() {
                 </div>
               }
             />
-            <StatCard icon={<Users size={18} />} label="전체 인원" value={stats.total} accent="slate" />
-            <StatCard icon={<Users size={18} />} label="IBKS" value={stats.ibks} accent="indigo" />
-            <StatCard icon={<Building2 size={18} />} label="협력사" value={stats.partner} accent="amber" />
-            <StatCard icon={<Briefcase size={18} />} label="투입중" value={stats.active} accent="emerald" />
-            <StatCard icon={<CalendarClock size={18} />} label="투입예정" value={stats.pending} accent="sky" />
+            <StatCard icon={<Users size={18} />} label="전체 인원" value={stats.total} accent="slate" grow />
+            <StatCard icon={<Users size={18} />} label="IBKS" value={stats.ibks} accent="indigo" grow />
+            <StatCard icon={<Building2 size={18} />} label="협력사" value={stats.partner} accent="amber" grow />
+            <StatCard icon={<Briefcase size={18} />} label="투입중" value={stats.active} accent="emerald" grow />
+            <StatCard icon={<CalendarClock size={18} />} label="투입예정" value={stats.pending} accent="sky" grow />
             <StatCard
                 icon={<Calendar size={18} />}
                 label="대기 인력"
@@ -653,7 +653,7 @@ export default function EmployeeManager() {
                 value={
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
                     <span className="text-lg sm:text-xl font-bold text-slate-900 tabular-nums">{stats.waiting}</span>
-                    <span style={{ display: 'flex', flexDirection: 'row', gap: '3px', alignItems: 'center' }}>
+                    <span style={{ display: 'flex', flexDirection: 'row', gap: '3px', alignItems: 'center', flexShrink: 0 }}>
                       <span className="text-[10px] font-bold rounded border flex gap-1" style={{ padding: '1px 5px', backgroundColor: '#EFF6FF', borderColor: '#BFDBFE', color: stats.waitingEmp > 0 ? '#1D4ED8' : '#93C5FD', opacity: stats.waitingEmp > 0 ? 1 : 0.45 }}>
                         <span>직원</span><span>{stats.waitingEmp}</span>
                       </span>
@@ -922,7 +922,7 @@ function TabBtn({ active, onClick, icon, children }) {
   );
 }
 
-function StatCard({ icon, label, value, accent, width }) {
+function StatCard({ icon, label, value, accent, width, grow }) {
   const colors = {
     slate: "text-slate-600 bg-slate-100",
     emerald: "text-emerald-700 bg-emerald-100",
@@ -933,7 +933,7 @@ function StatCard({ icon, label, value, accent, width }) {
     violet: "text-violet-700 bg-violet-100",
   };
   return (
-    <div className="bg-white rounded-lg border border-slate-200 p-2 sm:p-3 flex items-center gap-2 flex-shrink-0" style={{ width: width || '150px', height: '60px', boxSizing: 'border-box' }}>
+    <div className="bg-white rounded-lg border border-slate-200 p-2 sm:p-3 flex items-center gap-2" style={{ width: width || 'auto', flex: grow ? '1 1 0' : '0 0 auto', minWidth: grow ? '100px' : undefined, height: '60px', boxSizing: 'border-box' }}>
       <div className={`w-8 h-8 rounded-md flex items-center justify-center flex-shrink-0 ${colors[accent]}`}>{icon}</div>
       <div className="min-w-0 flex-1 flex flex-col justify-center" style={{ height: '100%' }}>
         <div className="text-[11px] sm:text-xs text-slate-500 font-medium" style={{ whiteSpace: 'nowrap' }}>{label}</div>
