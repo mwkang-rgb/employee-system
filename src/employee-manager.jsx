@@ -617,36 +617,28 @@ export default function EmployeeManager() {
 
         {/* 통계 카드 */}
         <div className="mb-0 py-1.5 overflow-x-auto lg:overflow-visible flex-shrink-0">
-          <div className="flex lg:grid lg:grid-cols-7 gap-2 sm:gap-3 min-w-max lg:min-w-0">
+          <div className="flex gap-2 sm:gap-3 min-w-max">
             <StatCard
               icon={<FolderKanban size={18} />}
               label="프로젝트"
               accent="violet"
-              wide
               value={
-                <span className="flex items-center justify-between w-full gap-1.5">
-                  <span className="text-lg sm:text-xl font-bold text-slate-900 tabular-nums">{stats.projectCount}</span>
-                  <span className="flex flex-col items-end gap-[2px]">
-                    <span
-                      className="text-[10px] font-bold rounded border flex justify-between"
-                      style={{ width: '62px', padding: '1px 5px', backgroundColor: '#FFF7ED', borderColor: '#FED7AA', color: stats.projectExt > 0 ? '#C2410C' : '#FDBA74', opacity: stats.projectExt > 0 ? 1 : 0.45 }}
-                    >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', height: '100%' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100%' }}>
+                    <span className="text-lg sm:text-xl font-bold text-slate-900 tabular-nums">{stats.projectCount}</span>
+                  </div>
+                  <span style={{ display: 'flex', flexDirection: 'column', gap: '2px', alignItems: 'flex-end', justifyContent: 'center', height: '100%' }}>
+                    <span className="text-[10px] font-bold rounded border flex justify-between" style={{ width: '62px', padding: '1px 5px', backgroundColor: '#FFF7ED', borderColor: '#FED7AA', color: stats.projectExt > 0 ? '#C2410C' : '#FDBA74', opacity: stats.projectExt > 0 ? 1 : 0.45 }}>
                       <span>대외</span><span>{stats.projectExt}</span>
                     </span>
-                    <span
-                      className="text-[10px] font-bold rounded border flex justify-between"
-                      style={{ width: '62px', padding: '1px 5px', backgroundColor: '#EFF6FF', borderColor: '#BFDBFE', color: stats.projectBank > 0 ? '#1D4ED8' : '#93C5FD', opacity: stats.projectBank > 0 ? 1 : 0.45 }}
-                    >
+                    <span className="text-[10px] font-bold rounded border flex justify-between" style={{ width: '62px', padding: '1px 5px', backgroundColor: '#EFF6FF', borderColor: '#BFDBFE', color: stats.projectBank > 0 ? '#1D4ED8' : '#93C5FD', opacity: stats.projectBank > 0 ? 1 : 0.45 }}>
                       <span>행내</span><span>{stats.projectBank}</span>
                     </span>
-                    <span
-                      className="text-[10px] font-bold rounded border flex justify-between"
-                      style={{ width: '62px', padding: '1px 5px', backgroundColor: '#F0FDF4', borderColor: '#BBF7D0', color: stats.projectInt > 0 ? '#15803D' : '#86EFAC', opacity: stats.projectInt > 0 ? 1 : 0.45 }}
-                    >
+                    <span className="text-[10px] font-bold rounded border flex justify-between" style={{ width: '62px', padding: '1px 5px', backgroundColor: '#F0FDF4', borderColor: '#BBF7D0', color: stats.projectInt > 0 ? '#15803D' : '#86EFAC', opacity: stats.projectInt > 0 ? 1 : 0.45 }}>
                       <span>사내</span><span>{stats.projectInt}</span>
                     </span>
                   </span>
-                </span>
+                </div>
               }
             />
             <StatCard icon={<Users size={18} />} label="전체 인원" value={stats.total} accent="slate" />
@@ -658,39 +650,20 @@ export default function EmployeeManager() {
                 icon={<Calendar size={18} />}
                 label="대기 인력"
                 accent="rose"
-                wide
                 value={
-                  <span className="flex items-center justify-between w-full gap-1.5">
-                    <span className="text-lg sm:text-xl font-bold text-slate-900 tabular-nums">{stats.waiting}</span>
-                    <span className="flex flex-col items-end gap-[2px]">
-                      <span
-                        className="text-[10px] font-bold rounded border flex justify-between"
-                        style={{
-                          width: '62px',
-                          padding: '1px 5px',
-                          backgroundColor: '#EFF6FF',
-                          borderColor: '#BFDBFE',
-                          color: stats.waitingEmp > 0 ? '#1D4ED8' : '#93C5FD',
-                          opacity: stats.waitingEmp > 0 ? 1 : 0.5,
-                        }}
-                      >
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', height: '100%' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100%' }}>
+                      <span className="text-lg sm:text-xl font-bold text-slate-900 tabular-nums">{stats.waiting}</span>
+                    </div>
+                    <span style={{ display: 'flex', flexDirection: 'column', gap: '2px', alignItems: 'flex-end', justifyContent: 'center', height: '100%' }}>
+                      <span className="text-[10px] font-bold rounded border flex justify-between" style={{ width: '62px', padding: '1px 5px', backgroundColor: '#EFF6FF', borderColor: '#BFDBFE', color: stats.waitingEmp > 0 ? '#1D4ED8' : '#93C5FD', opacity: stats.waitingEmp > 0 ? 1 : 0.45 }}>
                         <span>직원</span><span>{stats.waitingEmp}</span>
                       </span>
-                      <span
-                        className="text-[10px] font-bold rounded border flex justify-between"
-                        style={{
-                          width: '62px',
-                          padding: '1px 5px',
-                          backgroundColor: '#F5F3FF',
-                          borderColor: '#DDD6FE',
-                          color: stats.waitingProf > 0 ? '#6D28D9' : '#C4B5FD',
-                          opacity: stats.waitingProf > 0 ? 1 : 0.5,
-                        }}
-                      >
+                      <span className="text-[10px] font-bold rounded border flex justify-between" style={{ width: '62px', padding: '1px 5px', backgroundColor: '#F5F3FF', borderColor: '#DDD6FE', color: stats.waitingProf > 0 ? '#6D28D9' : '#C4B5FD', opacity: stats.waitingProf > 0 ? 1 : 0.45 }}>
                         <span>교수</span><span>{stats.waitingProf}</span>
                       </span>
                     </span>
-                  </span>
+                  </div>
                 }
               />
           </div>
@@ -951,7 +924,7 @@ function TabBtn({ active, onClick, icon, children }) {
   );
 }
 
-function StatCard({ icon, label, value, accent, wide }) {
+function StatCard({ icon, label, value, accent }) {
   const colors = {
     slate: "text-slate-600 bg-slate-100",
     emerald: "text-emerald-700 bg-emerald-100",
@@ -962,10 +935,10 @@ function StatCard({ icon, label, value, accent, wide }) {
     violet: "text-violet-700 bg-violet-100",
   };
   return (
-    <div className={`bg-white rounded-lg border border-slate-200 p-2 sm:p-3 flex items-center gap-2 flex-shrink-0 lg:w-auto ${wide ? "w-[160px]" : "w-[140px]"}`} style={{ height: '64px', boxSizing: 'border-box' }}>
+    <div className="bg-white rounded-lg border border-slate-200 p-2 sm:p-3 flex items-center gap-2 flex-shrink-0" style={{ width: '185px', height: '64px', boxSizing: 'border-box' }}>
       <div className={`w-8 h-8 rounded-md flex items-center justify-center flex-shrink-0 ${colors[accent]}`}>{icon}</div>
       <div className="min-w-0 flex-1 flex flex-col justify-center" style={{ height: '100%' }}>
-        <div className="text-[11px] sm:text-xs text-slate-500 font-medium">{label}</div>
+        <div className="text-[11px] sm:text-xs text-slate-500 font-medium" style={{ whiteSpace: 'nowrap' }}>{label}</div>
         <div className="text-lg sm:text-xl font-bold text-slate-900 tabular-nums w-full">{value}</div>
       </div>
     </div>
