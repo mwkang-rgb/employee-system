@@ -181,6 +181,9 @@ export default function EmployeeManager() {
     const waiting     = waitingAll.length;
     const waitingEmp  = waitingAll.filter((e) => e.rank !== "교수").length;
     const waitingProf = waitingAll.filter((e) => e.rank === "교수").length;
+    if (waitingAll.length !== waitingEmp + waitingProf) {
+      console.warn('[대기인력] waiting 합계 불일치:', waitingAll.length, '!=', waitingEmp, '+', waitingProf);
+    }
     const ibks = employees.filter(e => e.affiliation === "IBKS").length;
     const partner = employees.filter(e => e.affiliation === "협력사").length;
     const projectCount = projects.filter(p => p.id !== "pool").length;
@@ -620,17 +623,35 @@ export default function EmployeeManager() {
                 value={
                   <span className="flex items-center justify-between w-full gap-1.5">
                     <span className="text-lg sm:text-xl font-bold text-slate-900 tabular-nums">{stats.waiting}</span>
-                    <span className="flex flex-row items-center gap-1">
-                      {stats.waitingEmp > 0 && (
-                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded border bg-blue-50 text-blue-700 border-blue-200 whitespace-nowrap">
-                          직원 {stats.waitingEmp}
-                        </span>
-                      )}
-                      {stats.waitingProf > 0 && (
-                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded border bg-purple-50 text-purple-700 border-purple-200 whitespace-nowrap">
-                          교수 {stats.waitingProf}
-                        </span>
-                      )}
+                    <span className="flex flex-col items-end gap-0.5">
+                      <span
+                        className="text-[10px] font-bold py-0.5 rounded border flex justify-between"
+                        style={{
+                          width: '62px',
+                          paddingLeft: '5px',
+                          paddingRight: '5px',
+                          backgroundColor: '#EFF6FF',
+                          borderColor: '#BFDBFE',
+                          color: stats.waitingEmp > 0 ? '#1D4ED8' : '#93C5FD',
+                          opacity: stats.waitingEmp > 0 ? 1 : 0.5,
+                        }}
+                      >
+                        <span>직원</span><span>{stats.waitingEmp}</span>
+                      </span>
+                      <span
+                        className="text-[10px] font-bold py-0.5 rounded border flex justify-between"
+                        style={{
+                          width: '62px',
+                          paddingLeft: '5px',
+                          paddingRight: '5px',
+                          backgroundColor: '#F5F3FF',
+                          borderColor: '#DDD6FE',
+                          color: stats.waitingProf > 0 ? '#6D28D9' : '#C4B5FD',
+                          opacity: stats.waitingProf > 0 ? 1 : 0.5,
+                        }}
+                      >
+                        <span>교수</span><span>{stats.waitingProf}</span>
+                      </span>
                     </span>
                   </span>
                 }
