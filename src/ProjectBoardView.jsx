@@ -251,6 +251,16 @@ export default function ProjectBoardView({
       {/* 검색 + 프로젝트 등록 — 고정 */}
       <div className="bg-white rounded-lg border border-slate-200 p-2 sm:p-3 mb-0 flex-shrink-0">
         <div className="flex gap-2 items-center">
+          <select
+            value={filterBoardType}
+            onChange={(e) => setFilterBoardType(e.target.value)}
+            className="px-3 py-1.5 text-sm border border-violet-300 rounded-md focus:outline-none focus:ring-2 focus:ring-violet-500 flex-shrink-0"
+          >
+            <option value="전체">유형 전체</option>
+            <option value="대외 프로젝트">대외 프로젝트</option>
+            <option value="행내 프로젝트">행내 프로젝트</option>
+            <option value="사내 프로젝트">사내 프로젝트</option>
+          </select>
           <div className="relative flex-1 min-w-0">
             <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
@@ -261,27 +271,15 @@ export default function ProjectBoardView({
               className="w-full pl-9 pr-3 py-1.5 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
           </div>
+          {filterBoardType !== "전체" && (
+            <span className="text-xs text-violet-600 font-medium flex-shrink-0">· 유형 필터 적용 중</span>
+          )}
           <button
             onClick={onNewProject}
             className="px-3 py-1.5 text-sm bg-indigo-600 text-white rounded-md hover:bg-indigo-700 flex items-center gap-1 font-medium flex-shrink-0"
           >
             <FolderPlus size={14} /> <span className="hidden sm:inline">프로젝트 </span>등록
           </button>
-        </div>
-        <div className="mt-1.5 flex items-center gap-2 flex-wrap">
-          {filterBoardType !== "전체" && (
-            <span className="text-xs text-violet-600 font-medium">· 유형 필터 적용 중</span>
-          )}
-          <select
-            value={filterBoardType}
-            onChange={(e) => setFilterBoardType(e.target.value)}
-            className="px-3 py-1.5 text-sm border border-violet-300 rounded-md bg-violet-50 focus:outline-none focus:ring-2 focus:ring-violet-500 flex-shrink-0"
-          >
-            <option value="전체">유형 전체</option>
-            <option value="대외 프로젝트">대외 프로젝트</option>
-            <option value="행내 프로젝트">행내 프로젝트</option>
-            <option value="사내 프로젝트">사내 프로젝트</option>
-          </select>
         </div>
         <div className="mt-1 text-[11px] sm:text-xs text-slate-500 flex items-center gap-1.5">
           <GripVertical size={12} className="flex-shrink-0" />
