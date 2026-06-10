@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
-import { X, Users, Briefcase, Calendar, CalendarClock, FolderKanban, LayoutList, Building2, LogOut, Trash2, UserX, FolderPlus, FolderOpen, ShieldCheck } from "lucide-react";
+import { X, Users, Briefcase, Calendar, CalendarClock, FolderKanban, LayoutList, Building2, LogOut, Trash2, UserX, FolderPlus, FolderOpen, ShieldCheck, ChevronDown, ChevronUp } from "lucide-react";
 import { useRealtimeSync } from "./useRealtimeSync.js";
 import { useAuth } from "./AuthContext.jsx";
 import { COLOR_MAP, COLOR_OPTIONS } from "./constants.js";
@@ -97,6 +97,19 @@ export default function EmployeeManager() {
     window.history.replaceState(null, "", url.toString());
   };
   const [loading, setLoading] = useState(false);
+
+  // 모바일 통계 바 더보기 펼침 상태 — 저장값 없으면 접힘(false)
+  const [statExpanded, setStatExpanded] = useState(() => {
+    try { return localStorage.getItem("stat-bar-mobile-expanded") === "true"; }
+    catch { return false; }
+  });
+  const toggleStatExpanded = () => {
+    setStatExpanded((prev) => {
+      const next = !prev;
+      try { localStorage.setItem("stat-bar-mobile-expanded", String(next)); } catch {}
+      return next;
+    });
+  };
 
   const [showEmpModal, setShowEmpModal] = useState(false);
   const [editingEmp, setEditingEmp] = useState(null);
@@ -640,11 +653,11 @@ export default function EmployeeManager() {
                 </div>
               }
             />
-            <StatCard icon={<Users size={18} />} label="전체 인원" value={stats.total} accent="slate" grow className="order-3 md:order-none" />
-            <StatCard icon={<Users size={18} />} label="IBKS" value={stats.ibks} accent="indigo" grow className="order-3 md:order-none" />
-            <StatCard icon={<Building2 size={18} />} label="협력사" value={stats.partner} accent="amber" grow className="order-3 md:order-none" />
-            <StatCard icon={<Briefcase size={18} />} label="투입중" value={stats.active} accent="emerald" grow className="order-3 md:order-none" />
-            <StatCard icon={<CalendarClock size={18} />} label="투입예정" value={stats.pending} accent="sky" grow className="order-3 md:order-none" />
+            <StatCard icon={<Users size={18} />} label="전체 인원" value={stats.total} accent="slate" grow className={`order-3 md:order-none ${statExpanded ? "" : "hidden"} md:flex`} />
+            <StatCard icon={<Users size={18} />} label="IBKS" value={stats.ibks} accent="indigo" grow className={`order-3 md:order-none ${statExpanded ? "" : "hidden"} md:flex`} />
+            <StatCard icon={<Building2 size={18} />} label="협력사" value={stats.partner} accent="amber" grow className={`order-3 md:order-none ${statExpanded ? "" : "hidden"} md:flex`} />
+            <StatCard icon={<Briefcase size={18} />} label="투입중" value={stats.active} accent="emerald" grow className={`order-3 md:order-none ${statExpanded ? "" : "hidden"} md:flex`} />
+            <StatCard icon={<CalendarClock size={18} />} label="투입예정" value={stats.pending} accent="sky" grow className={`order-3 md:order-none ${statExpanded ? "" : "hidden"} md:flex`} />
             <StatCard
                 icon={<Calendar size={18} />}
                 label="대기 인력"
@@ -664,6 +677,17 @@ export default function EmployeeManager() {
                   </div>
                 }
               />
+            <button
+              type="button"
+              onClick={toggleStatExpanded}
+              className="col-span-2 order-4 md:hidden flex items-center justify-center gap-1 h-9 rounded-lg border border-slate-200 bg-white text-xs font-medium text-slate-600"
+            >
+              {statExpanded ? (
+                <><span>접기</span><ChevronUp size={14} /></>
+              ) : (
+                <><span>전체 지표 더보기</span><ChevronDown size={14} /></>
+              )}
+            </button>
           </div>
         </div>
 
