@@ -71,6 +71,18 @@ export default function EmployeeFormModal({
             />
           </Field>
 
+          <Field label="사번 *">
+            <input
+              type="text"
+              value={editingEmp.employeeNo || ""}
+              onChange={(e) => setEditingEmp({ ...editingEmp, employeeNo: e.target.value })}
+              autoComplete="off"
+              className="w-full px-3 py-2 text-base sm:text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              placeholder="예: 2021045"
+            />
+            <p className="mt-1 text-[11px] text-slate-500">사번은 사람 식별자입니다. 같은 사람을 여러 프로젝트에 등록할 때 동일 사번을 입력하면 통계에서 1명으로 집계됩니다.</p>
+          </Field>
+
           <div className="grid grid-cols-2 gap-3">
             <Field label="소속 *">
               <select

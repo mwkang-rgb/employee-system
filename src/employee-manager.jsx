@@ -24,6 +24,7 @@ function dbToApp(row) {
     pooledAt: row.pooled_at ?? row.pooledAt,
     assignmentType: row.assignment_type ?? row.assignmentType,
     residencyType: row.residency_type ?? row.residencyType ?? "상주",
+    employeeNo: row.employee_no ?? row.employeeNo ?? null,
   };
 }
 
@@ -37,6 +38,7 @@ function appToDb(obj) {
   if ('assignmentHistory' in result) { delete result.assignmentHistory; }
   if ('assignmentType' in result) { result.assignment_type = result.assignmentType; delete result.assignmentType; }
   if ('residencyType' in result) { result.residency_type = result.residencyType; delete result.residencyType; }
+  if ('employeeNo' in result) { result.employee_no = (result.employeeNo && String(result.employeeNo).trim()) || null; delete result.employeeNo; }
   return result;
 }
 
@@ -189,20 +191,25 @@ export default function EmployeeManager() {
   }, [employees]);
 
   const stats = useMemo(() => {
-    const total = employees.length;
-    const active = employees.filter((e) => resolveStatus(e, projectById[e.projectId]?.name).label === "투입중").length;
-    const pending = employees.filter((e) => resolveStatus(e, projectById[e.projectId]?.name).label === "투입예정").length;
+    // 사람 식별 키 — 사번이 있으면 사번 기준, 없으면 행 id로 폴백(각자 1명)
+    const personKey = (e) => (e.employeeNo && String(e.employeeNo).trim() !== "")
+      ? `no:${String(e.employeeNo).trim()}` : `id:${e.id}`;
+    const distinctCount = (arr) => new Set(arr.map(personKey)).size;
+
+    const total = distinctCount(employees);
+    const active = distinctCount(employees.filter((e) => resolveStatus(e, projectById[e.projectId]?.name).label === "투입중"));
+    const pending = distinctCount(employees.filter((e) => resolveStatus(e, projectById[e.projectId]?.name).label === "투입예정"));
     const waitingAll  = employees.filter((e) => e.projectId === "pool");
-    const waiting     = waitingAll.length;
-    const waitingEmp  = waitingAll.filter((e) => e.rank !== "교수").length;
-    const waitingProf = waitingAll.filter((e) => e.rank === "교수").length;
-    if (waitingAll.length !== waitingEmp + waitingProf) {
-      console.warn('[대기인력] waiting 합계 불일치:', waitingAll.length, '!=', waitingEmp, '+', waitingProf);
+    const waiting     = distinctCount(waitingAll);
+    const waitingEmp  = distinctCount(waitingAll.filter((e) => e.rank !== "교수"));
+    const waitingProf = distinctCount(waitingAll.filter((e) => e.rank === "교수"));
+    if (waiting !== waitingEmp + waitingProf) {
+      console.warn('[대기인력] waiting 고유인원 합계 불일치:', waiting, '!=', waitingEmp, '+', waitingProf);
     }
-    const ibks = employees.filter(e => e.affiliation === "IBKS").length;
-    const partner = employees.filter(e => e.affiliation === "협력사").length;
-    const resident    = employees.filter(e => (e.residencyType ?? "상주") === "상주").length;
-    const nonResident = employees.filter(e => e.residencyType === "비상주").length;
+    const ibks = distinctCount(employees.filter(e => e.affiliation === "IBKS"));
+    const partner = distinctCount(employees.filter(e => e.affiliation === "협력사"));
+    const resident    = distinctCount(employees.filter(e => (e.residencyType ?? "상주") === "상주"));
+    const nonResident = distinctCount(employees.filter(e => e.residencyType === "비상주"));
     const activeProjects = projects.filter(p => p.id !== "pool");
     const projectCount = activeProjects.length;
     const projectExt  = activeProjects.filter(p => p.projectType === "대외 프로젝트").length;
@@ -217,7 +224,7 @@ export default function EmployeeManager() {
   }, [employees, projects]);
 
   const openNewEmp = () => {
-    setEditingEmp({ id: null, name: "", rank: "사원", projectId: "", startDate: "", endDate: "", affiliation: "IBKS", partnerName: "", duty: "", role: "", assignmentType: "", residencyType: "상주" });
+    setEditingEmp({ id: null, name: "", employeeNo: "", rank: "사원", projectId: "", startDate: "", endDate: "", affiliation: "IBKS", partnerName: "", duty: "", role: "", assignmentType: "", residencyType: "상주" });
     setShowEmpModal(true);
   };
   const openEditEmp = (emp) => {
@@ -246,6 +253,9 @@ export default function EmployeeManager() {
     const indetermEnd = editingEmp.endDate === "9999-12-31";
     if (!editingEmp.name.trim()) {
       showAlert("알림", "직원명은 필수 입력입니다."); return;
+    }
+    if (!editingEmp.employeeNo || String(editingEmp.employeeNo).trim() === "") {
+      showAlert("입력 오류", "사번을 입력해 주세요."); return;
     }
     if (editingEmp.affiliation === "협력사" && !editingEmp.partnerName.trim()) {
       showAlert("알림", "협력사를 선택한 경우 협력사명을 입력해야 합니다."); return;
@@ -351,6 +361,7 @@ export default function EmployeeManager() {
 
     const projByName = Object.fromEntries(projects.map(p => [p.name, p.id]));
     const payloadErrors = [];
+    const skippedNoEmpNo = [];
     const payloads = rows.map((row, i) => {
       const assignmentType = row["투입형태"].toString().trim();
       const projName = row["투입프로젝트"]?.toString().trim() || "";
@@ -363,11 +374,17 @@ export default function EmployeeManager() {
         payloadErrors.push(`${i + 2}행: 프로젝트 '${projName}'을 찾을 수 없습니다`);
         return null;
       }
+      const empNo = (row["사번"] || "").toString().trim();
+      if (!empNo) {
+        skippedNoEmpNo.push(`${i + 2}행(${row["이름"]?.toString().trim() || "이름없음"})`);
+        return null;
+      }
       const 소속 = row["소속"].toString().trim();
       const rawStart = row["투입일자"]?.toString().trim() || "";
       const rawEnd   = row["철수일자"]?.toString().trim() || "";
       return {
         name: row["이름"].toString().trim(),
+        employee_no: empNo,
         affiliation: 소속 === "IBKS" ? "IBKS" : "협력사",
         partner_name: 소속 === "IBKS" ? "" : 소속,
         rank: row["직급"].toString().trim(),
@@ -402,7 +419,11 @@ export default function EmployeeManager() {
     const { data, error: fetchErr } = await supabase.from("employees").select("*");
     if (!fetchErr) setEmployees((data || []).map(dbToApp));
 
-    showAlert("알림", `${payloads.length}건의 직원 정보가 업로드되었습니다.`);
+    let msg = `${payloads.length}건의 직원 정보가 업로드되었습니다.`;
+    if (skippedNoEmpNo.length > 0) {
+      msg += `\n\n사번이 비어 있어 등록하지 않은 행 ${skippedNoEmpNo.length}건:\n` + skippedNoEmpNo.join(", ");
+    }
+    showAlert("알림", msg);
   };
 
   const openNewProj = () => {
