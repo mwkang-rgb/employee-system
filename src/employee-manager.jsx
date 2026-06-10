@@ -749,19 +749,14 @@ export default function EmployeeManager() {
                   </div>
                 }
               />
-            <StatCard icon={<Users size={18} />} label="전체 인원" value={stats.total} accent="slate" grow className={`order-3 md:order-none ${statExpanded ? "" : "hidden"} md:flex`} />
-            <StatCard icon={<Users size={18} />} label="IBKS" value={stats.ibks} accent="indigo" grow className={`order-3 md:order-none ${statExpanded ? "" : "hidden"} md:flex`} />
-            <StatCard icon={<Building2 size={18} />} label="협력사" value={stats.partner} accent="amber" grow className={`order-3 md:order-none ${statExpanded ? "" : "hidden"} md:flex`} />
-            <StatCard icon={<Briefcase size={18} />} label="투입중" value={stats.active} accent="emerald" grow className={`order-3 md:order-none ${statExpanded ? "" : "hidden"} md:flex`} />
-            <StatCard icon={<CalendarClock size={18} />} label="투입 예정" value={stats.pending} accent="sky" grow className={`order-3 md:order-none ${statExpanded ? "" : "hidden"} md:flex`} />
             <StatCard
-                icon={<Building2 size={18} />}
-                label="상주 구분"
-                accent="violet"
+                icon={<Users size={18} />}
+                label="전체 인원"
+                accent="slate"
                 className={`col-span-2 order-3 md:order-none md:flex-none md:w-[195px] ${statExpanded ? "" : "hidden"} md:flex`}
                 value={
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-                    <span className="text-lg sm:text-xl font-bold text-slate-900 tabular-nums">{stats.resident + stats.nonResident}</span>
+                    <span className="text-lg sm:text-xl font-bold text-slate-900 tabular-nums">{stats.total}</span>
                     <span style={{ display: 'flex', flexDirection: 'row', gap: '3px', alignItems: 'center', flexShrink: 0 }}>
                       <span className="text-[10px] font-bold rounded border flex gap-1" style={{ padding: '1px 5px', backgroundColor: '#F0FDF4', borderColor: '#BBF7D0', color: stats.resident > 0 ? '#15803D' : '#86EFAC', opacity: stats.resident > 0 ? 1 : 0.45 }}>
                         <span>상주</span><span>{stats.resident}</span>
@@ -773,6 +768,10 @@ export default function EmployeeManager() {
                   </div>
                 }
               />
+            <StatCard icon={<Users size={18} />} label="IBKS" value={stats.ibks} accent="indigo" grow className={`order-3 md:order-none ${statExpanded ? "" : "hidden"} md:flex`} />
+            <StatCard icon={<Building2 size={18} />} label="협력사" value={stats.partner} accent="amber" grow className={`order-3 md:order-none ${statExpanded ? "" : "hidden"} md:flex`} />
+            <StatCard icon={<Briefcase size={18} />} label="투입중" value={stats.active} accent="emerald" grow className={`order-3 md:order-none ${statExpanded ? "" : "hidden"} md:flex`} />
+            <StatCard icon={<CalendarClock size={18} />} label="투입 예정" value={stats.pending} accent="sky" grow className={`order-3 md:order-none ${statExpanded ? "" : "hidden"} md:flex`} />
             <button
               type="button"
               onClick={toggleStatExpanded}
