@@ -730,11 +730,6 @@ export default function EmployeeManager() {
                 </div>
               }
             />
-            <StatCard icon={<Users size={18} />} label="전체 인원" value={stats.total} accent="slate" grow className={`order-3 md:order-none ${statExpanded ? "" : "hidden"} md:flex`} />
-            <StatCard icon={<Users size={18} />} label="IBKS" value={stats.ibks} accent="indigo" grow className={`order-3 md:order-none ${statExpanded ? "" : "hidden"} md:flex`} />
-            <StatCard icon={<Building2 size={18} />} label="협력사" value={stats.partner} accent="amber" grow className={`order-3 md:order-none ${statExpanded ? "" : "hidden"} md:flex`} />
-            <StatCard icon={<Briefcase size={18} />} label="투입중" value={stats.active} accent="emerald" grow className={`order-3 md:order-none ${statExpanded ? "" : "hidden"} md:flex`} />
-            <StatCard icon={<CalendarClock size={18} />} label="투입예정" value={stats.pending} accent="sky" grow className={`order-3 md:order-none ${statExpanded ? "" : "hidden"} md:flex`} />
             <StatCard
                 icon={<Calendar size={18} />}
                 label="대기 인력"
@@ -754,6 +749,11 @@ export default function EmployeeManager() {
                   </div>
                 }
               />
+            <StatCard icon={<Users size={18} />} label="전체 인원" value={stats.total} accent="slate" grow className={`order-3 md:order-none ${statExpanded ? "" : "hidden"} md:flex`} />
+            <StatCard icon={<Users size={18} />} label="IBKS" value={stats.ibks} accent="indigo" grow className={`order-3 md:order-none ${statExpanded ? "" : "hidden"} md:flex`} />
+            <StatCard icon={<Building2 size={18} />} label="협력사" value={stats.partner} accent="amber" grow className={`order-3 md:order-none ${statExpanded ? "" : "hidden"} md:flex`} />
+            <StatCard icon={<Briefcase size={18} />} label="투입중" value={stats.active} accent="emerald" grow className={`order-3 md:order-none ${statExpanded ? "" : "hidden"} md:flex`} />
+            <StatCard icon={<CalendarClock size={18} />} label="투입 예정" value={stats.pending} accent="sky" grow className={`order-3 md:order-none ${statExpanded ? "" : "hidden"} md:flex`} />
             <StatCard
                 icon={<Building2 size={18} />}
                 label="상주 구분"
