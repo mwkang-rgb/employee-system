@@ -616,13 +616,13 @@ export default function EmployeeManager() {
         </div>
 
         {/* 통계 카드 */}
-        <div className="mb-0 py-1.5 overflow-x-auto lg:overflow-visible flex-shrink-0">
-          <div className="flex gap-2 sm:gap-3 w-full">
+        <div className="mb-0 py-1.5 flex-shrink-0 md:overflow-x-auto lg:overflow-visible">
+          <div className="grid grid-cols-2 gap-2 md:flex md:gap-3 md:w-full">
             <StatCard
               icon={<FolderKanban size={18} />}
               label="프로젝트"
               accent="violet"
-              width="220px"
+              className="col-span-2 order-1 md:order-none md:flex-none md:w-[220px]"
               value={
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
                   <span className="text-lg sm:text-xl font-bold text-slate-900 tabular-nums">{stats.projectCount}</span>
@@ -640,16 +640,16 @@ export default function EmployeeManager() {
                 </div>
               }
             />
-            <StatCard icon={<Users size={18} />} label="전체 인원" value={stats.total} accent="slate" grow />
-            <StatCard icon={<Users size={18} />} label="IBKS" value={stats.ibks} accent="indigo" grow />
-            <StatCard icon={<Building2 size={18} />} label="협력사" value={stats.partner} accent="amber" grow />
-            <StatCard icon={<Briefcase size={18} />} label="투입중" value={stats.active} accent="emerald" grow />
-            <StatCard icon={<CalendarClock size={18} />} label="투입예정" value={stats.pending} accent="sky" grow />
+            <StatCard icon={<Users size={18} />} label="전체 인원" value={stats.total} accent="slate" grow className="order-3 md:order-none" />
+            <StatCard icon={<Users size={18} />} label="IBKS" value={stats.ibks} accent="indigo" grow className="order-3 md:order-none" />
+            <StatCard icon={<Building2 size={18} />} label="협력사" value={stats.partner} accent="amber" grow className="order-3 md:order-none" />
+            <StatCard icon={<Briefcase size={18} />} label="투입중" value={stats.active} accent="emerald" grow className="order-3 md:order-none" />
+            <StatCard icon={<CalendarClock size={18} />} label="투입예정" value={stats.pending} accent="sky" grow className="order-3 md:order-none" />
             <StatCard
                 icon={<Calendar size={18} />}
                 label="대기 인력"
                 accent="rose"
-                width="195px"
+                className="col-span-2 order-2 md:order-none md:flex-none md:w-[195px]"
                 value={
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
                     <span className="text-lg sm:text-xl font-bold text-slate-900 tabular-nums">{stats.waiting}</span>
@@ -922,7 +922,7 @@ function TabBtn({ active, onClick, icon, children }) {
   );
 }
 
-function StatCard({ icon, label, value, accent, width, grow }) {
+function StatCard({ icon, label, value, accent, grow, className = "" }) {
   const colors = {
     slate: "text-slate-600 bg-slate-100",
     emerald: "text-emerald-700 bg-emerald-100",
@@ -933,7 +933,7 @@ function StatCard({ icon, label, value, accent, width, grow }) {
     violet: "text-violet-700 bg-violet-100",
   };
   return (
-    <div className="bg-white rounded-lg border border-slate-200 p-2 sm:p-3 flex items-center gap-2" style={{ width: width || 'auto', flex: grow ? '1 1 0' : '0 0 auto', minWidth: grow ? '100px' : undefined, height: '60px', boxSizing: 'border-box' }}>
+    <div className={`bg-white rounded-lg border border-slate-200 p-2 sm:p-3 flex items-center gap-2 ${grow ? "md:flex-1 md:min-w-[100px]" : ""} ${className}`} style={{ height: '60px', boxSizing: 'border-box' }}>
       <div className={`w-8 h-8 rounded-md flex items-center justify-center flex-shrink-0 ${colors[accent]}`}>{icon}</div>
       <div className="min-w-0 flex-1 flex flex-col justify-center" style={{ height: '100%' }}>
         <div className="text-[11px] sm:text-xs text-slate-500 font-medium" style={{ whiteSpace: 'nowrap' }}>{label}</div>
