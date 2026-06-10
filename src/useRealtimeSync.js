@@ -35,6 +35,7 @@ function rawToApp(row) {
     partnerName: row.partner_name ?? row.partnerName,
     pooledAt: row.pooled_at ?? row.pooledAt,
     assignmentType: row.assignment_type ?? row.assignmentType,
+    residencyType: row.residency_type ?? row.residencyType ?? "상주",
   };
 }
 

@@ -1,6 +1,6 @@
-import { X, UserPlus, UserCog } from "lucide-react";
+import { X, UserPlus, UserCog, Building2, Home } from "lucide-react";
 import {
-  AFFILIATIONS, RANKS, ASSIGNMENT_TYPES, ASSIGNMENT_TYPE_STYLES, SAMPLE_PARTNERS,
+  AFFILIATIONS, RANKS, ASSIGNMENT_TYPES, ASSIGNMENT_TYPE_STYLES, SAMPLE_PARTNERS, RESIDENCY_TYPES,
 } from "./constants.js";
 
 // 폼 필드 라벨 + 입력창 묶음 (이 파일 내부 로컬 컴포넌트)
@@ -137,6 +137,26 @@ export default function EmployeeFormModal({
               />
             </Field>
           </div>
+
+          <Field label="상주 구분 *">
+            <div className="grid grid-cols-2 gap-2">
+              {RESIDENCY_TYPES.map((type) => {
+                const selected = (editingEmp.residencyType || "상주") === type;
+                const Icon = type === "상주" ? Building2 : Home;
+                return (
+                  <button
+                    key={type}
+                    type="button"
+                    onClick={() => setEditingEmp({ ...editingEmp, residencyType: type })}
+                    className={`flex items-center justify-center gap-1.5 px-3 py-2 text-base sm:text-sm font-medium rounded-md border transition-colors ${selected ? "bg-indigo-600 text-white border-indigo-600" : "bg-white text-slate-600 border-slate-300 hover:bg-slate-50"}`}
+                  >
+                    <Icon size={16} />
+                    {type}
+                  </button>
+                );
+              })}
+            </div>
+          </Field>
 
           <Field label="투입 형태 *">
             <select

@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef, useEffect } from "react";
-import { Search, Edit2, Trash2, GripVertical, FolderPlus, Building2, Briefcase, UserCheck, Clock, CalendarClock, CheckCircle2, LogOut, Timer, Calendar, Users, Tag, ChevronDown, ChevronRight, ArrowRightLeft, X } from "lucide-react";
+import { Search, Edit2, Trash2, GripVertical, FolderPlus, Building2, Briefcase, UserCheck, Clock, CalendarClock, CheckCircle2, LogOut, Timer, Calendar, Users, Tag, ChevronDown, ChevronRight, ArrowRightLeft, X, Home } from "lucide-react";
 import { COLOR_MAP, POOL_SORT_OPTIONS, RANK_ORDER } from "./constants.js";
 import { resolveStatus, calcWaitingDuration, formatWaitingLabel } from "./helpers.js";
 
@@ -130,6 +130,17 @@ function EmployeeCardContent({ emp, empStatus, isPool, projectById, leading = nu
       </div>
       <div className="mt-1.5 flex flex-wrap gap-1 min-w-0 overflow-hidden">
         <AffiliationBadge affiliation={emp.affiliation} partnerName={emp.partnerName} />
+        {emp.residencyType === "비상주" ? (
+          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-medium rounded border bg-violet-50 text-violet-700 border-violet-200">
+            <Home size={10} />
+            비상주
+          </span>
+        ) : (
+          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-medium rounded border bg-emerald-50 text-emerald-700 border-emerald-200">
+            <Building2 size={10} />
+            상주
+          </span>
+        )}
         {emp.duty && emp.duty !== "없음" && (
           <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-medium rounded border bg-slate-50 text-slate-600 border-slate-200">
             <Briefcase size={10} />

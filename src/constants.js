@@ -9,6 +9,7 @@ export const SAMPLE_ROLES = ["프로젝트 총괄", "파트 리더", "백엔드 
 
 // 투입 형태
 export const ASSIGNMENT_TYPES = ["대기", "계약", "비계약", "지원", "투입예정"];
+export const RESIDENCY_TYPES = ["상주", "비상주"];
 export const ASSIGNMENT_TYPE_STYLES = {
   "대기":   { badge: "bg-slate-100 text-slate-600 border-slate-300", dot: "bg-slate-400", desc: "현재 투입 프로젝트 없음 (대기 상태)" },
   "계약":   { badge: "bg-blue-50 text-blue-700 border-blue-200",   dot: "bg-blue-500",   desc: "공식 계약 기반 투입 (수임/도급)" },

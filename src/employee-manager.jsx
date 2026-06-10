@@ -23,6 +23,7 @@ function dbToApp(row) {
     partnerName: row.partner_name ?? row.partnerName,
     pooledAt: row.pooled_at ?? row.pooledAt,
     assignmentType: row.assignment_type ?? row.assignmentType,
+    residencyType: row.residency_type ?? row.residencyType ?? "상주",
   };
 }
 
@@ -35,6 +36,7 @@ function appToDb(obj) {
   if ('pooledAt' in result) { result.pooled_at = result.pooledAt; delete result.pooledAt; }
   if ('assignmentHistory' in result) { delete result.assignmentHistory; }
   if ('assignmentType' in result) { result.assignment_type = result.assignmentType; delete result.assignmentType; }
+  if ('residencyType' in result) { result.residency_type = result.residencyType; delete result.residencyType; }
   return result;
 }
 
@@ -199,6 +201,8 @@ export default function EmployeeManager() {
     }
     const ibks = employees.filter(e => e.affiliation === "IBKS").length;
     const partner = employees.filter(e => e.affiliation === "협력사").length;
+    const resident    = employees.filter(e => (e.residencyType ?? "상주") === "상주").length;
+    const nonResident = employees.filter(e => e.residencyType === "비상주").length;
     const activeProjects = projects.filter(p => p.id !== "pool");
     const projectCount = activeProjects.length;
     const projectExt  = activeProjects.filter(p => p.projectType === "대외 프로젝트").length;
@@ -209,11 +213,11 @@ export default function EmployeeManager() {
       console.warn('[프로젝트] 유형 합계 불일치 (미입력 데이터 존재 가능):', projectCount, '!=', projectExt, '+', projectBank, '+', projectInt);
     }
 
-    return { total, active, pending, waiting, waitingEmp, waitingProf, ibks, partner, projectCount, projectExt, projectBank, projectInt };
+    return { total, active, pending, waiting, waitingEmp, waitingProf, ibks, partner, resident, nonResident, projectCount, projectExt, projectBank, projectInt };
   }, [employees, projects]);
 
   const openNewEmp = () => {
-    setEditingEmp({ id: null, name: "", rank: "사원", projectId: "", startDate: "", endDate: "", affiliation: "IBKS", partnerName: "", duty: "", role: "", assignmentType: "" });
+    setEditingEmp({ id: null, name: "", rank: "사원", projectId: "", startDate: "", endDate: "", affiliation: "IBKS", partnerName: "", duty: "", role: "", assignmentType: "", residencyType: "상주" });
     setShowEmpModal(true);
   };
   const openEditEmp = (emp) => {
@@ -370,6 +374,7 @@ export default function EmployeeManager() {
         duty: (row["직무"] || "").toString().trim() || "없음",
         role: (row["역할"] || "").toString().trim() || "없음",
         assignment_type: assignmentType,
+        residency_type: "상주",
         project_id: projectId,
         start_date: isPool ? null : (rawStart || "1111-01-01"),
         end_date:   isPool ? null : (rawEnd   || "9999-12-31"),
@@ -672,6 +677,25 @@ export default function EmployeeManager() {
                       </span>
                       <span className="text-[10px] font-bold rounded border flex gap-1" style={{ padding: '1px 5px', backgroundColor: '#F5F3FF', borderColor: '#DDD6FE', color: stats.waitingProf > 0 ? '#6D28D9' : '#C4B5FD', opacity: stats.waitingProf > 0 ? 1 : 0.45 }}>
                         <span>교수</span><span>{stats.waitingProf}</span>
+                      </span>
+                    </span>
+                  </div>
+                }
+              />
+            <StatCard
+                icon={<Building2 size={18} />}
+                label="상주 구분"
+                accent="violet"
+                className={`col-span-2 order-3 md:order-none md:flex-none md:w-[195px] ${statExpanded ? "" : "hidden"} md:flex`}
+                value={
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                    <span className="text-lg sm:text-xl font-bold text-slate-900 tabular-nums">{stats.resident + stats.nonResident}</span>
+                    <span style={{ display: 'flex', flexDirection: 'row', gap: '3px', alignItems: 'center', flexShrink: 0 }}>
+                      <span className="text-[10px] font-bold rounded border flex gap-1" style={{ padding: '1px 5px', backgroundColor: '#F0FDF4', borderColor: '#BBF7D0', color: stats.resident > 0 ? '#15803D' : '#86EFAC', opacity: stats.resident > 0 ? 1 : 0.45 }}>
+                        <span>상주</span><span>{stats.resident}</span>
+                      </span>
+                      <span className="text-[10px] font-bold rounded border flex gap-1" style={{ padding: '1px 5px', backgroundColor: '#F5F3FF', borderColor: '#DDD6FE', color: stats.nonResident > 0 ? '#6D28D9' : '#C4B5FD', opacity: stats.nonResident > 0 ? 1 : 0.45 }}>
+                        <span>비상주</span><span>{stats.nonResident}</span>
                       </span>
                     </span>
                   </div>
