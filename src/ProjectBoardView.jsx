@@ -20,13 +20,13 @@ const loadColumnOrder = () => {
   try { return JSON.parse(localStorage.getItem(BOARD_COLUMN_ORDER_KEY) || "null"); }
   catch { return null; }
 };
-// 모바일 아코디언 펼침 상태 — 저장값이 없으면 대기(pool)만 기본 펼침
+// 모바일 아코디언 펼침 상태 — 저장값이 없으면(최초 방문) 모든 컬럼을 접은 채 시작
 const loadMobileExpanded = () => {
   try {
     const raw = localStorage.getItem(BOARD_MOBILE_EXPANDED_KEY);
-    if (raw == null) return ["pool"];
+    if (raw == null) return [];
     return JSON.parse(raw);
-  } catch { return ["pool"]; }
+  } catch { return []; }
 };
 
 // 화면 폭 768px(Tailwind md) 미만이면 모바일로 판단
