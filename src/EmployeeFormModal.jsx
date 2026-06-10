@@ -26,6 +26,7 @@ export default function EmployeeFormModal({
   if (!editingEmp) return null;
 
   const isNew = editingEmp.id === null;
+  const isAddAssignment = !!editingEmp.__addAssignment;
   const isPool = editingEmp.projectId === "pool";
   const isPending = editingEmp.assignmentType === "투입예정";
   const dateDisabled = isPool || isPending;
@@ -51,7 +52,7 @@ export default function EmployeeFormModal({
                 : <UserCog size={18} className="text-indigo-600" />}
             </div>
             <h2 className="text-base sm:text-lg font-bold text-slate-900">
-              {isNew ? "직원 등록" : "직원 정보 수정"}
+              {isAddAssignment ? "추가 투입" : isNew ? "직원 등록" : "직원 정보 수정"}
             </h2>
           </div>
           <button onClick={onClose} className="text-slate-400 hover:text-slate-600">
@@ -61,12 +62,16 @@ export default function EmployeeFormModal({
 
         {/* 입력 폼 */}
         <div className="p-4 sm:p-5 space-y-3 sm:space-y-4 overflow-y-auto overflow-x-hidden flex-1">
+          {isAddAssignment && (
+            <p className="text-[11px] text-violet-700 bg-violet-50 border border-violet-200 rounded-md px-3 py-2">기존 직원의 추가 투입입니다. 인물 정보는 잠기며, 프로젝트·투입 정보만 입력합니다.</p>
+          )}
           <Field label="직원명 *">
             <input
               type="text"
               value={editingEmp.name}
               onChange={(e) => setEditingEmp({ ...editingEmp, name: e.target.value })}
-              className="w-full px-3 py-2 text-base sm:text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              disabled={isAddAssignment}
+              className={`w-full px-3 py-2 text-base sm:text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 ${isAddAssignment ? "bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed" : "border-slate-300"}`}
               placeholder="홍길동"
             />
           </Field>
@@ -76,8 +81,9 @@ export default function EmployeeFormModal({
               type="text"
               value={editingEmp.employeeNo || ""}
               onChange={(e) => setEditingEmp({ ...editingEmp, employeeNo: e.target.value })}
+              disabled={isAddAssignment}
               autoComplete="off"
-              className="w-full px-3 py-2 text-base sm:text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className={`w-full px-3 py-2 text-base sm:text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 ${isAddAssignment ? "bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed" : "border-slate-300"}`}
               placeholder="예: 2021045"
             />
             <p className="mt-1 text-[11px] text-slate-500">사번은 사람 식별자입니다. 같은 사람을 여러 프로젝트에 등록할 때 동일 사번을 입력하면 통계에서 1명으로 집계됩니다.</p>
@@ -88,7 +94,8 @@ export default function EmployeeFormModal({
               <select
                 value={editingEmp.affiliation}
                 onChange={(e) => setEditingEmp({ ...editingEmp, affiliation: e.target.value })}
-                className="w-full px-3 py-2 text-base sm:text-sm border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                disabled={isAddAssignment}
+                className={`w-full px-3 py-2 text-base sm:text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 ${isAddAssignment ? "bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed" : "border-slate-300 bg-white"}`}
               >
                 {AFFILIATIONS.map(a => <option key={a} value={a}>{a}</option>)}
               </select>
@@ -97,7 +104,8 @@ export default function EmployeeFormModal({
               <select
                 value={editingEmp.rank}
                 onChange={(e) => setEditingEmp({ ...editingEmp, rank: e.target.value })}
-                className="w-full px-3 py-2 text-base sm:text-sm border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                disabled={isAddAssignment}
+                className={`w-full px-3 py-2 text-base sm:text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 ${isAddAssignment ? "bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed" : "border-slate-300 bg-white"}`}
               >
                 {RANKS.map((r) => <option key={r} value={r}>{r}</option>)}
               </select>
@@ -160,7 +168,8 @@ export default function EmployeeFormModal({
                     key={type}
                     type="button"
                     onClick={() => setEditingEmp({ ...editingEmp, residencyType: type })}
-                    className={`flex items-center justify-center gap-1.5 px-3 py-2 text-base sm:text-sm font-medium rounded-md border transition-colors ${selected ? "bg-indigo-600 text-white border-indigo-600" : "bg-white text-slate-600 border-slate-300 hover:bg-slate-50"}`}
+                    disabled={isAddAssignment}
+                    className={`flex items-center justify-center gap-1.5 px-3 py-2 text-base sm:text-sm font-medium rounded-md border transition-colors ${selected ? "bg-indigo-600 text-white border-indigo-600" : "bg-white text-slate-600 border-slate-300 hover:bg-slate-50"} ${isAddAssignment ? "opacity-60 cursor-not-allowed" : ""}`}
                   >
                     <Icon size={16} />
                     {type}

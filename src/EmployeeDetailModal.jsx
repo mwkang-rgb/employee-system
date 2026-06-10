@@ -1,4 +1,4 @@
-import { X, Edit2, Briefcase, Building2, UserCheck, FileText, Clock, CalendarClock, CheckCircle2, LogOut } from "lucide-react";
+import { X, Edit2, Briefcase, Building2, UserCheck, FileText, Clock, CalendarClock, CheckCircle2, LogOut, Plus } from "lucide-react";
 import { ASSIGNMENT_TYPE_STYLES } from "./constants.js";
 import { calcWaitingDuration, formatWaitingLabel, resolveStatus } from "./helpers.js";
 
@@ -35,7 +35,7 @@ function DetailRow({ label, children }) {
 //   projectById — { [id]: project } 맵
 //   onClose     — 닫기 버튼 / 배경 클릭 시 호출
 //   onEdit      — "정보 수정" 버튼 클릭 시 호출
-export default function EmployeeDetailModal({ detailEmp, assignmentHistory, projectById, onClose, onEdit }) {
+export default function EmployeeDetailModal({ detailEmp, assignmentHistory, projectById, onClose, onEdit, onAddAssignment }) {
   if (!detailEmp) return null;
 
   const projectName = projectById[detailEmp.projectId]?.name;
@@ -225,6 +225,14 @@ export default function EmployeeDetailModal({ detailEmp, assignmentHistory, proj
 
         {/* 하단 버튼 */}
         <div className="px-4 sm:px-5 py-3 sm:py-4 border-t border-slate-200 flex justify-end gap-2 bg-slate-50 flex-shrink-0">
+          {detailEmp?.residencyType === "비상주" && (
+            <button
+              onClick={() => onAddAssignment?.(detailEmp)}
+              className="px-4 py-2 text-sm border border-violet-300 rounded-md bg-violet-50 hover:bg-violet-100 text-violet-700 flex items-center gap-1"
+            >
+              <Plus size={13} /> 추가 투입
+            </button>
+          )}
           <button
             onClick={onEdit}
             className="px-4 py-2 text-sm border border-slate-300 rounded-md bg-white hover:bg-slate-100 text-slate-700 flex items-center gap-1"

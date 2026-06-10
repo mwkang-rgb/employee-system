@@ -234,6 +234,21 @@ export default function EmployeeManager() {
     setEditingEmp(normalized);
     setShowEmpModal(true);
   };
+  // 비상주 직원의 추가 투입 — 같은 사번으로 새 행 생성, 인물정보는 잠금
+  const openAddAssignment = (emp) => {
+    setDetailEmp(null);
+    setDetailEmpHistory([]);
+    setEditingEmp({
+      id: null,
+      name: emp.name, rank: emp.rank, affiliation: emp.affiliation,
+      partnerName: emp.partnerName, employeeNo: emp.employeeNo,
+      residencyType: "비상주",
+      projectId: "", assignmentType: "", duty: "", role: "",
+      startDate: "", endDate: "", pooledAt: null,
+      __addAssignment: true,
+    });
+    setShowEmpModal(true);
+  };
   const removeEmp = (id) => {
     const emp = employees.find(e => e.id === id);
     setDeleteEmpConfirm({ id, name: emp?.name ?? "" });
@@ -284,6 +299,27 @@ export default function EmployeeManager() {
       showAlert("날짜 입력 오류", "철수일자는 투입일자보다 빠를 수 없습니다."); return;
     }
 
+    // 다중 투입 가드 — 사번 기준 (DB UNIQUE 인덱스와 이중 안전망)
+    const guardNo = String(editingEmp.employeeNo || "").trim();
+    if (guardNo) {
+      const sameNoRows = employees.filter(e => e.employeeNo && String(e.employeeNo).trim() === guardNo);
+      if (editingEmp.id === null) {
+        // (a) 비상주만 다중 투입 허용
+        if (editingEmp.residencyType !== "비상주" && sameNoRows.length > 0) {
+          showAlert("추가 투입 불가", "상주 직원은 다중 투입할 수 없습니다. 비상주만 가능합니다."); return;
+        }
+        // (b) 동일 프로젝트 중복 차단
+        if (sameNoRows.some(e => e.projectId === editingEmp.projectId)) {
+          showAlert("중복 투입", "이미 해당 프로젝트에 투입된 사번입니다."); return;
+        }
+      } else {
+        // (c) 다중 투입 중인 직원을 상주로 변경 불가
+        if (editingEmp.residencyType === "상주" && sameNoRows.length >= 2) {
+          showAlert("변경 불가", "다중 투입 중인 직원은 상주로 변경할 수 없습니다."); return;
+        }
+      }
+    }
+
     // 협력사 + 대기 조합은 자동 삭제 처리
     if (editingEmp.affiliation === "협력사" && isPool) {
       if (editingEmp.id === null) {
@@ -321,16 +357,31 @@ export default function EmployeeManager() {
       startDate: dateOptional ? null : editingEmp.startDate,
       endDate: dateOptional ? null : editingEmp.endDate,
     };
-    const { id: _id, ...rawPayload } = toSave;
+    const { id: _id, __addAssignment: _aa, ...rawPayload } = toSave;
     const payload = appToDb(rawPayload);
     if (editingEmp.id === null) {
       const { data, error } = await supabase.from("employees").insert([payload]).select().single();
-      if (error) { console.error(error); showAlert("알림", "저장 실패"); return; }
+      if (error) {
+        console.error(error);
+        if (error.code === "23505") { showAlert("중복 투입", "이미 해당 프로젝트에 투입된 사번입니다."); return; }
+        showAlert("알림", "저장 실패"); return;
+      }
       setEmployees((prev) => [...prev, dbToApp(data)]);
     } else {
       const { data, error } = await supabase.from("employees").update(payload).eq("id", editingEmp.id).select().single();
       if (error) { console.error(error); showAlert("알림", "수정 실패"); return; }
       setEmployees((prev) => prev.map((e) => (e.id === editingEmp.id ? dbToApp(data) : e)));
+
+      // 인물 공통정보(이름/직급/소속/협력사명)를 같은 사번의 다른 행에 자동 동기화
+      const no = String(editingEmp.employeeNo || "").trim();
+      if (no) {
+        const personFields = { name: toSave.name, rank: toSave.rank, affiliation: toSave.affiliation, partner_name: toSave.affiliation === "IBKS" ? "" : (toSave.partnerName || "") };
+        await supabase.from("employees").update(personFields).eq("employee_no", no).neq("id", editingEmp.id);
+        setEmployees(prev => prev.map(e =>
+          (e.employeeNo && String(e.employeeNo).trim() === no && e.id !== editingEmp.id)
+            ? { ...e, name: toSave.name, rank: toSave.rank, affiliation: toSave.affiliation, partnerName: personFields.partner_name }
+            : e));
+      }
     }
     setShowEmpModal(false);
     setEditingEmp(null);
@@ -794,6 +845,7 @@ export default function EmployeeManager() {
           setEditingEmp({ ...target });
           setShowEmpModal(true);
         }}
+        onAddAssignment={openAddAssignment}
       />
 
       {/* 프로젝트 삭제 확인 모달 */}
