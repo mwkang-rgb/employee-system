@@ -80,7 +80,10 @@ export default function EmployeeFormModal({
             <Field label="소속 *">
               <select
                 value={editingEmp.affiliation}
-                onChange={(e) => setEditingEmp({ ...editingEmp, affiliation: e.target.value })}
+                onChange={(e) => {
+                  const aff = e.target.value;
+                  setEditingEmp({ ...editingEmp, affiliation: aff, ...(aff === "협력사" ? { employeeNo: "" } : {}) });
+                }}
                 disabled={isAddAssignment}
                 className={`w-full px-3 py-2 text-base sm:text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 ${isAddAssignment ? "bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed" : "border-slate-300 bg-white"}`}
               >
@@ -99,21 +102,22 @@ export default function EmployeeFormModal({
             </Field>
           </div>
 
-          <Field label={editingEmp.affiliation === "협력사" ? "사번" : "사번 *"}>
-            <input
-              type="text"
-              value={editingEmp.employeeNo || ""}
-              onChange={(e) => setEditingEmp({ ...editingEmp, employeeNo: e.target.value })}
-              disabled={isAddAssignment}
-              autoComplete="off"
-              className={`w-full px-3 py-2 text-base sm:text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 ${isAddAssignment ? "bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed" : "border-slate-300"}`}
-              placeholder="예: 2021045"
-            />
-            <p className="mt-1 text-[11px] text-slate-500">
-              사번은 사람 식별자입니다. 같은 사람을 여러 프로젝트에 등록할 때 동일 사번을 입력하면 통계에서 1명으로 집계됩니다.
-              {editingEmp.affiliation === "협력사" && " 협력사는 사번 입력이 선택사항입니다."}
-            </p>
-          </Field>
+          {editingEmp.affiliation !== "협력사" && (
+            <Field label="사번 *">
+              <input
+                type="text"
+                value={editingEmp.employeeNo || ""}
+                onChange={(e) => setEditingEmp({ ...editingEmp, employeeNo: e.target.value })}
+                disabled={isAddAssignment}
+                autoComplete="off"
+                className={`w-full px-3 py-2 text-base sm:text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 ${isAddAssignment ? "bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed" : "border-slate-300"}`}
+                placeholder="예: 2021045"
+              />
+              <p className="mt-1 text-[11px] text-slate-500">
+                사번은 사람 식별자입니다. 같은 사람을 여러 프로젝트에 등록할 때 동일 사번을 입력하면 통계에서 1명으로 집계됩니다.
+              </p>
+            </Field>
+          )}
 
           {/* 협력사 선택 시에만 노출 */}
           {editingEmp.affiliation === "협력사" && (

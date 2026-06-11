@@ -349,6 +349,7 @@ export default function EmployeeManager() {
 
     const toSave = {
       ...editingEmp,
+      employeeNo: editingEmp.affiliation === "협력사" ? "" : editingEmp.employeeNo,
       partnerName: editingEmp.affiliation === "IBKS" ? "" : editingEmp.partnerName.trim(),
       duty: isTransitioningToPool ? "없음" : ((editingEmp.duty || "").trim() || "없음"),
       role: isTransitioningToPool ? "없음" : ((editingEmp.role || "").trim() || "없음"),
