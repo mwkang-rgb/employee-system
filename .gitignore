@@ -17,6 +17,7 @@ esbuild_err.txt
 
 # AI tools
 .ai/
+.claude/settings.local.json
 
 # 환경 변수 (민감한 인증 정보)
 .env
