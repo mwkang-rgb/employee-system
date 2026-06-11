@@ -225,7 +225,7 @@ export default function EmployeeDetailModal({ detailEmp, assignmentHistory, proj
 
         {/* 하단 버튼 */}
         <div className="px-4 sm:px-5 py-3 sm:py-4 border-t border-slate-200 flex justify-end gap-2 bg-slate-50 flex-shrink-0">
-          {detailEmp?.residencyType === "비상주" && (
+          {detailEmp?.residencyType === "비상주" && status.label !== "대기" && (
             <button
               onClick={() => onAddAssignment?.(detailEmp)}
               className="px-4 py-2 text-sm border border-violet-300 rounded-md bg-violet-50 hover:bg-violet-100 text-violet-700 flex items-center gap-1"
