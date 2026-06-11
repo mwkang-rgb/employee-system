@@ -269,7 +269,8 @@ export default function EmployeeManager() {
     if (!editingEmp.name.trim()) {
       showAlert("알림", "직원명은 필수 입력입니다."); return;
     }
-    if (!editingEmp.employeeNo || String(editingEmp.employeeNo).trim() === "") {
+    if (editingEmp.affiliation !== "협력사" &&
+        (!editingEmp.employeeNo || String(editingEmp.employeeNo).trim() === "")) {
       showAlert("입력 오류", "사번을 입력해 주세요."); return;
     }
     if (editingEmp.affiliation === "협력사" && !editingEmp.partnerName.trim()) {
