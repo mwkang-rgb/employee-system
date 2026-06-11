@@ -1,7 +1,7 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import { Search, Edit2, Trash2, GripVertical, FolderPlus, Building2, Briefcase, UserCheck, Clock, CalendarClock, CheckCircle2, LogOut, Timer, Calendar, Users, Tag, ChevronDown, ChevronRight, ArrowRightLeft, X, Home } from "lucide-react";
 import { COLOR_MAP, POOL_SORT_OPTIONS, RANK_ORDER } from "./constants.js";
-import { resolveStatus, calcWaitingDuration, formatWaitingLabel } from "./helpers.js";
+import { resolveStatus, calcWaitingDuration, formatWaitingLabel, todayISO } from "./helpers.js";
 
 const BOARD_ORDER_KEY = "board-card-orders";
 const BOARD_POOL_SORT_KEY = "board-pool-sort";
@@ -66,7 +66,8 @@ function AffiliationBadge({ affiliation, partnerName }) {
 const CARD_STATUS_ICONS = { "대기": Clock, "투입예정": CalendarClock, "투입중": CheckCircle2, "철수": LogOut };
 
 // 인력 카드 본문 — 데스크톱/모바일 공용 (드래그/이동 등 래퍼는 각 화면이 담당)
-function EmployeeCardContent({ emp, empStatus, isPool, projectById, leading = null }) {
+function EmployeeCardContent({ emp, empStatus, isPool, projectById, leading = null, onWithdraw = null, withdrawHoverOnly = false }) {
+  const canWithdraw = onWithdraw && (empStatus.label === "투입중" || empStatus.label === "투입예정");
   const CardStatusIcon = CARD_STATUS_ICONS[empStatus.label] || null;
   const isPurePool = emp.projectId === "pool";
   const empProjName = projectById[emp.projectId]?.name;
@@ -171,6 +172,17 @@ function EmployeeCardContent({ emp, empStatus, isPool, projectById, leading = nu
           <span>{displayEnd}</span>
         </div>
       )}
+      {canWithdraw && (
+        <div className={`mt-1.5 flex justify-end ${withdrawHoverOnly ? "opacity-0 group-hover:opacity-100 transition-opacity" : ""}`}>
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onWithdraw(); }}
+            className="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-medium rounded border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 active:bg-blue-100"
+          >
+            <LogOut size={11} /> 철수
+          </button>
+        </div>
+      )}
     </>
   );
 }
@@ -261,7 +273,7 @@ function ProjectMeta({ proj, stats, color }) {
 //   onDeleteProject  — (projId) 프로젝트 삭제
 export default function ProjectBoardView({
   employees, projects,
-  onDropEmployee, onCardClick, onEditEmp,
+  onDropEmployee, onCardClick, onEditEmp, onWithdraw,
   onNewProject, onEditProject, onDeleteProject,
 }) {
   const isMobile = useIsMobile();
@@ -279,6 +291,7 @@ export default function ProjectBoardView({
   // 모바일 전용 상태
   const [mobileExpanded, setMobileExpanded] = useState(loadMobileExpanded);
   const [moveTarget, setMoveTarget] = useState(null); // { emp, srcColId }
+  const [withdrawTarget, setWithdrawTarget] = useState(null); // 철수 대상 emp
   // ref 사용: 이벤트 핸들러에서 최신 값 참조 (stale closure 방지)
   const dragSourceColRef = useRef(null);
   const columnMembersRef = useRef({});
@@ -659,6 +672,7 @@ export default function ProjectBoardView({
           onEditProject={onEditProject}
           onDeleteProject={onDeleteProject}
           onRequestMove={(emp, srcColId) => setMoveTarget({ emp, srcColId })}
+          onRequestWithdraw={(emp) => setWithdrawTarget(emp)}
         />
       ) : (
         <DesktopKanbanBoard
@@ -688,6 +702,7 @@ export default function ProjectBoardView({
           onCardClick={onCardClick}
           onEditProject={onEditProject}
           onDeleteProject={onDeleteProject}
+          onRequestWithdraw={(emp) => setWithdrawTarget(emp)}
         />
       )}
 
@@ -699,6 +714,15 @@ export default function ProjectBoardView({
           projectById={projectById}
           onSelect={(targetProjId) => handleMobileMove(moveTarget.emp, moveTarget.srcColId, targetProjId)}
           onClose={() => setMoveTarget(null)}
+        />
+      )}
+
+      {/* 철수 확인 모달 */}
+      {withdrawTarget && (
+        <WithdrawModal
+          emp={withdrawTarget}
+          onConfirm={(endDate) => { onWithdraw(withdrawTarget.id, endDate); setWithdrawTarget(null); }}
+          onClose={() => setWithdrawTarget(null)}
         />
       )}
     </div>
@@ -713,7 +737,7 @@ function DesktopKanbanBoard({
   setDragOverColumn, setColumnOrder,
   handleDragOver, handleDragLeave, handleDrop,
   handleDragStart, handleDragEnd, handleCardDragOver, handleCardDrop,
-  onCardClick, onEditProject, onDeleteProject,
+  onCardClick, onEditProject, onDeleteProject, onRequestWithdraw,
 }) {
   return (
     <div className="flex-1 overflow-auto min-h-0 mt-1.5" style={{ minWidth: 0 }}>
@@ -868,7 +892,7 @@ function DesktopKanbanBoard({
                         onDragOver={(e) => handleCardDragOver(e, emp.id, proj.id)}
                         onDrop={(e) => handleCardDrop(e, emp.id, proj.id)}
                         onClick={() => onCardClick(emp)}
-                        className={`bg-white rounded-md border border-slate-200 p-2.5 shadow-sm hover:shadow-md hover:border-indigo-300 cursor-pointer transition-all select-none min-w-0 ${isDragging ? "opacity-40 scale-95" : ""}`}
+                        className={`group bg-white rounded-md border border-slate-200 p-2.5 shadow-sm hover:shadow-md hover:border-indigo-300 cursor-pointer transition-all select-none min-w-0 ${isDragging ? "opacity-40 scale-95" : ""}`}
                         title="클릭하여 상세 보기"
                       >
                         <EmployeeCardContent
@@ -877,6 +901,8 @@ function DesktopKanbanBoard({
                           isPool={isPool}
                           projectById={projectById}
                           leading={<GripVertical size={12} className="text-slate-300 flex-shrink-0 cursor-grab active:cursor-grabbing" />}
+                          onWithdraw={() => onRequestWithdraw(emp)}
+                          withdrawHoverOnly
                         />
                       </div>
                       {showIndicatorBelow && (
@@ -899,7 +925,7 @@ function MobileAccordionBoard({
   columns, projectById, empStatuses,
   mobileExpanded, toggleMobileExpand,
   poolSortField, setPoolSortField, poolSortDir, setPoolSortDir,
-  onCardClick, onEditProject, onDeleteProject, onRequestMove,
+  onCardClick, onEditProject, onDeleteProject, onRequestMove, onRequestWithdraw,
 }) {
   return (
     <div className="flex-1 overflow-auto min-h-0 mt-1.5 space-y-2 pb-4">
@@ -1008,7 +1034,16 @@ function MobileAccordionBoard({
                           isPool={isPool}
                           projectById={projectById}
                         />
-                        <div className="mt-2 pt-2 border-t border-slate-100 flex justify-end">
+                        <div className="mt-2 pt-2 border-t border-slate-100 flex justify-end gap-1.5">
+                          {(empStatus.label === "투입중" || empStatus.label === "투입예정") && (
+                            <button
+                              type="button"
+                              onClick={(e) => { e.stopPropagation(); onRequestWithdraw(emp); }}
+                              className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium rounded border border-blue-200 bg-blue-50 text-blue-700 active:bg-blue-100"
+                            >
+                              <LogOut size={12} /> 철수
+                            </button>
+                          )}
                           <button
                             type="button"
                             onClick={(e) => { e.stopPropagation(); onRequestMove(emp, proj.id); }}
@@ -1109,6 +1144,59 @@ function MoveBottomSheet({ moveTarget, projects, projectById, onSelect, onClose 
           {srcColId === "pool"
             ? "대기 → 프로젝트 이동 시 투입 정보 입력 창이 열립니다."
             : "선택 즉시 이동이 적용됩니다."}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// 철수 확인 모달 — 철수일자 선택 + (협력사) 삭제 경고
+function WithdrawModal({ emp, onConfirm, onClose }) {
+  const [endDate, setEndDate] = useState(todayISO());
+  const isPartner = emp.affiliation === "협력사";
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="absolute inset-0 bg-black/40" />
+      <div
+        className="relative bg-white rounded-xl w-full max-w-sm shadow-xl flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200">
+          <div className="text-sm font-bold text-slate-900">철수 처리</div>
+          <button onClick={onClose} className="p-1.5 rounded-md hover:bg-slate-100 text-slate-500" aria-label="닫기">
+            <X size={18} />
+          </button>
+        </div>
+        <div className="p-4 space-y-3">
+          <p className="text-sm text-slate-700">
+            <span className="font-semibold">{emp.name}({emp.rank})</span>님을 철수 처리합니다.
+            {!isPartner && " 철수 후 대기로 이동합니다."}
+          </p>
+          <div>
+            <label className="block text-[12px] font-medium text-slate-600 mb-1">철수일자</label>
+            <input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className="w-full px-3 py-2 text-base sm:text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+          </div>
+          {isPartner && (
+            <p className="text-[12px] text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2">
+              협력사 직원은 철수 시 목록에서 삭제되며 되돌릴 수 없습니다. 투입 이력은 보존됩니다.
+            </p>
+          )}
+        </div>
+        <div className="flex border-t border-slate-200">
+          <button onClick={onClose} className="flex-1 py-3 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors">취소</button>
+          <div className="w-px bg-slate-200" />
+          <button
+            onClick={() => onConfirm(endDate)}
+            className={`flex-1 py-3 text-sm font-semibold transition-colors ${isPartner ? "text-red-600 hover:bg-red-50" : "text-blue-600 hover:bg-blue-50"}`}
+          >
+            {isPartner ? "철수 후 삭제" : "철수"}
+          </button>
         </div>
       </div>
     </div>

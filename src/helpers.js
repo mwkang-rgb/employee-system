@@ -56,7 +56,7 @@ export const buildHistoryEntry = (emp, projectsMap, options = {}) => {
     projectId: currentProj.id,
     projectName: currentProj.name,
     startDate: emp.startDate || null,
-    endDate: options.closeEndDate ? todayISO() : (emp.endDate || null),
+    endDate: options.endDate ?? (options.closeEndDate ? todayISO() : (emp.endDate || null)),
     assignmentType: emp.assignmentType || "",
     role: emp.role || "",
     duty: emp.duty || "",

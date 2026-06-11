@@ -642,6 +642,25 @@ export default function EmployeeManager() {
     }
   };
 
+  // 철수 처리: 이력 기록 후 (IBKS) 대기로 초기화 / (협력사) 삭제
+  const handleWithdraw = async (empId, endDate) => {
+    const emp = employees.find(x => x.id === empId);
+    if (!emp) return;
+    const projMap = Object.fromEntries(projects.map(p => [p.id, p]));
+    await insertHistoryEntry(emp, projMap, { closeEndDate: true, endDate });
+
+    if (emp.affiliation === "협력사") {
+      const { error } = await supabase.from("employees").delete().eq("id", empId);
+      if (error) { console.error(error); showAlert("알림", "철수 처리 실패"); return; }
+      setEmployees(prev => prev.filter(x => x.id !== empId));
+      return;
+    }
+    const poolReset = { projectId: "pool", pooledAt: todayISO(), startDate: null, endDate: null, assignmentType: "대기", duty: "없음", role: "없음" };
+    const { error } = await supabase.from("employees").update(appToDb(poolReset)).eq("id", empId);
+    if (error) { console.error(error); showAlert("알림", "철수 처리 실패"); return; }
+    setEmployees(prev => prev.map(x => (x.id === empId ? { ...x, ...poolReset } : x)));
+  };
+
   // 드래그앤드롭으로 직원을 다른 프로젝트로 이동 (ProjectBoardView에서 호출)
   const handleDropEmployee = async (empId, projId) => {
     const emp = employees.find(x => x.id === empId);
@@ -649,6 +668,8 @@ export default function EmployeeManager() {
     if (emp.projectId === projId) return;
 
     if (projId === "pool" && emp.affiliation === "협력사") {
+      const projMap = Object.fromEntries(projects.map(p => [p.id, p]));
+      await insertHistoryEntry(emp, projMap, { closeEndDate: true });
       const { error } = await supabase.from("employees").delete().eq("id", empId);
       if (error) { console.error(error); showAlert("알림", "삭제 실패"); return; }
       setEmployees(prev => prev.filter(x => x.id !== empId));
@@ -811,6 +832,7 @@ export default function EmployeeManager() {
               employees={employees}
               projects={projects}
               onDropEmployee={handleDropEmployee}
+              onWithdraw={handleWithdraw}
               onCardClick={openDetailModal}
               onEditEmp={openEditEmp}
               onNewProject={openNewProj}
