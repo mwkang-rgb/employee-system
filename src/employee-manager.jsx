@@ -149,6 +149,8 @@ export default function EmployeeManager() {
   // 직원 삭제 확인 모달
   const [deleteEmpConfirm, setDeleteEmpConfirm] = useState(null);
   // deleteEmpConfirm = { id, name }
+  const [poolWithdrawConfirm, setPoolWithdrawConfirm] = useState(null);
+  // poolWithdrawConfirm = { id, name, projectName }
 
   // 직원 조회
   useEffect(() => {
@@ -256,6 +258,20 @@ export default function EmployeeManager() {
     if (error) { console.error(error); showAlert("알림", "삭제 실패"); return; }
     setEmployees((prev) => prev.filter((e) => e.id !== id));
   };
+  const doPoolWithdraw = async () => {
+    const info = poolWithdrawConfirm;
+    setPoolWithdrawConfirm(null);
+    if (!info) return;
+    const prevEmp = employees.find(e => e.id === info.id);
+    if (!prevEmp) return;
+    const projMap = Object.fromEntries(projects.map(p => [p.id, p]));
+    await insertHistoryEntry(prevEmp, projMap, { closeEndDate: true });
+    const { error } = await supabase.from("employees").delete().eq("id", info.id);
+    if (error) { console.error(error); showAlert("알림", "철수 처리 실패"); return; }
+    setEmployees(prev => prev.filter(e => e.id !== info.id));
+    setShowEmpModal(false);
+    setEditingEmp(null);
+  };
   const saveEmp = async () => {
     const isPool = editingEmp.projectId === "pool" || editingEmp.assignmentType === "대기";
     const isPending = editingEmp.assignmentType === "투입예정";
@@ -296,6 +312,23 @@ export default function EmployeeManager() {
       showAlert("날짜 입력 오류", "철수일자는 투입일자보다 빠를 수 없습니다."); return;
     }
 
+    // 다중투입 직원의 한 행을 '대기'로 저장 = 해당 프로젝트에서 철수(행 삭제). 확인 모달로 처리.
+    if (editingEmp.id !== null && isPool && editingEmp.affiliation !== "협력사") {
+      const no = String(editingEmp.employeeNo || "").trim();
+      const otherActive = no
+        ? employees.filter(e =>
+            e.id !== editingEmp.id &&
+            e.employeeNo && String(e.employeeNo).trim() === no &&
+            e.projectId && e.projectId !== "pool" && e.assignmentType !== "대기")
+        : [];
+      if (otherActive.length > 0) {
+        const prevEmp = employees.find(e => e.id === editingEmp.id);
+        const projName = prevEmp ? (projects.find(p => p.id === prevEmp.projectId)?.name || "") : "";
+        setPoolWithdrawConfirm({ id: editingEmp.id, name: editingEmp.name, projectName: projName });
+        return;
+      }
+    }
+
     // 다중 투입 가드 — 사번 기준 (DB UNIQUE 인덱스와 이중 안전망)
     const guardNo = String(editingEmp.employeeNo || "").trim();
     if (guardNo) {
@@ -310,8 +343,11 @@ export default function EmployeeManager() {
           showAlert("중복 투입", "이미 해당 프로젝트에 투입된 사번입니다."); return;
         }
       } else {
-        // (c) 다중 투입 중인 직원을 상주로 변경 불가
-        if (editingEmp.residencyType === "상주" && sameNoRows.length >= 2) {
+        // (c) 활성 투입이 2건 이상인 직원만 상주로 변경 불가(대기 전환 행/대기 행 제외)
+        const activeSameNo = sameNoRows.filter(e =>
+          e.id !== editingEmp.id && e.projectId && e.projectId !== "pool" && e.assignmentType !== "대기");
+        const selfActive = isPool ? 0 : 1;
+        if (editingEmp.residencyType === "상주" && (activeSameNo.length + selfActive) >= 2) {
           showAlert("변경 불가", "다중 투입 중인 직원은 상주로 변경할 수 없습니다."); return;
         }
       }
@@ -946,6 +982,28 @@ export default function EmployeeManager() {
               <button onClick={() => setDeleteEmpConfirm(null)} className="flex-1 py-3 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors">취소</button>
               <div className="w-px bg-slate-200" />
               <button onClick={doDeleteEmployee} className="flex-1 py-3 text-sm font-semibold text-red-600 hover:bg-red-50 transition-colors">삭제</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {poolWithdrawConfirm && (
+        <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50" onClick={() => setPoolWithdrawConfirm(null)}>
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-center px-6 pt-5 pb-4 gap-3">
+              <div className="w-11 h-11 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                <LogOut size={22} className="text-blue-600" />
+              </div>
+              <h3 className="text-base font-bold text-slate-900">철수 처리</h3>
+            </div>
+            <div className="px-6 pb-5 text-left text-sm text-slate-600 space-y-1.5">
+              <p><span className="font-semibold text-slate-800">{poolWithdrawConfirm?.name}</span> 님은 다른 프로젝트에 투입 중입니다.</p>
+              <p>{poolWithdrawConfirm?.projectName ? `'${poolWithdrawConfirm.projectName}' ` : ""}프로젝트에서 철수 처리(행 삭제)됩니다.</p>
+            </div>
+            <div className="flex border-t border-slate-200">
+              <button onClick={() => setPoolWithdrawConfirm(null)} className="flex-1 py-3 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors">취소</button>
+              <div className="w-px bg-slate-200" />
+              <button onClick={doPoolWithdraw} className="flex-1 py-3 text-sm font-semibold text-blue-600 hover:bg-blue-50 transition-colors">철수</button>
             </div>
           </div>
         </div>
