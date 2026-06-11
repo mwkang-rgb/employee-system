@@ -139,6 +139,36 @@ export default function EmployeeFormModal({
             </div>
           )}
 
+          <Field label="투입 형태 *">
+            <select
+              value={editingEmp.assignmentType || "비계약"}
+              onChange={(e) => {
+                const newType = e.target.value;
+                if (newType === "투입예정") {
+                  const newProjectId = editingEmp.projectId === "pool"
+                    ? ""
+                    : editingEmp.projectId;
+                  setEditingEmp({ ...editingEmp, assignmentType: "투입예정", projectId: newProjectId });
+                } else if (newType === "대기") {
+                  setEditingEmp({ ...editingEmp, assignmentType: "대기", projectId: "pool", startDate: "", endDate: "", duty: "", role: "" });
+                } else {
+                  const newProjectId = editingEmp.projectId === "pool"
+                    ? ""
+                    : editingEmp.projectId;
+                  setEditingEmp({ ...editingEmp, assignmentType: newType, projectId: newProjectId });
+                }
+              }}
+              className="w-full px-3 py-2 text-base sm:text-sm border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            >
+              {ASSIGNMENT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+            </select>
+            {editingEmp.assignmentType && ASSIGNMENT_TYPE_STYLES[editingEmp.assignmentType] && (
+              <div className="mt-1 text-[11px] text-slate-500">
+                {ASSIGNMENT_TYPE_STYLES[editingEmp.assignmentType].desc}
+              </div>
+            )}
+          </Field>
+
           {/* 직무 · 역할 */}
           <div className="grid grid-cols-2 gap-3">
             <Field label="직무">
@@ -184,36 +214,6 @@ export default function EmployeeFormModal({
                 );
               })}
             </div>
-          </Field>
-
-          <Field label="투입 형태 *">
-            <select
-              value={editingEmp.assignmentType || "비계약"}
-              onChange={(e) => {
-                const newType = e.target.value;
-                if (newType === "투입예정") {
-                  const newProjectId = editingEmp.projectId === "pool"
-                    ? ""
-                    : editingEmp.projectId;
-                  setEditingEmp({ ...editingEmp, assignmentType: "투입예정", projectId: newProjectId });
-                } else if (newType === "대기") {
-                  setEditingEmp({ ...editingEmp, assignmentType: "대기", projectId: "pool", startDate: "", endDate: "", duty: "", role: "" });
-                } else {
-                  const newProjectId = editingEmp.projectId === "pool"
-                    ? ""
-                    : editingEmp.projectId;
-                  setEditingEmp({ ...editingEmp, assignmentType: newType, projectId: newProjectId });
-                }
-              }}
-              className="w-full px-3 py-2 text-base sm:text-sm border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            >
-              {ASSIGNMENT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-            </select>
-            {editingEmp.assignmentType && ASSIGNMENT_TYPE_STYLES[editingEmp.assignmentType] && (
-              <div className="mt-1 text-[11px] text-slate-500">
-                {ASSIGNMENT_TYPE_STYLES[editingEmp.assignmentType].desc}
-              </div>
-            )}
           </Field>
 
           <Field label="투입 프로젝트 *">
