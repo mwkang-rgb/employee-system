@@ -138,23 +138,35 @@ export default function EmployeeListView({
     else { setSortField(field); setSortDir("asc"); }
   };
 
-  const exportCSV = () => {
+  const exportExcel = () => {
+    // 빈 날짜/센티넬 값은 null → 엑셀에서 빈 셀로 처리
+    const parseDate = (d) => {
+      if (!d || d === "1111-01-01" || d === "9999-12-31") return null;
+      const dt = new Date(`${d}T00:00:00`);
+      return isNaN(dt.getTime()) ? null : dt;
+    };
     const header = ["ID", "직원명", "직급", "소속", "협력사명", "직무", "역할", "투입프로젝트", "투입일자", "철수일자", "상태"];
     const rows = filtered.map((e) => [
       e.id, e.name, e.rank, e.affiliation, e.partnerName || "",
       e.duty || "", e.role || "",
       projectById[e.projectId]?.name || "",
-      (!e.startDate || e.startDate === "1111-01-01") ? "-" : e.startDate,
-      (!e.endDate || e.endDate === "9999-12-31") ? "-" : e.endDate,
+      parseDate(e.startDate),
+      parseDate(e.endDate),
       resolveStatus(e, projectById[e.projectId]?.name).label,
     ]);
-    const csv = "﻿" + [header, ...rows].map((r) => r.join(",")).join("\n");
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `직원투입현황_${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
+    const ws = XLSX.utils.aoa_to_sheet([header, ...rows], { cellDates: true });
+    // 투입일자(8)·철수일자(9) 컬럼을 날짜형으로 — 엑셀에서 날짜 정렬/필터 동작
+    const range = XLSX.utils.decode_range(ws["!ref"]);
+    for (let r = 1; r <= range.e.r; r++) {
+      for (const c of [8, 9]) {
+        const cell = ws[XLSX.utils.encode_cell({ r, c })];
+        if (cell && cell.v != null) { cell.t = "d"; cell.z = "yyyy-mm-dd"; }
+      }
+    }
+    ws["!cols"] = [8, 14, 8, 8, 12, 14, 16, 20, 12, 12, 10].map((w) => ({ wch: w }));
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "직원투입현황");
+    XLSX.writeFile(wb, `직원투입현황_${new Date().toISOString().slice(0, 10)}.xlsx`);
   };
 
   const SortIcon = ({ field }) => {
@@ -217,8 +229,8 @@ export default function EmployeeListView({
             <option value="투입중">투입중</option>
             <option value="철수">철수</option>
           </select>
-          <button onClick={exportCSV} className="px-3 py-1.5 text-sm border border-slate-300 rounded-md bg-white hover:bg-slate-50 flex items-center gap-1 text-slate-700 flex-shrink-0">
-            <Download size={14} /> CSV
+          <button onClick={exportExcel} className="px-3 py-1.5 text-sm border border-slate-300 rounded-md bg-white hover:bg-slate-50 flex items-center gap-1 text-slate-700 flex-shrink-0">
+            <Download size={14} /> 엑셀 다운로드
           </button>
           <button onClick={downloadTemplate} className="px-3 py-1.5 text-sm border border-slate-300 rounded-md bg-white hover:bg-slate-50 flex items-center gap-1 text-slate-700 flex-shrink-0">
             📥 양식 다운로드
