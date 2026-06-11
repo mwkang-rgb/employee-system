@@ -1,7 +1,7 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import { Search, Edit2, Trash2, GripVertical, FolderPlus, Building2, Briefcase, UserCheck, Clock, CalendarClock, CheckCircle2, LogOut, Timer, Calendar, Users, Tag, ChevronDown, ChevronRight, ArrowRightLeft, X, Home } from "lucide-react";
 import { COLOR_MAP, POOL_SORT_OPTIONS, RANK_ORDER } from "./constants.js";
-import { resolveStatus, calcWaitingDuration, formatWaitingLabel, todayISO } from "./helpers.js";
+import { resolveStatus, calcWaitingDuration, formatWaitingLabel, todayISO, personKey } from "./helpers.js";
 
 const BOARD_ORDER_KEY = "board-card-orders";
 const BOARD_POOL_SORT_KEY = "board-pool-sort";
@@ -564,8 +564,9 @@ export default function ProjectBoardView({
       // ── 통계 계산 ──
       let stats;
       if (isPool) {
-        const empCount = members.filter(m => m.rank !== "교수").length;
-        const profCount = members.filter(m => m.rank === "교수").length;
+        const poolMembers = members.filter(m => m.projectId === "pool");
+        const empCount = new Set(poolMembers.filter(m => m.rank !== "교수").map(personKey)).size;
+        const profCount = new Set(poolMembers.filter(m => m.rank === "교수").map(personKey)).size;
         const getPendingBase = (m) => {
           if (m.pooledAt) return m.pooledAt;
           if (empStatuses[m.id]?.label === "투입예정" && m.projectId !== "pool") {

@@ -12,6 +12,13 @@ export const randomDate = (start, end) => {
 // 오늘 날짜를 YYYY-MM-DD 문자열로 반환
 export const todayISO = () => new Date().toISOString().slice(0, 10);
 
+// 사람 식별 키 — 사번 있으면 사번 기준, 없으면 행 id(각자 1명)
+export const personKey = (e) =>
+  (e.employeeNo && String(e.employeeNo).trim() !== "")
+    ? `no:${String(e.employeeNo).trim()}`
+    : `id:${e.id}`;
+export const distinctCount = (arr) => new Set(arr.map(personKey)).size;
+
 const STATUS_COLORS = {
   "대기":    "bg-slate-100 text-slate-600 border-slate-300",
   "투입예정": "bg-sky-50 text-sky-700 border-sky-200",

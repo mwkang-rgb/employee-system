@@ -4,7 +4,7 @@ import { X, Users, Briefcase, Calendar, CalendarClock, FolderKanban, LayoutList,
 import { useRealtimeSync } from "./useRealtimeSync.js";
 import { useAuth } from "./AuthContext.jsx";
 import { COLOR_MAP, COLOR_OPTIONS } from "./constants.js";
-import { todayISO, getStatus, resolveStatus, buildHistoryEntry } from "./helpers.js";
+import { todayISO, getStatus, resolveStatus, buildHistoryEntry, personKey, distinctCount } from "./helpers.js";
 import { supabase } from "./supabaseClient";
 import * as XLSX from "xlsx";
 import EmployeeDetailModal from "./EmployeeDetailModal.jsx";
@@ -191,11 +191,6 @@ export default function EmployeeManager() {
   }, [employees]);
 
   const stats = useMemo(() => {
-    // 사람 식별 키 — 사번이 있으면 사번 기준, 없으면 행 id로 폴백(각자 1명)
-    const personKey = (e) => (e.employeeNo && String(e.employeeNo).trim() !== "")
-      ? `no:${String(e.employeeNo).trim()}` : `id:${e.id}`;
-    const distinctCount = (arr) => new Set(arr.map(personKey)).size;
-
     const total = distinctCount(employees);
     const active = distinctCount(employees.filter((e) => resolveStatus(e, projectById[e.projectId]?.name).label === "투입중"));
     const pending = distinctCount(employees.filter((e) => resolveStatus(e, projectById[e.projectId]?.name).label === "투입예정"));
@@ -642,6 +637,16 @@ export default function EmployeeManager() {
     }
   };
 
+  // 같은 사번이 다른 프로젝트(비-pool)에 아직 투입 중인지
+  const hasOtherActiveAssignment = (emp) => {
+    const no = (emp.employeeNo && String(emp.employeeNo).trim()) || "";
+    if (!no) return false;
+    return employees.some(e =>
+      e.id !== emp.id &&
+      e.employeeNo && String(e.employeeNo).trim() === no &&
+      e.projectId && e.projectId !== "pool");
+  };
+
   // 철수 처리: 이력 기록 후 (IBKS) 대기로 초기화 / (협력사) 삭제
   const handleWithdraw = async (empId, endDate) => {
     const emp = employees.find(x => x.id === empId);
@@ -650,6 +655,13 @@ export default function EmployeeManager() {
     await insertHistoryEntry(emp, projMap, { closeEndDate: true, endDate });
 
     if (emp.affiliation === "협력사") {
+      const { error } = await supabase.from("employees").delete().eq("id", empId);
+      if (error) { console.error(error); showAlert("알림", "철수 처리 실패"); return; }
+      setEmployees(prev => prev.filter(x => x.id !== empId));
+      return;
+    }
+    if (hasOtherActiveAssignment(emp)) {
+      // 다른 프로젝트에 여전히 투입 중 → 이 행만 삭제(중복 대기 방지, 이력은 위에서 기록함)
       const { error } = await supabase.from("employees").delete().eq("id", empId);
       if (error) { console.error(error); showAlert("알림", "철수 처리 실패"); return; }
       setEmployees(prev => prev.filter(x => x.id !== empId));
@@ -668,6 +680,15 @@ export default function EmployeeManager() {
     if (emp.projectId === projId) return;
 
     if (projId === "pool" && emp.affiliation === "협력사") {
+      const projMap = Object.fromEntries(projects.map(p => [p.id, p]));
+      await insertHistoryEntry(emp, projMap, { closeEndDate: true });
+      const { error } = await supabase.from("employees").delete().eq("id", empId);
+      if (error) { console.error(error); showAlert("알림", "삭제 실패"); return; }
+      setEmployees(prev => prev.filter(x => x.id !== empId));
+      return;
+    }
+
+    if (projId === "pool" && hasOtherActiveAssignment(emp)) {
       const projMap = Object.fromEntries(projects.map(p => [p.id, p]));
       await insertHistoryEntry(emp, projMap, { closeEndDate: true });
       const { error } = await supabase.from("employees").delete().eq("id", empId);
