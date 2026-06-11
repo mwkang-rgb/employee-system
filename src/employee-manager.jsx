@@ -706,8 +706,8 @@ export default function EmployeeManager() {
         </div>
 
         {/* 통계 카드 */}
-        <div className="mb-0 py-1.5 flex-shrink-0 md:overflow-x-auto lg:overflow-visible">
-          <div className="grid grid-cols-2 gap-2 md:flex md:gap-3 md:w-full">
+        <div className="mb-0 py-1.5 flex-shrink-0">
+          <div className="grid grid-cols-2 gap-2 md:flex md:flex-wrap md:gap-3 md:w-full">
             <StatCard
               icon={<FolderKanban size={18} />}
               label="프로젝트"
