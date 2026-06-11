@@ -667,7 +667,7 @@ export default function EmployeeManager() {
       setEmployees(prev => prev.filter(x => x.id !== empId));
       return;
     }
-    const poolReset = { projectId: "pool", pooledAt: todayISO(), startDate: null, endDate: null, assignmentType: "대기", duty: "없음", role: "없음" };
+    const poolReset = { projectId: "pool", pooledAt: todayISO(), startDate: null, endDate: null, assignmentType: "대기", duty: "없음", role: "없음", residencyType: "상주" };
     const { error } = await supabase.from("employees").update(appToDb(poolReset)).eq("id", empId);
     if (error) { console.error(error); showAlert("알림", "철수 처리 실패"); return; }
     setEmployees(prev => prev.map(x => (x.id === empId ? { ...x, ...poolReset } : x)));
@@ -699,7 +699,7 @@ export default function EmployeeManager() {
 
     const projMap = Object.fromEntries(projects.map(p => [p.id, p]));
     await insertHistoryEntry(emp, projMap, { closeEndDate: true });
-    const poolReset = { projectId: projId, pooledAt: todayISO(), startDate: null, endDate: null, assignmentType: "대기", duty: "없음", role: "없음" };
+    const poolReset = { projectId: projId, pooledAt: todayISO(), startDate: null, endDate: null, assignmentType: "대기", duty: "없음", role: "없음", residencyType: "상주" };
     const updatePayload = appToDb(projId === "pool" ? poolReset : { projectId: projId, pooledAt: null });
 
     const { error } = await supabase.from("employees").update(updatePayload).eq("id", empId);

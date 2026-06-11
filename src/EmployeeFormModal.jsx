@@ -150,7 +150,7 @@ export default function EmployeeFormModal({
                     : editingEmp.projectId;
                   setEditingEmp({ ...editingEmp, assignmentType: "투입예정", projectId: newProjectId });
                 } else if (newType === "대기") {
-                  setEditingEmp({ ...editingEmp, assignmentType: "대기", projectId: "pool", startDate: "", endDate: "", duty: "", role: "" });
+                  setEditingEmp({ ...editingEmp, assignmentType: "대기", projectId: "pool", startDate: "", endDate: "", duty: "", role: "", residencyType: "상주" });
                 } else {
                   const newProjectId = editingEmp.projectId === "pool"
                     ? ""
