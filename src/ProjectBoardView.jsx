@@ -104,11 +104,23 @@ function EmployeeCardContent({ emp, empStatus, isPool, projectById, leading = nu
             <div className="text-xs text-slate-500">{emp.rank}</div>
           </div>
         </div>
-        <div className="flex flex-col items-end gap-0.5 flex-shrink-0">
-          <span className={`inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 font-medium rounded border ${empStatus.color}`}>
-            {CardStatusIcon && <CardStatusIcon size={10} />}
-            {empStatus.label}
-          </span>
+        <div className="flex items-start gap-1.5 flex-shrink-0">
+          {canWithdraw && (
+            <button
+              type="button"
+              title="철수"
+              aria-label="철수"
+              onClick={(e) => { e.stopPropagation(); onWithdraw(); }}
+              className={`mt-0.5 inline-flex items-center justify-center w-[22px] h-[22px] rounded border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 active:bg-blue-100 ${withdrawHoverOnly ? "opacity-0 group-hover:opacity-100 transition-opacity" : ""}`}
+            >
+              <LogOut size={12} />
+            </button>
+          )}
+          <div className="flex flex-col items-end gap-0.5">
+            <span className={`inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 font-medium rounded border ${empStatus.color}`}>
+              {CardStatusIcon && <CardStatusIcon size={10} />}
+              {empStatus.label}
+            </span>
           {isPool && waitingLabel && (
             <span
               className={`inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 font-semibold rounded border ${waitingColor} tabular-nums`}
@@ -127,6 +139,7 @@ function EmployeeCardContent({ emp, empStatus, isPool, projectById, leading = nu
               {pendingLabel}
             </span>
           )}
+          </div>
         </div>
       </div>
       <div className="mt-1.5 flex flex-wrap gap-1 min-w-0 overflow-hidden">
@@ -170,17 +183,6 @@ function EmployeeCardContent({ emp, empStatus, isPool, projectById, leading = nu
           <span>{displayStart}</span>
           <span className="text-slate-300">→</span>
           <span>{displayEnd}</span>
-        </div>
-      )}
-      {canWithdraw && (
-        <div className={`mt-1.5 flex justify-end ${withdrawHoverOnly ? "opacity-0 group-hover:opacity-100 transition-opacity" : ""}`}>
-          <button
-            type="button"
-            onClick={(e) => { e.stopPropagation(); onWithdraw(); }}
-            className="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-medium rounded border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 active:bg-blue-100"
-          >
-            <LogOut size={11} /> 철수
-          </button>
         </div>
       )}
     </>
