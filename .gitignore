@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# 빌드 에러 로그
+esbuild_err.txt
+
 # AI tools
 .ai/
 
