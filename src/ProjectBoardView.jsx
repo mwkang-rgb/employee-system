@@ -565,8 +565,9 @@ export default function ProjectBoardView({
       let stats;
       if (isPool) {
         const poolMembers = members.filter(m => m.projectId === "pool");
-        const empCount = new Set(poolMembers.filter(m => m.rank !== "교수").map(personKey)).size;
-        const profCount = new Set(poolMembers.filter(m => m.rank === "교수").map(personKey)).size;
+        const waitingCount = new Set(poolMembers.filter(m => m.rank !== "교수").map(personKey)).size;
+        const waitingProfCount = new Set(poolMembers.filter(m => m.rank === "교수").map(personKey)).size;
+        const pendingCount = new Set(members.filter(m => empStatuses[m.id]?.label === "투입예정").map(personKey)).size;
         const getPendingBase = (m) => {
           if (m.pooledAt) return m.pooledAt;
           if (empStatuses[m.id]?.label === "투입예정" && m.projectId !== "pool") {
@@ -583,7 +584,7 @@ export default function ProjectBoardView({
           avgWait = Math.round(durations.reduce((s, d) => s + d, 0) / durations.length);
           maxWait = Math.max(...durations);
         }
-        stats = { empCount, profCount, avgWait, maxWait, hasWaitData: withDates.length > 0 };
+        stats = { waitingCount, pendingCount, waitingProfCount, avgWait, maxWait, hasWaitData: withDates.length > 0 };
       } else {
         const pmEmp = members.find(m => m.duty === "PM");
         let elapsedLabel = null;
@@ -818,16 +819,21 @@ function DesktopKanbanBoard({
                     </span>
                   </div>
                   {isPool ? (
-                    (stats.empCount > 0 || stats.profCount > 0) ? (
+                    (stats.waitingCount > 0 || stats.pendingCount > 0 || stats.waitingProfCount > 0) ? (
                       <span className="flex items-center gap-1 flex-shrink-0">
-                        {stats.empCount > 0 && (
-                          <span className="px-1.5 py-0.5 text-[10px] font-bold rounded border bg-blue-50 text-blue-700 border-blue-200">
-                            직원 {stats.empCount}
+                        {stats.waitingCount > 0 && (
+                          <span className="px-1.5 py-0.5 text-[10px] font-bold rounded border bg-slate-50 text-slate-700 border-slate-200">
+                            대기 {stats.waitingCount}
                           </span>
                         )}
-                        {stats.profCount > 0 && (
+                        {stats.pendingCount > 0 && (
+                          <span className="px-1.5 py-0.5 text-[10px] font-bold rounded border bg-amber-50 text-amber-700 border-amber-200">
+                            투입예정 {stats.pendingCount}
+                          </span>
+                        )}
+                        {stats.waitingProfCount > 0 && (
                           <span className="px-1.5 py-0.5 text-[10px] font-bold rounded border bg-purple-50 text-purple-700 border-purple-200">
-                            교수 {stats.profCount}
+                            대기 교수 {stats.waitingProfCount}
                           </span>
                         )}
                       </span>
@@ -953,13 +959,16 @@ function MobileAccordionBoard({
                   <span className={`font-bold text-sm ${c.text} truncate`}>{proj.name}</span>
                 </div>
                 {isPool ? (
-                  (stats.empCount > 0 || stats.profCount > 0) ? (
+                  (stats.waitingCount > 0 || stats.pendingCount > 0 || stats.waitingProfCount > 0) ? (
                     <span className="flex items-center gap-1 flex-shrink-0">
-                      {stats.empCount > 0 && (
-                        <span className="px-1.5 py-0.5 text-[10px] font-bold rounded border bg-blue-50 text-blue-700 border-blue-200">직원 {stats.empCount}</span>
+                      {stats.waitingCount > 0 && (
+                        <span className="px-1.5 py-0.5 text-[10px] font-bold rounded border bg-slate-50 text-slate-700 border-slate-200">대기 {stats.waitingCount}</span>
                       )}
-                      {stats.profCount > 0 && (
-                        <span className="px-1.5 py-0.5 text-[10px] font-bold rounded border bg-purple-50 text-purple-700 border-purple-200">교수 {stats.profCount}</span>
+                      {stats.pendingCount > 0 && (
+                        <span className="px-1.5 py-0.5 text-[10px] font-bold rounded border bg-amber-50 text-amber-700 border-amber-200">투입예정 {stats.pendingCount}</span>
+                      )}
+                      {stats.waitingProfCount > 0 && (
+                        <span className="px-1.5 py-0.5 text-[10px] font-bold rounded border bg-purple-50 text-purple-700 border-purple-200">대기 교수 {stats.waitingProfCount}</span>
                       )}
                     </span>
                   ) : null
