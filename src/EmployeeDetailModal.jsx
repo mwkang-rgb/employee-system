@@ -164,11 +164,28 @@ export default function EmployeeDetailModal({ detailEmp, assignmentHistory, proj
                 </div>
               );
             }
-            const totalMonths = history.reduce((sum, h) => {
-              if (!h.startDate || !h.endDate) return sum;
-              const s = new Date(h.startDate), e = new Date(h.endDate);
-              return sum + Math.max(0, (e.getFullYear() - s.getFullYear()) * 12 + (e.getMonth() - s.getMonth()));
-            }, 0);
+            const todayT = (() => { const d = new Date(); d.setHours(0, 0, 0, 0); return d.getTime(); })();
+            const intervals = history
+              .filter(h => h.startDate && h.startDate !== "1111-01-01")
+              .map(h => {
+                const s = new Date(h.startDate).setHours(0, 0, 0, 0);
+                let e = (!h.endDate || h.endDate === "9999-12-31") ? todayT : new Date(h.endDate).setHours(0, 0, 0, 0);
+                if (e > todayT) e = todayT;
+                return [s, e];
+              })
+              .filter(([s, e]) => e >= s)
+              .sort((a, b) => a[0] - b[0]);
+            let totalDays = 0, curS = null, curE = null;
+            for (const [s, e] of intervals) {
+              if (curE === null || s > curE) {
+                if (curE !== null) totalDays += (curE - curS) / 86400000 + 1;
+                curS = s; curE = e;
+              } else if (e > curE) {
+                curE = e;
+              }
+            }
+            if (curE !== null) totalDays += (curE - curS) / 86400000 + 1;
+            const totalMonths = Math.round(totalDays / 30.44);
             return (
               <div className="rounded-lg border border-slate-200 overflow-hidden">
                 <div className="px-3 py-2 bg-slate-100/70 border-b border-slate-200 flex items-center justify-between">

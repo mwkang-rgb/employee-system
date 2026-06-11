@@ -48,6 +48,7 @@ async function insertHistoryEntry(emp, projMap, options = {}) {
   const { error } = await supabase.from("assignment_history").insert([{
     id: entry.id,
     employee_id: emp.id,
+    employee_no: (emp.employeeNo && String(emp.employeeNo).trim()) || null,
     project_id: entry.projectId === "pool" ? null : entry.projectId,
     project_name: entry.projectName,
     duty: entry.duty || null,
@@ -68,6 +69,7 @@ function histDbToApp(row) {
     assignmentType: row.assignment_type,
     role: row.role,
     duty: row.duty,
+    employeeNo: row.employee_no,
   };
 }
 
@@ -129,11 +131,10 @@ export default function EmployeeManager() {
   const openDetailModal = async (emp) => {
     setDetailEmp(emp);
     setDetailEmpHistory([]);
-    const { data, error } = await supabase
-      .from("assignment_history")
-      .select("*")
-      .eq("employee_id", emp.id)
-      .order("start_date", { ascending: true });
+    const no = (emp.employeeNo && String(emp.employeeNo).trim()) || "";
+    let query = supabase.from("assignment_history").select("*");
+    query = no ? query.eq("employee_no", no) : query.eq("employee_id", emp.id);
+    const { data, error } = await query.order("start_date", { ascending: true });
     if (!error) setDetailEmpHistory((data || []).map(histDbToApp));
   };
 
