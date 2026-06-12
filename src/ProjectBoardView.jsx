@@ -828,12 +828,12 @@ function DesktopKanbanBoard({
                         )}
                         {stats.pendingCount > 0 && (
                           <span className="px-1.5 py-0.5 text-[10px] font-bold rounded border bg-amber-50 text-amber-700 border-amber-200">
-                            투입예정 {stats.pendingCount}
+                            예정 {stats.pendingCount}
                           </span>
                         )}
                         {stats.waitingProfCount > 0 && (
                           <span className="px-1.5 py-0.5 text-[10px] font-bold rounded border bg-purple-50 text-purple-700 border-purple-200">
-                            대기 교수 {stats.waitingProfCount}
+                            교수 {stats.waitingProfCount}
                           </span>
                         )}
                       </span>
@@ -965,10 +965,10 @@ function MobileAccordionBoard({
                         <span className="px-1.5 py-0.5 text-[10px] font-bold rounded border bg-slate-50 text-slate-700 border-slate-200">대기 {stats.waitingCount}</span>
                       )}
                       {stats.pendingCount > 0 && (
-                        <span className="px-1.5 py-0.5 text-[10px] font-bold rounded border bg-amber-50 text-amber-700 border-amber-200">투입예정 {stats.pendingCount}</span>
+                        <span className="px-1.5 py-0.5 text-[10px] font-bold rounded border bg-amber-50 text-amber-700 border-amber-200">예정 {stats.pendingCount}</span>
                       )}
                       {stats.waitingProfCount > 0 && (
-                        <span className="px-1.5 py-0.5 text-[10px] font-bold rounded border bg-purple-50 text-purple-700 border-purple-200">대기 교수 {stats.waitingProfCount}</span>
+                        <span className="px-1.5 py-0.5 text-[10px] font-bold rounded border bg-purple-50 text-purple-700 border-purple-200">교수 {stats.waitingProfCount}</span>
                       )}
                     </span>
                   ) : null

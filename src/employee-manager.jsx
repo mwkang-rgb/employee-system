@@ -818,7 +818,7 @@ export default function EmployeeManager() {
                 icon={<Calendar size={18} />}
                 label="대기 인력"
                 accent="rose"
-                className="col-span-2 order-2 md:order-none md:flex-none md:w-[230px]"
+                className="col-span-2 order-2 md:order-none md:flex-none md:w-[225px]"
                 value={
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
                     <span className="text-lg sm:text-xl font-bold text-slate-900 tabular-nums">{stats.waitingTotal}</span>
@@ -827,10 +827,10 @@ export default function EmployeeManager() {
                         <span>대기</span><span>{stats.waitingEmp}</span>
                       </span>
                       <span className="text-[10px] font-bold rounded border flex gap-1" style={{ padding: '1px 5px', backgroundColor: '#FFFBEB', borderColor: '#FDE68A', color: stats.pending > 0 ? '#B45309' : '#FCD34D', opacity: stats.pending > 0 ? 1 : 0.45 }}>
-                        <span>투입예정</span><span>{stats.pending}</span>
+                        <span>예정</span><span>{stats.pending}</span>
                       </span>
                       <span className="text-[10px] font-bold rounded border flex gap-1" style={{ padding: '1px 5px', backgroundColor: '#FAF5FF', borderColor: '#E9D5FF', color: stats.waitingProf > 0 ? '#7E22CE' : '#C4B5FD', opacity: stats.waitingProf > 0 ? 1 : 0.45 }}>
-                        <span>대기 교수</span><span>{stats.waitingProf}</span>
+                        <span>교수</span><span>{stats.waitingProf}</span>
                       </span>
                     </span>
                   </div>
