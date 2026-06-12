@@ -196,13 +196,16 @@ export default function EmployeeManager() {
   const stats = useMemo(() => {
     const total = distinctCount(employees);
     const active = distinctCount(employees.filter((e) => resolveStatus(e, projectById[e.projectId]?.name).label === "투입중"));
-    const pending = distinctCount(employees.filter((e) => resolveStatus(e, projectById[e.projectId]?.name).label === "투입예정"));
+    const pendingAll  = employees.filter((e) => resolveStatus(e, projectById[e.projectId]?.name).label === "투입예정");
+    const pending = distinctCount(pendingAll);
     const waitingAll  = employees.filter((e) => e.projectId === "pool");
     const waiting     = distinctCount(waitingAll);
     const waitingEmp  = distinctCount(waitingAll.filter((e) => e.rank !== "교수"));
     const waitingProf = distinctCount(waitingAll.filter((e) => e.rank === "교수"));
-    if (waiting !== waitingEmp + waitingProf) {
-      console.warn('[대기인력] waiting 고유인원 합계 불일치:', waiting, '!=', waitingEmp, '+', waitingProf);
+    const waitingTotal = waitingEmp + pending + waitingProf;
+    const distinctTotal = distinctCount([...waitingAll, ...pendingAll]);
+    if (distinctTotal !== waitingTotal) {
+      console.warn('[대기인력] 합계 불일치(중복 집계 가능):', waitingTotal, '!= 고유 합집합', distinctTotal);
     }
     const ibks = distinctCount(employees.filter(e => e.affiliation === "IBKS"));
     const partner = distinctCount(employees.filter(e => e.affiliation === "협력사"));
@@ -218,7 +221,7 @@ export default function EmployeeManager() {
       console.warn('[프로젝트] 유형 합계 불일치 (미입력 데이터 존재 가능):', projectCount, '!=', projectExt, '+', projectBank, '+', projectInt);
     }
 
-    return { total, active, pending, waiting, waitingEmp, waitingProf, ibks, partner, resident, nonResident, projectCount, projectExt, projectBank, projectInt };
+    return { total, active, pending, waiting, waitingEmp, waitingProf, waitingTotal, ibks, partner, resident, nonResident, projectCount, projectExt, projectBank, projectInt };
   }, [employees, projects]);
 
   const openNewEmp = () => {
@@ -815,16 +818,19 @@ export default function EmployeeManager() {
                 icon={<Calendar size={18} />}
                 label="대기 인력"
                 accent="rose"
-                className="col-span-2 order-2 md:order-none md:flex-none md:w-[195px]"
+                className="col-span-2 order-2 md:order-none md:flex-none md:w-[230px]"
                 value={
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-                    <span className="text-lg sm:text-xl font-bold text-slate-900 tabular-nums">{stats.waiting}</span>
+                    <span className="text-lg sm:text-xl font-bold text-slate-900 tabular-nums">{stats.waitingTotal}</span>
                     <span style={{ display: 'flex', flexDirection: 'row', gap: '3px', alignItems: 'center', flexShrink: 0 }}>
-                      <span className="text-[10px] font-bold rounded border flex gap-1" style={{ padding: '1px 5px', backgroundColor: '#EFF6FF', borderColor: '#BFDBFE', color: stats.waitingEmp > 0 ? '#1D4ED8' : '#93C5FD', opacity: stats.waitingEmp > 0 ? 1 : 0.45 }}>
-                        <span>직원</span><span>{stats.waitingEmp}</span>
+                      <span className="text-[10px] font-bold rounded border flex gap-1" style={{ padding: '1px 5px', backgroundColor: '#F8FAFC', borderColor: '#E2E8F0', color: stats.waitingEmp > 0 ? '#334155' : '#94A3B8', opacity: stats.waitingEmp > 0 ? 1 : 0.45 }}>
+                        <span>대기</span><span>{stats.waitingEmp}</span>
                       </span>
-                      <span className="text-[10px] font-bold rounded border flex gap-1" style={{ padding: '1px 5px', backgroundColor: '#F5F3FF', borderColor: '#DDD6FE', color: stats.waitingProf > 0 ? '#6D28D9' : '#C4B5FD', opacity: stats.waitingProf > 0 ? 1 : 0.45 }}>
-                        <span>교수</span><span>{stats.waitingProf}</span>
+                      <span className="text-[10px] font-bold rounded border flex gap-1" style={{ padding: '1px 5px', backgroundColor: '#FFFBEB', borderColor: '#FDE68A', color: stats.pending > 0 ? '#B45309' : '#FCD34D', opacity: stats.pending > 0 ? 1 : 0.45 }}>
+                        <span>투입예정</span><span>{stats.pending}</span>
+                      </span>
+                      <span className="text-[10px] font-bold rounded border flex gap-1" style={{ padding: '1px 5px', backgroundColor: '#FAF5FF', borderColor: '#E9D5FF', color: stats.waitingProf > 0 ? '#7E22CE' : '#C4B5FD', opacity: stats.waitingProf > 0 ? 1 : 0.45 }}>
+                        <span>대기 교수</span><span>{stats.waitingProf}</span>
                       </span>
                     </span>
                   </div>
