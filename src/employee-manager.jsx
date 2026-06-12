@@ -945,7 +945,7 @@ export default function EmployeeManager() {
               </div>
               <h3 className="text-base font-bold text-slate-900">프로젝트 삭제</h3>
             </div>
-            <div className="px-6 pb-5 text-left text-sm text-slate-600 space-y-1.5">
+            <div className="px-6 pb-5 text-center text-sm text-slate-600 space-y-1.5">
                 {deleteConfirm.members.length > 0 ? (
                   <>
                     <p>이 프로젝트에 <span className="font-semibold text-slate-800">{deleteConfirm.members.length}명</span>이 배치되어 있습니다.</p>
