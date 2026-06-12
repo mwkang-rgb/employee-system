@@ -980,7 +980,7 @@ export default function EmployeeManager() {
               </div>
               <h3 className="text-base font-bold text-slate-900">직원 삭제</h3>
             </div>
-            <div className="px-6 pb-5 text-left text-sm text-slate-600 space-y-1.5">
+            <div className="px-6 pb-5 text-center text-sm text-slate-600 space-y-1.5">
               <p><span className="font-semibold text-slate-800">{deleteEmpConfirm?.name}</span> 님의 정보를 삭제하시겠습니까?</p>
               <p className="text-slate-500 text-sm">삭제된 정보는 복구할 수 없습니다.</p>
             </div>
