@@ -145,9 +145,9 @@ export default function EmployeeListView({
       const dt = new Date(`${d}T00:00:00`);
       return isNaN(dt.getTime()) ? null : dt;
     };
-    const header = ["ID", "직원명", "직급", "소속", "협력사명", "직무", "역할", "투입프로젝트", "투입일자", "철수일자", "상태"];
-    const rows = filtered.map((e) => [
-      e.id, e.name, e.rank, e.affiliation, e.partnerName || "",
+    const header = ["NO", "ID", "직원명", "직급", "소속", "협력사명", "직무", "역할", "투입프로젝트", "투입일자", "철수일자", "상태"];
+    const rows = filtered.map((e, idx) => [
+      idx + 1, e.id, e.name, e.rank, e.affiliation, e.partnerName || "",
       e.duty || "", e.role || "",
       projectById[e.projectId]?.name || "",
       parseDate(e.startDate),
@@ -155,15 +155,15 @@ export default function EmployeeListView({
       resolveStatus(e, projectById[e.projectId]?.name).label,
     ]);
     const ws = XLSX.utils.aoa_to_sheet([header, ...rows], { cellDates: true });
-    // 투입일자(8)·철수일자(9) 컬럼을 날짜형으로 — 엑셀에서 날짜 정렬/필터 동작
+    // 투입일자(9)·철수일자(10) 컬럼을 날짜형으로 — 엑셀에서 날짜 정렬/필터 동작
     const range = XLSX.utils.decode_range(ws["!ref"]);
     for (let r = 1; r <= range.e.r; r++) {
-      for (const c of [8, 9]) {
+      for (const c of [9, 10]) {
         const cell = ws[XLSX.utils.encode_cell({ r, c })];
         if (cell && cell.v != null) { cell.t = "d"; cell.z = "yyyy-mm-dd"; }
       }
     }
-    ws["!cols"] = [8, 14, 8, 8, 12, 14, 16, 20, 12, 12, 10].map((w) => ({ wch: w }));
+    ws["!cols"] = [6, 8, 14, 8, 8, 12, 14, 16, 20, 12, 12, 10].map((w) => ({ wch: w }));
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "직원투입현황");
     XLSX.writeFile(wb, `직원투입현황_${new Date().toISOString().slice(0, 10)}.xlsx`);
@@ -273,13 +273,13 @@ export default function EmployeeListView({
                   </div>
                 </td>
               </tr>
-            ) : paged.map((e) => {
+            ) : paged.map((e, idx) => {
               const proj = projectById[e.projectId];
               const status = resolveStatus(e, proj?.name);
               const c = COLOR_MAP[proj?.color || "slate"];
               return (
                 <tr key={e.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
-                  <td className="px-3 sm:px-4 py-3 text-center text-slate-500">{e.id}</td>
+                  <td className="px-3 sm:px-4 py-3 text-center text-slate-500">{(page - 1) * PAGE_SIZE + idx + 1}</td>
                   <td className="px-3 sm:px-4 py-3 text-left font-medium text-slate-900">{e.name}</td>
                   <td className="px-3 sm:px-4 py-3 text-left"><AffiliationBadge affiliation={e.affiliation} partnerName={e.partnerName} /></td>
                   <td className="px-3 sm:px-4 py-3 text-left text-slate-700">{e.rank}</td>
